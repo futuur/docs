@@ -1,13 +1,13 @@
 ---
-title: "Claude & AI Agents (MCP)"
-description: "Use Futuur prediction markets directly inside Claude, Cursor, and any MCP-compatible AI client."
+title: "Claude (MCP)"
+description: "Use Futuur prediction markets directly inside Claude via the Futuur MCP server."
 ---
 
 import { McpConfigBuilder } from "/snippets/mcp-config-builder.jsx";
 
-The [Model Context Protocol](https://modelcontextprotocol.io) (MCP) lets AI assistants like Claude call external tools on your behalf. The Futuur MCP server exposes tools covering market discovery, order placement, position management, and account info — all accessible through natural language.
+The [Model Context Protocol](https://modelcontextprotocol.io) (MCP) lets Claude call external tools on your behalf. The Futuur MCP server exposes tools covering market discovery, order placement, position management, and account info — all accessible through natural language.
 
-**Get connected in under a minute:** paste your API keys on this page, copy one terminal command for your OS, run it, and restart your client.
+**Get connected in under a minute:** paste your API keys, copy the `claude mcp add` command, run it in your terminal, then start a new Claude session.
 
 **You can say things like:**
 - *"Show me the top 10 markets by volume"*
@@ -23,6 +23,9 @@ The [Model Context Protocol](https://modelcontextprotocol.io) (MCP) lets AI assi
   <Step title="Node.js 18 or higher">
     Download from [nodejs.org](https://nodejs.org). Verify with `node --version`.
   </Step>
+  <Step title="Claude Code CLI">
+    Install the [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code). Verify with `claude --version`.
+  </Step>
   <Step title="Futuur API keys">
     Log in to [futuur.com](https://futuur.com) → **Settings** → **API** → generate a key pair. You'll get a **public key** and a **private key**.
   </Step>
@@ -32,47 +35,41 @@ The [Model Context Protocol](https://modelcontextprotocol.io) (MCP) lets AI assi
 
 ## Setup
 
+Paste your Futuur API keys below, then copy and run the generated command in your terminal.
+
 <McpConfigBuilder />
 
 <Steps>
   <Step title="Paste your API keys">
     Use the fields above. Keys stay in your browser — they are only embedded in the command you copy.
   </Step>
-  <Step title="Pick your client and OS">
-    Choose **Cursor**, **Claude Desktop**, or **Claude Code**, then **macOS**, **Linux**, or **Windows (CMD)**.
+  <Step title="Copy and run">
+    Paste the `claude mcp add` command into your terminal and press Enter. Claude registers the Futuur MCP server with your keys.
   </Step>
-  <Step title="Copy, run, restart">
-    Paste the command into Terminal (macOS/Linux) or **Command Prompt** (Windows), press Enter, then **restart** your AI client.
+  <Step title="Start Claude">
+    Open a new Claude Code session (`claude`) — the Futuur tools are available immediately.
   </Step>
 </Steps>
 
 <Tip>
-  **Restart required.** After the command finishes, fully quit and reopen Claude Desktop or Cursor so the new MCP server loads.
+  To add the server for a single project only, run the command from that project directory. To add it globally, run it from any directory — Claude stores it in your user config.
 </Tip>
 
 <Accordion title="Manual JSON config (optional)">
-  If you prefer to edit config files yourself, add this block to your client's MCP config file (merge with any existing `mcpServers`):
+  If you prefer to edit config files yourself, add this under `"mcpServers"` in `~/.claude.json` (global) or `.claude/settings.json` (project):
 
   ```json
   {
-    "mcpServers": {
-      "futuur": {
-        "command": "npx",
-        "args": ["-y", "@futuur/futuur-mcp"],
-        "env": {
-          "FUTUUR_PUBLIC_KEY": "your_public_key_here",
-          "FUTUUR_PRIVATE_KEY": "your_private_key_here"
-        }
+    "futuur": {
+      "command": "npx",
+      "args": ["-y", "@futuur/futuur-mcp"],
+      "env": {
+        "FUTUUR_PUBLIC_KEY": "your_public_key_here",
+        "FUTUUR_PRIVATE_KEY": "your_private_key_here"
       }
     }
   }
   ```
-
-  | Client | Config file location |
-  |--------|---------------------|
-  | Cursor | `.cursor/mcp.json` in your project, or global MCP settings |
-  | Claude Desktop | `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) · `%APPDATA%\Claude\claude_desktop_config.json` (Windows) |
-  | Claude Code | `~/.claude.json` or project `.claude/settings.json` |
 </Accordion>
 
 ---
