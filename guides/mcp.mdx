@@ -1,0 +1,163 @@
+---
+title: "Claude & AI Agents (MCP)"
+description: "Use Futuur prediction markets directly inside Claude, Cursor, and any MCP-compatible AI client."
+---
+
+import { McpConfigBuilder } from "/snippets/mcp-config-builder.jsx";
+
+The [Model Context Protocol](https://modelcontextprotocol.io) (MCP) lets AI assistants like Claude call external tools on your behalf. The Futuur MCP server exposes tools covering market discovery, order placement, position management, and account info — all accessible through natural language.
+
+**Get connected in under a minute:** paste your API keys on this page, copy one terminal command for your OS, run it, and restart your client.
+
+**You can say things like:**
+- *"Show me the top 10 markets by volume"*
+- *"Simulate buying 200 OOM on the Yes outcome of event #1234"*
+- *"What are my open positions and how are they performing?"*
+- *"Sell 50 shares of my wager on the US election market"*
+
+---
+
+## Prerequisites
+
+<Steps>
+  <Step title="Node.js 18 or higher">
+    Download from [nodejs.org](https://nodejs.org). Verify with `node --version`.
+  </Step>
+  <Step title="Futuur API keys">
+    Log in to [futuur.com](https://futuur.com) → **Settings** → **API** → generate a key pair. You'll get a **public key** and a **private key**.
+  </Step>
+</Steps>
+
+---
+
+## Setup
+
+<McpConfigBuilder />
+
+<Steps>
+  <Step title="Paste your API keys">
+    Use the fields above. Keys stay in your browser — they are only embedded in the command you copy.
+  </Step>
+  <Step title="Pick your client and OS">
+    Choose **Cursor**, **Claude Desktop**, or **Claude Code**, then **macOS**, **Linux**, or **Windows (CMD)**.
+  </Step>
+  <Step title="Copy, run, restart">
+    Paste the command into Terminal (macOS/Linux) or **Command Prompt** (Windows), press Enter, then **restart** your AI client.
+  </Step>
+</Steps>
+
+<Tip>
+  **Restart required.** After the command finishes, fully quit and reopen Claude Desktop or Cursor so the new MCP server loads.
+</Tip>
+
+<Accordion title="Manual JSON config (optional)">
+  If you prefer to edit config files yourself, add this block to your client's MCP config file (merge with any existing `mcpServers`):
+
+  ```json
+  {
+    "mcpServers": {
+      "futuur": {
+        "command": "npx",
+        "args": ["-y", "@futuur/futuur-mcp"],
+        "env": {
+          "FUTUUR_PUBLIC_KEY": "your_public_key_here",
+          "FUTUUR_PRIVATE_KEY": "your_private_key_here"
+        }
+      }
+    }
+  }
+  ```
+
+  | Client | Config file location |
+  |--------|---------------------|
+  | Cursor | `.cursor/mcp.json` in your project, or global MCP settings |
+  | Claude Desktop | `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) · `%APPDATA%\Claude\claude_desktop_config.json` (Windows) |
+  | Claude Code | `~/.claude.json` or project `.claude/settings.json` |
+</Accordion>
+
+---
+
+## Available tools
+
+<CardGroup cols={2}>
+  <Card title="Market discovery" icon="search">
+    `get_markets` · `get_market_details` · `get_price_history` · `get_categories`
+  </Card>
+  <Card title="Account" icon="user">
+    `get_user_profile` · `get_user_ranking`
+  </Card>
+  <Card title="Trading" icon="arrow-left-right">
+    `get_bet_simulation` · `place_bet` · `list_orders` · `cancel_order`
+  </Card>
+  <Card title="Positions" icon="chart-line">
+    `get_user_bets` · `get_wager_details` · `get_partial_sell_amount` · `sell_bet`
+  </Card>
+</CardGroup>
+
+| Tool | What it does |
+|------|-------------|
+| `get_markets` | List and search events with filters — category, tag, status, ordering |
+| `get_market_details` | Full details for one event including all outcome markets |
+| `get_price_history` | Historical prices for an event (`day` / `week` / `month` / `year` / `all_time`) |
+| `get_categories` | List available market categories |
+| `get_user_profile` | Your account profile and balances |
+| `get_user_ranking` | Your leaderboard position |
+| `get_bet_simulation` | Preview a buy order — cost and shares — without placing it |
+| `place_bet` | Execute a limit order from a confirmed simulation |
+| `list_orders` | List your open, filled, or cancelled orders |
+| `cancel_order` | Cancel an open order by ID |
+| `get_user_bets` | List your wager positions with filters |
+| `get_wager_details` | Full details for one wager |
+| `get_partial_sell_amount` | Simulate how much you'd receive for selling N shares |
+| `sell_bet` | Sell all or part of a wager position |
+
+---
+
+## Example session
+
+```
+You:    Show me the top 5 prediction markets right now
+
+Claude: [calls get_markets with ordering=-volume, limit=5]
+        Here are the top markets by volume: ...
+
+You:    I want to bet 100 OOM that Trump wins. Show me the details first.
+
+Claude: [calls get_market_details for the event]
+        The "Trump wins 2026" market is currently priced at 62% (0.62).
+        Market ID: 8821, Event ID: 4401.
+
+You:    Simulate buying 100 OOM on the Yes outcome
+
+Claude: [calls get_bet_simulation with event_id=4401, market=8821, amount=100, currency=OOM]
+        You'd receive approximately 161 shares at 0.62 each. Total cost: 100 OOM.
+        Shall I place the order?
+
+You:    Yes, go ahead
+
+Claude: [calls place_bet with confirmed payload]
+        Order placed. ID: 99231, status: filled.
+```
+
+<Tip>
+  Use `currency_mode: "play_money"` to practice with OOM (play money) before trading real funds.
+</Tip>
+
+---
+
+## Links
+
+<CardGroup cols={2}>
+  <Card title="GitHub repository" icon="github" href="https://github.com/futuur/Futuur-MCP">
+    Source code, issues, and contributions
+  </Card>
+  <Card title="Authentication" icon="key" href="/authentication">
+    How HMAC-SHA512 signing works
+  </Card>
+  <Card title="Placing a bet" icon="arrow-right" href="/guides/placing-a-bet">
+    Full step-by-step guide to placing orders via the REST API
+  </Card>
+  <Card title="API Reference" icon="code" href="/api-reference/events/list">
+    Browse all available endpoints
+  </Card>
+</CardGroup>
