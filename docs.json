@@ -37,7 +37,8 @@
             "pages": [
               "introduction",
               "authentication",
-              "rate-limits"
+              "rate-limits",
+              "guides/mcp"
             ]
           },
           {
@@ -52,6 +53,7 @@
           {
             "group": "Guides",
             "pages": [
+              "guides/mcp",
               "guides/placing-a-bet",
               "guides/selling-a-position",
               "guides/reading-the-order-book"
