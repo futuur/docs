@@ -1,9 +1,11 @@
 ---
 title: "Account information"
-description: "Retrieve your account details and balance."
+description: "Retrieve your account details and wallet balances."
 ---
 
-Returns details about your authenticated account, including your username, email address, and current balances across all supported currencies.
+Returns details about your authenticated account, including your username, email address, wallet balances, and account status.
+
+For ledger balances broken out by currency, use [`GET /me/balances/`](/api-reference/me/balances).
 
 ## Endpoint
 
@@ -27,11 +29,13 @@ This endpoint takes no parameters.
 
 ## Response
 
+Returns a `UserPrivate` object.
+
 <ResponseField name="id" type="integer" required>
   Unique numeric identifier for your account.
 </ResponseField>
 
-<ResponseField name="username" type="string" required>
+<ResponseField name="username" type="string">
   Your account username.
 </ResponseField>
 
@@ -39,24 +43,24 @@ This endpoint takes no parameters.
   The email address associated with your account.
 </ResponseField>
 
-<ResponseField name="oom_balance" type="string" required>
-  Your play money balance in OOM (Opinion on Markets). Returned as a decimal string.
+<ResponseField name="wallet" type="object" required>
+  Dictionary of balances keyed by currency code (for example, `OOM`, `USDC`, `USDT`, `USD`). Values are decimal strings.
 </ResponseField>
 
-<ResponseField name="usdc_balance" type="string" required>
-  Your real money balance in USDC. Returned as a decimal string.
-</ResponseField>
-
-<ResponseField name="usdt_balance" type="string">
-  Your real money balance in USDT. Returned as a decimal string.
-</ResponseField>
-
-<ResponseField name="usd_balance" type="string">
-  Your real money balance in USD. Returned as a decimal string.
-</ResponseField>
-
-<ResponseField name="is_email_confirmed" type="boolean" required>
+<ResponseField name="email_confirmed" type="boolean" required>
   Whether you have confirmed your email address.
+</ResponseField>
+
+<ResponseField name="real_currency_enabled" type="boolean" required>
+  Whether real money trading is enabled for your account.
+</ResponseField>
+
+<ResponseField name="kyc_status" type="string" required>
+  Current KYC status. One of `no_need`, `requested`, `initialized`, `refused`, `approved`, or `by_passed`.
+</ResponseField>
+
+<ResponseField name="date_joined" type="string">
+  ISO 8601 timestamp of when you joined Futuur.
 </ResponseField>
 
 ## Register a Safe address
@@ -78,10 +82,15 @@ curl --request GET \
   "id": 42,
   "username": "trader_jane",
   "email": "jane@example.com",
-  "oom_balance": "5000.00",
-  "usdc_balance": "100.00",
-  "usdt_balance": "0.00",
-  "usd_balance": "0.00",
-  "is_email_confirmed": true
+  "wallet": {
+    "OOM": "5000.00",
+    "USDC": "100.00",
+    "USDT": "0.00",
+    "USD": "0.00"
+  },
+  "email_confirmed": true,
+  "real_currency_enabled": true,
+  "kyc_status": "approved",
+  "date_joined": "2024-03-15T10:00:00Z"
 }
 ```

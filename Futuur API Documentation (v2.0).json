@@ -263,6 +263,37 @@
                 }
             }
         },
+        "/events/{id}/live_data/": {
+            "get": {
+                "operationId": "Event Live Data",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this event.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "Events"
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/EventDetail"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/events/{id}/order_book/": {
             "get": {
                 "operationId": "Order Book",
@@ -529,6 +560,45 @@
                 }
             }
         },
+        "/me/balances/": {
+            "get": {
+                "operationId": "My balances",
+                "description": "Return ledger account balances for the authenticated user, one object per currency. Use the optional `currency` query parameter to return only that currency.",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "currency",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "If set, only the balance for this currency is returned (matches stored currency code, case-insensitive)."
+                    }
+                ],
+                "tags": [
+                    "Me"
+                ],
+                "security": [
+                    {
+                        "HMAC": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/UserPrivateAccountBalance"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/me/ranking/": {
             "get": {
                 "operationId": "My ranking",
@@ -557,7 +627,7 @@
         },
         "/me/safe/": {
             "post": {
-                "operationId": "register_safe_address",
+                "operationId": "Register safe address",
                 "description": "Registers Safe smart account address for authenticated user",
                 "tags": [
                     "Me"
@@ -1652,14 +1722,14 @@
                         "type": "boolean",
                         "description": "If enabled, Question will use Order Book to place bet instead of AMM(LsLmsr)."
                     },
-                    "markets_correlation": {
+                    "resolution_mode": {
                         "enum": [
-                            "linked",
-                            "independent"
+                            "exclusive",
+                            "non_exclusive"
                         ],
                         "type": "string",
-                        "x-spec-enum-id": "9ab19c88863ef536",
-                        "description": "This information helps Market Makers to define its prices policy.<br>This is purely informative and do not change the markets behavior.<br><br><b>Linked:</b> Indicate that markets are correlated and influence each other.<br><b>Independent:</b> Each market is independent from each other.\n\n* `linked` - Linked\n* `independent` - Independent"
+                        "x-spec-enum-id": "776277bccdee94d1",
+                        "description": "<b>Exclusive:</b> Only one market can resolve to LONG.<br><b>Non Exclusive:</b> Multiple markets can resolve to LONG. Markets have independent rules.\n\n* `exclusive` - Exclusive\n* `non_exclusive` - Non Exclusive"
                     },
                     "markets_count": {
                         "type": "integer",
@@ -1703,10 +1773,6 @@
                         "type": "string",
                         "description": "* `open` - open\n* `stopped` - stopped\n* `resolved` - resolved\n* `cancelled` - cancelled\n* `paused` - paused\n* `reversed` - reversed",
                         "x-spec-enum-id": "857d7e2b339dec31"
-                    },
-                    "status_display": {
-                        "type": "string",
-                        "readOnly": true
                     },
                     "tags": {
                         "type": "array",
@@ -1777,10 +1843,6 @@
                     "real_currency_available": {
                         "type": "boolean"
                     },
-                    "is_binary": {
-                        "type": "string",
-                        "readOnly": true
-                    },
                     "canonical_currency": {
                         "enum": [
                             "BCH",
@@ -1806,16 +1868,6 @@
                         "x-spec-enum-id": "9626ac7693c6118e",
                         "description": "All bets in real currency will be converted to this currency.\n\n* `BCH` - BCH\n* `BNB` - BNB\n* `BRL` - BRL R$\n* `BTC` - BTC ₿\n* `BUSD` - BUSD\n* `DOGE` - DOGE\n* `ETH` - ETH\n* `EUR` - EUR €\n* `LTC` - LTC Ł\n* `LTCT` - LTCT (test coin)\n* `MXN` - MXN MX$\n* `OOM` - OOM ø\n* `SOL` - SOL\n* `TRX` - TRX\n* `USD` - USD $\n* `USDC` - USDC\n* `USDT` - USDT\n* `XMR` - XMR"
                     },
-                    "outcomes_type": {
-                        "enum": [
-                            "custom",
-                            "yesno",
-                            "updown"
-                        ],
-                        "type": "string",
-                        "x-spec-enum-id": "2e56781379f308a3",
-                        "description": "This field defines how to render the market card.\n\n* `custom` - Custom names\n* `yesno` - Yes/No\n* `updown` - Up/Down"
-                    },
                     "order_book_enabled": {
                         "type": "boolean",
                         "description": "If enabled, Question will use Order Book to place bet instead of AMM(LsLmsr)."
@@ -1824,30 +1876,14 @@
                         "type": "string",
                         "readOnly": true
                     },
-                    "tax_play_money": {
-                        "type": "number",
-                        "format": "double",
-                        "maximum": 1,
-                        "minimum": 0,
-                        "nullable": true,
-                        "description": "[0, 1] - Tax for play money. Applied on AMM(LsLmsr).<br>Leave blank to inherit from the category."
-                    },
-                    "tax_real_money": {
-                        "type": "number",
-                        "format": "double",
-                        "maximum": 1,
-                        "minimum": 0,
-                        "nullable": true,
-                        "description": "[0, 1] - Tax for real money. Applied on AMM(LsLmsr).<br>Leave blank to inherit from the category."
-                    },
-                    "markets_correlation": {
+                    "resolution_mode": {
                         "enum": [
-                            "linked",
-                            "independent"
+                            "exclusive",
+                            "non_exclusive"
                         ],
                         "type": "string",
-                        "x-spec-enum-id": "9ab19c88863ef536",
-                        "description": "This information helps Market Makers to define its prices policy.<br>This is purely informative and do not change the markets behavior.<br><br><b>Linked:</b> Indicate that markets are correlated and influence each other.<br><b>Independent:</b> Each market is independent from each other.\n\n* `linked` - Linked\n* `independent` - Independent"
+                        "x-spec-enum-id": "776277bccdee94d1",
+                        "description": "<b>Exclusive:</b> Only one market can resolve to LONG.<br><b>Non Exclusive:</b> Multiple markets can resolve to LONG. Markets have independent rules.\n\n* `exclusive` - Exclusive\n* `non_exclusive` - Non Exclusive"
                     },
                     "wagers_count": {
                         "type": "integer",
@@ -1973,7 +2009,6 @@
                     "comment_count",
                     "event_extra_data",
                     "id",
-                    "is_binary",
                     "is_following",
                     "is_new",
                     "is_real_money_bets_forbidden",
@@ -1981,7 +2016,6 @@
                     "markets",
                     "relevance",
                     "slug",
-                    "status_display",
                     "suggested_by",
                     "tags",
                     "thumbnail",
@@ -2025,10 +2059,6 @@
                         "type": "string",
                         "description": "* `open` - open\n* `stopped` - stopped\n* `resolved` - resolved\n* `cancelled` - cancelled\n* `paused` - paused\n* `reversed` - reversed",
                         "x-spec-enum-id": "857d7e2b339dec31"
-                    },
-                    "status_display": {
-                        "type": "string",
-                        "readOnly": true
                     },
                     "tags": {
                         "type": "array",
@@ -2099,10 +2129,6 @@
                     "real_currency_available": {
                         "type": "boolean"
                     },
-                    "is_binary": {
-                        "type": "string",
-                        "readOnly": true
-                    },
                     "canonical_currency": {
                         "enum": [
                             "BCH",
@@ -2128,16 +2154,6 @@
                         "x-spec-enum-id": "9626ac7693c6118e",
                         "description": "All bets in real currency will be converted to this currency.\n\n* `BCH` - BCH\n* `BNB` - BNB\n* `BRL` - BRL R$\n* `BTC` - BTC ₿\n* `BUSD` - BUSD\n* `DOGE` - DOGE\n* `ETH` - ETH\n* `EUR` - EUR €\n* `LTC` - LTC Ł\n* `LTCT` - LTCT (test coin)\n* `MXN` - MXN MX$\n* `OOM` - OOM ø\n* `SOL` - SOL\n* `TRX` - TRX\n* `USD` - USD $\n* `USDC` - USDC\n* `USDT` - USDT\n* `XMR` - XMR"
                     },
-                    "outcomes_type": {
-                        "enum": [
-                            "custom",
-                            "yesno",
-                            "updown"
-                        ],
-                        "type": "string",
-                        "x-spec-enum-id": "2e56781379f308a3",
-                        "description": "This field defines how to render the market card.\n\n* `custom` - Custom names\n* `yesno` - Yes/No\n* `updown` - Up/Down"
-                    },
                     "order_book_enabled": {
                         "type": "boolean",
                         "description": "If enabled, Question will use Order Book to place bet instead of AMM(LsLmsr)."
@@ -2146,30 +2162,14 @@
                         "type": "string",
                         "readOnly": true
                     },
-                    "tax_play_money": {
-                        "type": "number",
-                        "format": "double",
-                        "maximum": 1,
-                        "minimum": 0,
-                        "nullable": true,
-                        "description": "[0, 1] - Tax for play money. Applied on AMM(LsLmsr).<br>Leave blank to inherit from the category."
-                    },
-                    "tax_real_money": {
-                        "type": "number",
-                        "format": "double",
-                        "maximum": 1,
-                        "minimum": 0,
-                        "nullable": true,
-                        "description": "[0, 1] - Tax for real money. Applied on AMM(LsLmsr).<br>Leave blank to inherit from the category."
-                    },
-                    "markets_correlation": {
+                    "resolution_mode": {
                         "enum": [
-                            "linked",
-                            "independent"
+                            "exclusive",
+                            "non_exclusive"
                         ],
                         "type": "string",
-                        "x-spec-enum-id": "9ab19c88863ef536",
-                        "description": "This information helps Market Makers to define its prices policy.<br>This is purely informative and do not change the markets behavior.<br><br><b>Linked:</b> Indicate that markets are correlated and influence each other.<br><b>Independent:</b> Each market is independent from each other.\n\n* `linked` - Linked\n* `independent` - Independent"
+                        "x-spec-enum-id": "776277bccdee94d1",
+                        "description": "<b>Exclusive:</b> Only one market can resolve to LONG.<br><b>Non Exclusive:</b> Multiple markets can resolve to LONG. Markets have independent rules.\n\n* `exclusive` - Exclusive\n* `non_exclusive` - Non Exclusive"
                     },
                     "wagers_count": {
                         "type": "integer",
@@ -2238,14 +2238,12 @@
                     "comment_count",
                     "event_extra_data",
                     "id",
-                    "is_binary",
                     "is_following",
                     "is_new",
                     "is_wagerable",
                     "markets",
                     "relevance",
                     "slug",
-                    "status_display",
                     "tags",
                     "thumbnail",
                     "title",
@@ -3254,6 +3252,24 @@
                     "wagers_count_play_money",
                     "wagers_count_real_money",
                     "wallet"
+                ]
+            },
+            "UserPrivateAccountBalance": {
+                "type": "object",
+                "description": "One double-entry account row: balance amount in a single currency.",
+                "properties": {
+                    "currency": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "amount": {
+                        "type": "string",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "amount",
+                    "currency"
                 ]
             },
             "UserPrivateRanking": {

@@ -55,16 +55,25 @@ GET https://api.futuur.com/wagers/
 
 Returns a paginated list of wager objects.
 
-<ResponseField name="count" type="integer" required>
-  Total number of wagers matching the query.
-</ResponseField>
-
-<ResponseField name="next" type="string">
-  URL for the next page of results. `null` if there are no more pages.
-</ResponseField>
-
-<ResponseField name="previous" type="string">
-  URL for the previous page of results. `null` if on the first page.
+<ResponseField name="pagination" type="object" required>
+  Pagination metadata for the result set.
+  <Expandable title="properties">
+    <ResponseField name="total" type="integer">
+      Total number of wagers matching the query.
+    </ResponseField>
+    <ResponseField name="next" type="string">
+      URL for the next page of results. `null` if there are no more pages.
+    </ResponseField>
+    <ResponseField name="previous" type="string">
+      URL for the previous page of results. `null` if on the first page.
+    </ResponseField>
+    <ResponseField name="page_size" type="integer">
+      Number of results returned per page.
+    </ResponseField>
+    <ResponseField name="offset" type="integer">
+      Current pagination offset.
+    </ResponseField>
+  </Expandable>
 </ResponseField>
 
 <ResponseField name="results" type="object[]" required>
@@ -125,9 +134,13 @@ curl --request GET \
 
 ```json Sample response
 {
-  "count": 12,
-  "next": "https://api.futuur.com/wagers/?active=true&currency_mode=real_money&limit=2&offset=2",
-  "previous": null,
+  "pagination": {
+    "total": 12,
+    "next": "https://api.futuur.com/wagers/?active=true&currency_mode=real_money&limit=2&offset=2",
+    "previous": null,
+    "page_size": 2,
+    "offset": 0
+  },
   "results": [
     {
       "id": 88201,

@@ -18,11 +18,12 @@ An event defines the question, the resolution criteria, and the timeframe. Key f
 | `id` | Unique identifier |
 | `title` | The prediction question |
 | `slug` | URL-friendly identifier |
-| `status` | Current state: `open`, `closed`, or `resolved` |
-| `categories` | Topic categories the event belongs to |
+| `status` | Current state: `open`, `stopped`, `resolved`, `cancelled`, `paused`, or `reversed` |
+| `category` | Array of category objects the event belongs to |
 | `markets` | Array of outcome markets |
-| `close_time` | When trading stops |
-| `resolution_date` | When the event resolves |
+| `bet_end_date` | When betting closes |
+| `resolve_date` | When the event was resolved |
+| `resolution_mode` | How markets resolve within the event (see below) |
 | `description` | Full question details and resolution criteria |
 
 ### Event statuses
@@ -31,11 +32,20 @@ An event defines the question, the resolution criteria, and the timeframe. Key f
   <Accordion title="open">
     The event is active and accepting bets. You can place, modify, and cancel orders.
   </Accordion>
-  <Accordion title="closed">
-    Trading has stopped — `close_time` has passed — but the event has not yet resolved. No new orders are accepted.
+  <Accordion title="stopped">
+    Trading has stopped — `bet_end_date` has passed — but the event has not yet resolved. No new orders are accepted.
   </Accordion>
   <Accordion title="resolved">
     The outcome has been determined. Winning wagers are paid out and losing wagers are settled. The event is read-only.
+  </Accordion>
+  <Accordion title="cancelled">
+    The event was cancelled and will not resolve normally.
+  </Accordion>
+  <Accordion title="paused">
+    Trading is temporarily paused on this event.
+  </Accordion>
+  <Accordion title="reversed">
+    A previous resolution was reversed. Check the event for updated resolution details.
   </Accordion>
 </AccordionGroup>
 
@@ -49,29 +59,26 @@ Key fields on a market object include:
 |---|---|
 | `id` | Unique identifier |
 | `title` | The outcome this market represents |
-| `slug` | URL-friendly identifier |
 | `price` | Current implied probability (0–1) |
+| `status` | Market status: `active`, `resolved`, `paused`, `stopped`, `cancelled`, or `reversed` |
+| `position_labels` | Label style: `yesno`, `updown`, or `custom` |
 
 The `price` field reflects the market's current probability. A price of `0.65` means the market is trading at a 65% chance of that outcome occurring.
 
-## Market correlation types
+## Resolution modes
 
-Events use one of two correlation types that determine how prices across markets within the same event relate to each other.
+Events use a `resolution_mode` field that determines how many markets can resolve to long (win):
 
 <Tabs>
-  <Tab title="linked_prices (default)">
-    All market prices within the event sum to 1. When you buy shares in one outcome, the prices of all other outcomes shift accordingly — just like a traditional prediction market.
+  <Tab title="exclusive">
+    Only one market within the event can resolve to long. This is the default for mutually exclusive outcomes where exactly one result wins.
 
-    **Example:** An event with three markets at prices `0.50`, `0.30`, and `0.20` (sum = 1.00). If you buy heavily into the first market, its price rises while the others fall to maintain the sum.
-
-    Use this type for mutually exclusive outcomes where exactly one will resolve true.
+    **Example:** A presidential election event where only one candidate can win.
   </Tab>
-  <Tab title="independent">
-    Each market's price is calculated independently. Buying shares in one outcome has no effect on prices in other markets within the same event.
+  <Tab title="non_exclusive">
+    Multiple markets can resolve to long. Each market has independent resolution rules.
 
-    **Example:** An event might ask "Which of these features will ship in Q1?" where multiple outcomes can be true simultaneously. Each market trades independently based on its own order book.
-
-    Use this type when multiple outcomes can resolve true at the same time.
+    **Example:** An event asking "Which of these features will ship in Q1?" where several outcomes can be true at the same time.
   </Tab>
 </Tabs>
 
@@ -88,6 +95,8 @@ Use `GET /events/` to list events. The endpoint supports the following filters:
 | `resolved_only` | Set to `true` to return only resolved events |
 | `pending_resolution` | Set to `true` to return events awaiting resolution |
 | `live` | Set to `true` to return only currently live events |
+
+For live or in-play markets that update frequently, poll [`GET /events/{id}/live_data/`](/api-reference/events/live-data) instead of the authenticated retrieve endpoint.
 
 ```bash
 # List events in a category using play money

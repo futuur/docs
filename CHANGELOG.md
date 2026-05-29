@@ -1,5 +1,42 @@
 # Changelog
 
+## 2026-05-29 — Sync with live API schema
+
+Refreshed `Futuur API Documentation (v2.0).json` from [https://api.futuur.com/docs/schema/](https://api.futuur.com/docs/schema/) and aligned Mintlify pages with the current v2.0 spec.
+
+### Added — new endpoint pages
+
+- `api-reference/events/live-data.mdx` — `GET /events/{id}/live_data/`. Returns up-to-date `EventDetail` for live markets. No authentication required.
+- `api-reference/me/balances.mdx` — `GET /me/balances/`. Returns per-currency ledger balances with optional `?currency=` filter.
+
+### Changed — navigation
+
+`docs.json` now lists the new pages:
+
+- **Events**: added `live-data` after `retrieve`.
+- **Account**: added `balances` after `information`.
+
+### Changed — event schema alignment
+
+- `api-reference/events/list.mdx`: response now documents the `pagination` wrapper and `EventList` fields (`status`, `resolution_mode`, `bet_end_date`, `category` array, `markets`, volume fields).
+- `api-reference/events/retrieve.mdx`: response updated to match `EventDetail` and `MarketList` shapes; links to the new live-data endpoint.
+- `concepts/events-and-markets.mdx`: replaced `linked_prices` / `independent` correlation docs with `resolution_mode` (`exclusive` / `non_exclusive`); updated status enum and field names.
+
+### Changed — account schema alignment
+
+- `api-reference/me/information.mdx`: documents `wallet` (currency-keyed dict) and `email_confirmed` instead of flat `*_balance` fields and `is_email_confirmed`; links to the new balances endpoint.
+
+### Changed — cross-links
+
+- `introduction.mdx`: mentions live data and balances; adds a My balances card.
+- `guides/mcp.mdx`: `get_user_profile` description links to the balances endpoint.
+
+### Changed — pagination and ranking alignment
+
+- `api-reference/orders/list.mdx`: response now uses the `pagination` object (`total`, `next`, `previous`, `page_size`, `offset`) plus `results`, matching `PaginatedLimitOrderList`.
+- `api-reference/wagers/list.mdx`: same pagination shape, matching `PaginatedWagerListList`.
+- `api-reference/me/ranking.mdx`: response updated to the `UserPrivateRanking` schema — a single `ranking` string field.
+
 ## 2026-05-13 — Sync with API v2.0 OpenAPI spec
 
 Aligned the Mintlify documentation with `Futuur API Documentation (v2.0).json`.

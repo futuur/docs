@@ -3,7 +3,7 @@ title: "My ranking"
 description: "Get your current leaderboard ranking."
 ---
 
-Returns your current position on the Futuur leaderboard. Use this endpoint to track your standing relative to other traders and monitor how your score changes over time.
+Returns your current position on the Futuur leaderboard. Use this endpoint to track your standing relative to other traders.
 
 ## Endpoint
 
@@ -27,16 +27,8 @@ This endpoint takes no parameters.
 
 ## Response
 
-<ResponseField name="rank" type="integer" required>
-  Your current position on the leaderboard. Lower is better — rank `1` is the top trader.
-</ResponseField>
-
-<ResponseField name="score" type="number" required>
-  Your cumulative score used to determine your rank position.
-</ResponseField>
-
-<ResponseField name="total_users" type="integer" required>
-  The total number of ranked users. Use this alongside `rank` to calculate your percentile.
+<ResponseField name="ranking" type="string" required>
+  Your current leaderboard ranking as returned by the API.
 </ResponseField>
 
 ## Example
@@ -51,8 +43,6 @@ curl --request GET \
 
 ```json
 {
-  "rank": 127,
-  "score": 8540.5,
-  "total_users": 15000
+  "ranking": "127"
 }
 ```

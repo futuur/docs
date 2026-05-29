@@ -1,0 +1,77 @@
+---
+title: "My balances"
+description: "Retrieve ledger account balances for the authenticated user, one row per currency."
+---
+
+Return ledger account balances for your authenticated account. Each object in the response represents one currency row with its current balance amount.
+
+## Endpoint
+
+```
+GET https://api.futuur.com/me/balances/
+```
+
+## Authentication
+
+This endpoint requires HMAC-SHA512 authentication. Include the following headers with every request:
+
+| Header | Description |
+|--------|-------------|
+| `Key` | Your public API key |
+| `Timestamp` | Current Unix timestamp |
+| `HMAC` | SHA-512 signature of the request |
+
+## Parameters
+
+<ParamField query="currency" type="string">
+  If set, returns only the balance for this currency code. Matching is case-insensitive (for example, `usdc` and `USDC` both match).
+</ParamField>
+
+## Response
+
+Returns an array of balance objects.
+
+<ResponseField name="currency" type="string" required>
+  Currency code for this balance row (for example, `OOM`, `USDC`, `USDT`, `USD`).
+</ResponseField>
+
+<ResponseField name="amount" type="string" required>
+  Current balance amount in this currency. Returned as a decimal string.
+</ResponseField>
+
+<Tip>
+  For full account profile fields (username, email, KYC status, and the aggregated `wallet` object), use [`GET /me/`](/api-reference/me/information).
+</Tip>
+
+## Example
+
+```bash cURL
+curl --request GET \
+  --url "https://api.futuur.com/me/balances/" \
+  --header "Key: YOUR_PUBLIC_KEY" \
+  --header "Timestamp: 1712345678" \
+  --header "HMAC: YOUR_HMAC_SIGNATURE"
+```
+
+```json Sample response
+[
+  { "currency": "OOM", "amount": "5000.00" },
+  { "currency": "USDC", "amount": "100.00" },
+  { "currency": "USDT", "amount": "0.00" },
+  { "currency": "USD", "amount": "0.00" }
+]
+```
+
+```bash Filter by currency
+curl --request GET \
+  --url "https://api.futuur.com/me/balances/?currency=USDC" \
+  --header "Key: YOUR_PUBLIC_KEY" \
+  --header "Timestamp: 1712345678" \
+  --header "HMAC: YOUR_HMAC_SIGNATURE"
+```
+
+```json Filtered response
+[
+  { "currency": "USDC", "amount": "100.00" }
+]
+```

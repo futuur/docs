@@ -69,6 +69,7 @@
             "pages": [
               "api-reference/events/list",
               "api-reference/events/retrieve",
+              "api-reference/events/live-data",
               "api-reference/events/actions",
               "api-reference/events/order-book",
               "api-reference/events/price-history",
@@ -98,6 +99,7 @@
             "group": "Account",
             "pages": [
               "api-reference/me/information",
+              "api-reference/me/balances",
               "api-reference/me/ranking",
               "api-reference/me/safe"
             ]
