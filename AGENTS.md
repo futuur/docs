@@ -11,6 +11,7 @@
 - Configuration lives in `docs.json`
 - Run `mint dev` to preview locally
 - Run `mint broken-links` to check links
+- After Django/API changes, invoke the **sync-futuur-api-docs** skill (`.cursor/skills/sync-futuur-api-docs/`) to align MDX with https://api.futuur.com/docs/schema/
 
 ## Terminology
 

@@ -9,6 +9,7 @@
         "/events/": {
             "get": {
                 "operationId": "List Events",
+                "description": "**Authorization:** No need.\n\n",
                 "parameters": [
                     {
                         "in": "query",
@@ -123,11 +124,6 @@
                 ],
                 "tags": [
                     "Events"
-                ],
-                "security": [
-                    {
-                        "HMAC": []
-                    }
                 ],
                 "responses": {
                     "200": {
@@ -286,81 +282,6 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/EventDetail"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/events/{id}/order_book/": {
-            "get": {
-                "operationId": "Order Book",
-                "description": "Get aggregated order book data.",
-                "parameters": [
-                    {
-                        "in": "query",
-                        "name": "currency_mode",
-                        "schema": {
-                            "enum": [
-                                "play_money",
-                                "real_money"
-                            ],
-                            "type": "string",
-                            "x-spec-enum-id": "0deb4f1ad1c60037",
-                            "minLength": 1
-                        },
-                        "description": "* `play_money` - Play money\n* `real_money` - Real money",
-                        "required": true
-                    },
-                    {
-                        "in": "path",
-                        "name": "id",
-                        "schema": {
-                            "type": "integer"
-                        },
-                        "description": "A unique integer value identifying this event.",
-                        "required": true
-                    },
-                    {
-                        "in": "query",
-                        "name": "market",
-                        "schema": {
-                            "type": "integer"
-                        },
-                        "required": true
-                    },
-                    {
-                        "in": "query",
-                        "name": "position",
-                        "schema": {
-                            "enum": [
-                                "long",
-                                "short"
-                            ],
-                            "type": "string",
-                            "x-spec-enum-id": "530d4792b39a311d",
-                            "default": "long",
-                            "minLength": 1
-                        },
-                        "description": "* `long` - long\n* `short` - short"
-                    }
-                ],
-                "tags": [
-                    "Events"
-                ],
-                "security": [
-                    {
-                        "HMAC": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/OrderBook"
                                 }
                             }
                         },
@@ -1071,6 +992,92 @@
                 }
             }
         },
+        "/orders/batch-update/": {
+            "post": {
+                "operationId": "Batch Update Limit Orders...",
+                "description": "Batch update open limit orders.\n\nEach update cancels the existing open order and creates a replacement\nwith the updated fields, so all order-book validations run normally.",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "Idempotency-Key",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Optional. Unique value chosen by the client for a logical operation. If you repeat the same POST with the same key and the same JSON body after a successful response, the API returns the stored response and does not create another order. A different body (e.g. different price) uses a different fingerprint, so requoting is not blocked."
+                    },
+                    {
+                        "name": "ordering",
+                        "required": false,
+                        "in": "query",
+                        "description": "Which field to use when ordering the results.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Orders"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BatchUpdateLimitOrder"
+                            },
+                            "examples": {
+                                "BatchUpdateRequest": {
+                                    "value": {
+                                        "orders": [
+                                            {
+                                                "id": 100,
+                                                "shares": "12",
+                                                "price": "0.48"
+                                            },
+                                            {
+                                                "id": 101,
+                                                "expired_at": null
+                                            }
+                                        ]
+                                    },
+                                    "summary": "Batch update request"
+                                }
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BatchUpdateLimitOrder"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BatchUpdateLimitOrder"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "HMAC": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/BatchUpdateLimitOrderItemResult"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/orders/cancel-all/": {
             "post": {
                 "operationId": "Cancel All Limit Orders",
@@ -1319,7 +1326,7 @@
                         ],
                         "type": "string",
                         "x-spec-enum-id": "530d4792b39a311d",
-                        "description": "'long': bets in favor of the outcome, 'short': bets against the outcome.\n\n* `long` - long\n* `short` - short"
+                        "description": "<i>long</i>: bets in favor of the market<br><i>short</i>: bets against the market.\n\n* `long` - long\n* `short` - short"
                     },
                     "side": {
                         "enum": [
@@ -1328,7 +1335,7 @@
                         ],
                         "type": "string",
                         "x-spec-enum-id": "9463a3ffff0c13f6",
-                        "description": "'bid': purchase, 'ask': sell.\n\n* `bid` - Bid\n* `ask` - Ask"
+                        "description": "<i>bid</i>: purchase<br><i>ask</i>: sell.\n\n* `bid` - Bid\n* `ask` - Ask"
                     },
                     "expired_at": {
                         "type": "string",
@@ -1356,90 +1363,6 @@
                     "currency",
                     "market",
                     "side"
-                ]
-            },
-            "AskLevel": {
-                "type": "object",
-                "properties": {
-                    "price": {
-                        "type": "number",
-                        "format": "double",
-                        "maximum": 1000,
-                        "minimum": -1000,
-                        "exclusiveMaximum": true,
-                        "exclusiveMinimum": true
-                    },
-                    "total_shares": {
-                        "type": "number",
-                        "format": "double",
-                        "maximum": 1000000000000000000,
-                        "minimum": -1000000000000000000,
-                        "exclusiveMaximum": true,
-                        "exclusiveMinimum": true
-                    },
-                    "total_amount": {
-                        "type": "number",
-                        "format": "double",
-                        "maximum": 1000000000000000000,
-                        "minimum": -1000000000000000000,
-                        "exclusiveMaximum": true,
-                        "exclusiveMinimum": true
-                    },
-                    "total_fees": {
-                        "type": "number",
-                        "format": "double",
-                        "maximum": 1000000000000000000,
-                        "minimum": -1000000000000000000,
-                        "exclusiveMaximum": true,
-                        "exclusiveMinimum": true
-                    },
-                    "cumulative_shares": {
-                        "type": "number",
-                        "format": "double",
-                        "maximum": 1000000000000000000,
-                        "minimum": -1000000000000000000,
-                        "exclusiveMaximum": true,
-                        "exclusiveMinimum": true
-                    },
-                    "cumulative_amount": {
-                        "type": "number",
-                        "format": "double",
-                        "maximum": 1000000000000000000,
-                        "minimum": -1000000000000000000,
-                        "exclusiveMaximum": true,
-                        "exclusiveMinimum": true
-                    },
-                    "cumulative_fees": {
-                        "type": "number",
-                        "format": "double",
-                        "maximum": 1000000000000000000,
-                        "minimum": -1000000000000000000,
-                        "exclusiveMaximum": true,
-                        "exclusiveMinimum": true
-                    },
-                    "total_user_shares": {
-                        "type": "number",
-                        "format": "double",
-                        "maximum": 1000000000000000000,
-                        "minimum": -1000000000000000000,
-                        "exclusiveMaximum": true,
-                        "exclusiveMinimum": true
-                    },
-                    "total_user_shares_requested": {
-                        "type": "number",
-                        "format": "double",
-                        "maximum": 1000000000000000000,
-                        "minimum": -1000000000000000000,
-                        "exclusiveMaximum": true,
-                        "exclusiveMinimum": true
-                    }
-                },
-                "required": [
-                    "cumulative_amount",
-                    "cumulative_shares",
-                    "price",
-                    "total_amount",
-                    "total_shares"
                 ]
             },
             "BatchCancelLimitOrder": {
@@ -1520,88 +1443,43 @@
                     "results"
                 ]
             },
-            "BidLevel": {
+            "BatchUpdateLimitOrder": {
                 "type": "object",
                 "properties": {
-                    "price": {
-                        "type": "number",
-                        "format": "double",
-                        "maximum": 1000,
-                        "minimum": -1000,
-                        "exclusiveMaximum": true,
-                        "exclusiveMinimum": true
-                    },
-                    "total_shares": {
-                        "type": "number",
-                        "format": "double",
-                        "maximum": 1000000000000000000,
-                        "minimum": -1000000000000000000,
-                        "exclusiveMaximum": true,
-                        "exclusiveMinimum": true
-                    },
-                    "total_amount": {
-                        "type": "number",
-                        "format": "double",
-                        "maximum": 1000000000000000000,
-                        "minimum": -1000000000000000000,
-                        "exclusiveMaximum": true,
-                        "exclusiveMinimum": true
-                    },
-                    "total_fees": {
-                        "type": "number",
-                        "format": "double",
-                        "maximum": 1000000000000000000,
-                        "minimum": -1000000000000000000,
-                        "exclusiveMaximum": true,
-                        "exclusiveMinimum": true
-                    },
-                    "cumulative_shares": {
-                        "type": "number",
-                        "format": "double",
-                        "maximum": 1000000000000000000,
-                        "minimum": -1000000000000000000,
-                        "exclusiveMaximum": true,
-                        "exclusiveMinimum": true
-                    },
-                    "cumulative_amount": {
-                        "type": "number",
-                        "format": "double",
-                        "maximum": 1000000000000000000,
-                        "minimum": -1000000000000000000,
-                        "exclusiveMaximum": true,
-                        "exclusiveMinimum": true
-                    },
-                    "cumulative_fees": {
-                        "type": "number",
-                        "format": "double",
-                        "maximum": 1000000000000000000,
-                        "minimum": -1000000000000000000,
-                        "exclusiveMaximum": true,
-                        "exclusiveMinimum": true
-                    },
-                    "total_user_shares": {
-                        "type": "number",
-                        "format": "double",
-                        "maximum": 1000000000000000000,
-                        "minimum": -1000000000000000000,
-                        "exclusiveMaximum": true,
-                        "exclusiveMinimum": true
-                    },
-                    "total_user_shares_requested": {
-                        "type": "number",
-                        "format": "double",
-                        "maximum": 1000000000000000000,
-                        "minimum": -1000000000000000000,
-                        "exclusiveMaximum": true,
-                        "exclusiveMinimum": true
+                    "orders": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "additionalProperties": {}
+                        },
+                        "maxItems": 20,
+                        "minItems": 1
                     }
                 },
                 "required": [
-                    "cumulative_amount",
-                    "cumulative_shares",
-                    "price",
-                    "total_amount",
-                    "total_shares"
+                    "orders"
+                ]
+            },
+            "BatchUpdateLimitOrderItemResult": {
+                "type": "object",
+                "properties": {
+                    "index": {
+                        "type": "integer"
+                    },
+                    "order_id": {
+                        "type": "integer"
+                    },
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "order": {
+                        "$ref": "#/components/schemas/LimitOrder"
+                    },
+                    "errors": {}
+                },
+                "required": [
+                    "index",
+                    "success"
                 ]
             },
             "CancelAllLimitOrder": {
@@ -1843,6 +1721,15 @@
                     "real_currency_available": {
                         "type": "boolean"
                     },
+                    "markets_correlation": {
+                        "enum": [
+                            "linked",
+                            "independent"
+                        ],
+                        "type": "string",
+                        "x-spec-enum-id": "9ab19c88863ef536",
+                        "description": "This information helps Market Makers to define its prices policy.<br>This is purely informative and do not change the markets behavior.<br><br><b>Linked:</b> Indicate that markets are correlated and influence each other.<br><b>Independent:</b> Each market is independent from each other.\n\n* `linked` - Linked\n* `independent` - Independent"
+                    },
                     "canonical_currency": {
                         "enum": [
                             "BCH",
@@ -1885,19 +1772,15 @@
                         "x-spec-enum-id": "776277bccdee94d1",
                         "description": "<b>Exclusive:</b> Only one market can resolve to LONG.<br><b>Non Exclusive:</b> Multiple markets can resolve to LONG. Markets have independent rules.\n\n* `exclusive` - Exclusive\n* `non_exclusive` - Non Exclusive"
                     },
-                    "wagers_count": {
+                    "wagers_count_play_money": {
                         "type": "integer",
                         "readOnly": true,
                         "description": "Wagers count in play money"
                     },
-                    "wagers_count_canonical": {
+                    "wagers_count_real_money": {
                         "type": "integer",
                         "readOnly": true,
                         "description": "Wagers count in real money"
-                    },
-                    "wagers_count_total": {
-                        "type": "string",
-                        "readOnly": true
                     },
                     "comment_count": {
                         "type": "integer",
@@ -2000,6 +1883,10 @@
                         "exclusiveMinimum": true,
                         "readOnly": true,
                         "nullable": true
+                    },
+                    "event_ui": {
+                        "type": "string",
+                        "readOnly": true
                     }
                 },
                 "required": [
@@ -2008,6 +1895,7 @@
                     "category",
                     "comment_count",
                     "event_extra_data",
+                    "event_ui",
                     "id",
                     "is_following",
                     "is_new",
@@ -2025,9 +1913,8 @@
                     "transactions_count_canonical",
                     "volume_play_money",
                     "volume_real_money",
-                    "wagers_count",
-                    "wagers_count_canonical",
-                    "wagers_count_total"
+                    "wagers_count_play_money",
+                    "wagers_count_real_money"
                 ]
             },
             "EventList": {
@@ -2129,6 +2016,15 @@
                     "real_currency_available": {
                         "type": "boolean"
                     },
+                    "markets_correlation": {
+                        "enum": [
+                            "linked",
+                            "independent"
+                        ],
+                        "type": "string",
+                        "x-spec-enum-id": "9ab19c88863ef536",
+                        "description": "This information helps Market Makers to define its prices policy.<br>This is purely informative and do not change the markets behavior.<br><br><b>Linked:</b> Indicate that markets are correlated and influence each other.<br><b>Independent:</b> Each market is independent from each other.\n\n* `linked` - Linked\n* `independent` - Independent"
+                    },
                     "canonical_currency": {
                         "enum": [
                             "BCH",
@@ -2171,19 +2067,15 @@
                         "x-spec-enum-id": "776277bccdee94d1",
                         "description": "<b>Exclusive:</b> Only one market can resolve to LONG.<br><b>Non Exclusive:</b> Multiple markets can resolve to LONG. Markets have independent rules.\n\n* `exclusive` - Exclusive\n* `non_exclusive` - Non Exclusive"
                     },
-                    "wagers_count": {
+                    "wagers_count_play_money": {
                         "type": "integer",
                         "readOnly": true,
                         "description": "Wagers count in play money"
                     },
-                    "wagers_count_canonical": {
+                    "wagers_count_real_money": {
                         "type": "integer",
                         "readOnly": true,
                         "description": "Wagers count in real money"
-                    },
-                    "wagers_count_total": {
-                        "type": "string",
-                        "readOnly": true
                     },
                     "comment_count": {
                         "type": "integer",
@@ -2249,9 +2141,8 @@
                     "title",
                     "volume_play_money",
                     "volume_real_money",
-                    "wagers_count",
-                    "wagers_count_canonical",
-                    "wagers_count_total"
+                    "wagers_count_play_money",
+                    "wagers_count_real_money"
                 ]
             },
             "EventTag": {
@@ -2327,7 +2218,7 @@
                         ],
                         "type": "string",
                         "x-spec-enum-id": "9463a3ffff0c13f6",
-                        "description": "'bid': purchase, 'ask': sell.\n\n* `bid` - Bid\n* `ask` - Ask"
+                        "description": "<i>bid</i>: purchase<br><i>ask</i>: sell.\n\n* `bid` - Bid\n* `ask` - Ask"
                     },
                     "position": {
                         "enum": [
@@ -2336,7 +2227,7 @@
                         ],
                         "type": "string",
                         "x-spec-enum-id": "530d4792b39a311d",
-                        "description": "'long': bets in favor of the outcome, 'short': bets against the outcome.\n\n* `long` - long\n* `short` - short"
+                        "description": "<i>long</i>: bets in favor of the market<br><i>short</i>: bets against the market.\n\n* `long` - long\n* `short` - short"
                     },
                     "expired_at": {
                         "type": "string",
@@ -2463,27 +2354,6 @@
                     "title"
                 ]
             },
-            "OrderBook": {
-                "type": "object",
-                "properties": {
-                    "ask": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/AskLevel"
-                        }
-                    },
-                    "bid": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/BidLevel"
-                        }
-                    }
-                },
-                "required": [
-                    "ask",
-                    "bid"
-                ]
-            },
             "PaginatedEventListList": {
                 "type": "object",
                 "properties": {
@@ -2601,7 +2471,7 @@
                         ],
                         "type": "string",
                         "x-spec-enum-id": "9463a3ffff0c13f6",
-                        "description": "'bid': purchase, 'ask': sell.\n\n* `bid` - Bid\n* `ask` - Ask"
+                        "description": "<i>bid</i>: purchase<br><i>ask</i>: sell.\n\n* `bid` - Bid\n* `ask` - Ask"
                     },
                     "position": {
                         "enum": [
@@ -2610,7 +2480,7 @@
                         ],
                         "type": "string",
                         "x-spec-enum-id": "530d4792b39a311d",
-                        "description": "'long': bets in favor of the outcome, 'short': bets against the outcome.\n\n* `long` - long\n* `short` - short"
+                        "description": "<i>long</i>: bets in favor of the market<br><i>short</i>: bets against the market.\n\n* `long` - long\n* `short` - short"
                     },
                     "expired_at": {
                         "type": "string",
@@ -3756,7 +3626,7 @@
     "tags": [
         {
             "name": "Authentication",
-            "description": "### **Authentication**\n\nMost Futuur API endpoints require authentication. Authentication is performed using your API key and is secured by a SHA-512 HMAC.\n\nEach authenticated request must include the following headers:\n\n- **Key**: Your **PUBLIC KEY**\n- **Timestamp**: Current timestamp in Unix format\n- **HMAC**: SHA-512 hexdigest hash of the request signed with your **PRIVATE KEY**\n\n### **How to Generate the HMAC**\n\nThe HMAC signature is created from the full raw headers, POST, and GET data of your request, ordered alphabetically by its keys.\n\nFor example, if making a request to `markets/?category=5`, generate a SHA-512 hash from:\n\n```\ncategory=5&Key={{your_public_key}}&Timestamp={{current_timestamp}}\n```\n\n### **Python Example**\n\n```python\nimport hashlib\nimport hmac\nimport datetime\nfrom collections import OrderedDict\nfrom urllib.parse import urlencode\n\nPRIVATE_KEY = 'your_private_key'\nPUBLIC_KEY = 'your_public_key'\n\n# Prepare parameters\nparams = {\n    'Key': PUBLIC_KEY,\n    'Timestamp': int(datetime.datetime.utcnow().timestamp()),\n    'category': 5\n}\n\n# Sort and encode parameters\nparams_sorted = OrderedDict(sorted(params.items()))\nparams_encoded = urlencode(params_sorted).encode('utf-8')\n\n# Generate HMAC signature\nhmac_signature = hmac.new(\n    PRIVATE_KEY.encode('utf-8'),\n    params_encoded,\n    hashlib.sha512\n).hexdigest()\n\n# Build headers\nheaders = {\n    'Key': PUBLIC_KEY,\n    'Timestamp': str(params['Timestamp']),\n    'HMAC': hmac_signature\n}\n```"
+            "description": "### **Authentication**\n\nMost Futuur API endpoints require authentication. Authentication is performed using your API key and is secured by a SHA-512 HMAC.\n\nEach authenticated request must include the following headers:\n\n- **Key**: Your **PUBLIC KEY**\n- **Timestamp**: Current timestamp in Unix format\n- **HMAC**: SHA-512 hexdigest hash of the request signed with your **PRIVATE KEY**\n\n### **Getting Your Public and Private Keys**\n\nYou can generate an API key pair from your Futuur account settings:\n\n1. Open **Account Settings**.\n2. Go to the **API** section.\n3. Click **Generate new Keys**.\n\nAlternatively, authenticate with your Futuur account and call:\n\n```http\nPOST /v2.0/api-keys/\n```\n\nThe response contains:\n\n- **public_key**: use this value in the `Key` header.\n- **private_key**: use this value to sign requests and generate the `HMAC` header.\n\nStore your **private_key** securely. When a new key pair is created, previous active keys are disabled.\n\n### **How to Generate the HMAC**\n\nThe HMAC signature is created from the full raw headers, POST, and GET data of your request, ordered alphabetically by its keys.\n\nFor example, if making a request to `markets/?category=5`, generate a SHA-512 hash from:\n\n```\ncategory=5&Key={{your_public_key}}&Timestamp={{current_timestamp}}\n```\n\n### **Python Example**\n\n```python\nimport hashlib\nimport hmac\nimport datetime\nfrom collections import OrderedDict\nfrom urllib.parse import urlencode\n\nPRIVATE_KEY = 'your_private_key'\nPUBLIC_KEY = 'your_public_key'\n\n# Prepare parameters\nparams = {\n    'Key': PUBLIC_KEY,\n    'Timestamp': int(datetime.datetime.utcnow().timestamp()),\n    'category': 5\n}\n\n# Sort and encode parameters\nparams_sorted = OrderedDict(sorted(params.items()))\nparams_encoded = urlencode(params_sorted).encode('utf-8')\n\n# Generate HMAC signature\nhmac_signature = hmac.new(\n    PRIVATE_KEY.encode('utf-8'),\n    params_encoded,\n    hashlib.sha512\n).hexdigest()\n\n# Build headers\nheaders = {\n    'Key': PUBLIC_KEY,\n    'Timestamp': str(params['Timestamp']),\n    'HMAC': hmac_signature\n}\n```"
         },
         {
             "name": "Websocket",

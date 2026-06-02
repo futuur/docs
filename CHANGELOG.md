@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-06-02 — Sync with live API schema
+
+Refreshed `Futuur API Documentation (v2.0).json` from [https://api.futuur.com/docs/schema/](https://api.futuur.com/docs/schema/). The compare script reported no endpoint, parameter, or tracked schema diffs against the previous baseline.
+
+### Changed — wager schema alignment
+
+- `api-reference/wagers/list.mdx` and `api-reference/wagers/retrieve.mdx`: response fields now match `WagerList` / `WagerDetail` (removed invented fields such as `avg_price`, `current_value`, `market_detail`, and `event_detail`).
+- `api-reference/events/wagers.mdx`: sample and field reference aligned with `WagerList`; documents a non-paginated array response.
+- `concepts/wagers.mdx`: added `cancelled` to the status table.
+
+### Changed — guide fixes
+
+- `guides/selling-a-position.mdx`: `position` values use `long` / `short`; order book array key is `bid`.
+- `guides/placing-a-bet.mdx`: order book keys use `bid` / `ask` per `OrderBook` schema.
+
 ## 2026-05-29 — Sync with live API schema
 
 Refreshed `Futuur API Documentation (v2.0).json` from [https://api.futuur.com/docs/schema/](https://api.futuur.com/docs/schema/) and aligned Mintlify pages with the current v2.0 spec.

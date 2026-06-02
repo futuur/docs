@@ -24,7 +24,7 @@ GET https://api.futuur.com/wagers/
 </ParamField>
 
 <ParamField query="past_bets" type="boolean">
-  When `true`, returns only inactive wagers — those that are sold, won, lost, or disabled.
+  When `true`, returns only inactive wagers — those that are sold, won, lost, cancelled, or disabled.
 </ParamField>
 
 <ParamField query="event" type="integer">
@@ -77,43 +77,82 @@ Returns a paginated list of wager objects.
 </ResponseField>
 
 <ResponseField name="results" type="object[]" required>
-  Array of wager objects.
+  Array of `WagerList` objects.
   <Expandable title="Wager properties">
     <ResponseField name="id" type="integer" required>
       Unique wager ID.
     </ResponseField>
-    <ResponseField name="user" type="integer" required>
-      ID of the user who placed the wager.
-    </ResponseField>
-    <ResponseField name="market" type="integer" required>
-      Market (outcome) ID the wager is placed on.
-    </ResponseField>
-    <ResponseField name="event" type="integer" required>
-      Event ID associated with the wager.
-    </ResponseField>
-    <ResponseField name="currency" type="string" required>
-      Currency used for the wager.
-    </ResponseField>
-    <ResponseField name="shares" type="number" required>
-      Number of shares held.
-    </ResponseField>
-    <ResponseField name="amount" type="number" required>
-      Total amount wagered in currency units.
-    </ResponseField>
-    <ResponseField name="avg_price" type="number" required>
-      Average price per share at time of purchase, expressed as a probability between 0 and 1.
-    </ResponseField>
-    <ResponseField name="current_value" type="number">
-      Current market value of the wager in currency units.
-    </ResponseField>
     <ResponseField name="status" type="string" required>
-      Wager status: `purchased`, `sold`, `won`, `lost`, or `disabled`.
+      Wager status: `purchased`, `sold`, `won`, `lost`, `cancelled`, or `disabled`.
+    </ResponseField>
+    <ResponseField name="status_display" type="string" required>
+      Human-readable status label.
+    </ResponseField>
+    <ResponseField name="user" type="string" required>
+      User resource reference (read-only).
+    </ResponseField>
+    <ResponseField name="event" type="string" required>
+      Event resource reference (read-only).
+    </ResponseField>
+    <ResponseField name="market" type="string" required>
+      Market resource reference (read-only).
     </ResponseField>
     <ResponseField name="position" type="string" required>
-      Position direction: `long` (betting in favor of the outcome) or `short` (betting against).
+      Position direction: `long` (in favor of the outcome) or `short` (against).
     </ResponseField>
-    <ResponseField name="created_at" type="string" required>
-      ISO 8601 datetime when the wager was created.
+    <ResponseField name="position_display" type="string" required>
+      Human-readable position label.
+    </ResponseField>
+    <ResponseField name="currency" type="string">
+      Currency code for the wager (for example `OOM`, `USDC`).
+    </ResponseField>
+    <ResponseField name="shares" type="number" required>
+      Consolidated shares held in this wager.
+    </ResponseField>
+    <ResponseField name="shares_in_canonical" type="number" required>
+      Consolidated shares expressed in the event's canonical currency.
+    </ResponseField>
+    <ResponseField name="total_amount" type="string" required>
+      Total amount associated with the wager.
+    </ResponseField>
+    <ResponseField name="purchases_amount" type="number">
+      Cost basis of the open position, adjusted for partial sales.
+    </ResponseField>
+    <ResponseField name="active_purchases_amount" type="string" required>
+      Amount from active purchases on this wager.
+    </ResponseField>
+    <ResponseField name="active_purchases">
+      Purchases from the last outcome bought in this event.
+    </ResponseField>
+    <ResponseField name="roi" type="string" required>
+      Return on investment for the wager.
+    </ResponseField>
+    <ResponseField name="earnings" type="string" required>
+      Earnings associated with the wager.
+    </ResponseField>
+    <ResponseField name="amount_on_win" type="string" required>
+      Projected payout if the wager wins.
+    </ResponseField>
+    <ResponseField name="amount_on_sell" type="string" required>
+      Amount available if the position is sold now.
+    </ResponseField>
+    <ResponseField name="last_profit" type="number">
+      Last profit when the event resolved or the wager was sold. `null` if not applicable.
+    </ResponseField>
+    <ResponseField name="last_sell_amount" type="number">
+      Last sale amount when the wager was sold. Always positive when set.
+    </ResponseField>
+    <ResponseField name="last_purchase" type="string" required>
+      ISO 8601 datetime of the most recent purchase.
+    </ResponseField>
+    <ResponseField name="last_update" type="string" required>
+      ISO 8601 datetime of the most recent wager update.
+    </ResponseField>
+    <ResponseField name="last_action">
+      Serialized data about the most recent `WagerAction` on this wager.
+    </ResponseField>
+    <ResponseField name="actions_count" type="integer">
+      Number of user-triggered actions (purchases, sales) on this wager.
     </ResponseField>
   </Expandable>
 </ResponseField>
@@ -144,31 +183,29 @@ curl --request GET \
   "results": [
     {
       "id": 88201,
-      "user": 5042,
-      "market": 3801,
-      "event": 901,
+      "status": "purchased",
+      "status_display": "Purchased",
+      "user": "https://api.futuur.com/users/5042/",
+      "event": "https://api.futuur.com/events/901/",
+      "market": "https://api.futuur.com/markets/3801/",
+      "position": "long",
+      "position_display": "Long",
       "currency": "USDC",
       "shares": 100.0,
-      "amount": 65.0,
-      "avg_price": 0.65,
-      "current_value": 71.50,
-      "status": "purchased",
-      "position": "long",
-      "created_at": "2026-04-05T14:22:10Z"
-    },
-    {
-      "id": 88195,
-      "user": 5042,
-      "market": 4112,
-      "event": 920,
-      "currency": "USDC",
-      "shares": 50.0,
-      "amount": 21.0,
-      "avg_price": 0.42,
-      "current_value": 19.00,
-      "status": "purchased",
-      "position": "long",
-      "created_at": "2026-04-04T09:05:33Z"
+      "shares_in_canonical": 100.0,
+      "total_amount": "65.00",
+      "purchases_amount": 65.0,
+      "active_purchases_amount": "65.00",
+      "roi": "10.00",
+      "earnings": "6.50",
+      "amount_on_win": "100.00",
+      "amount_on_sell": "71.50",
+      "last_profit": null,
+      "last_sell_amount": null,
+      "last_purchase": "2026-04-05T14:22:10Z",
+      "last_update": "2026-04-07T08:15:44Z",
+      "last_action": null,
+      "actions_count": 1
     }
   ]
 }

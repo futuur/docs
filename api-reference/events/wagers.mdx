@@ -3,7 +3,7 @@ title: "Event wagers"
 description: "List all wagers placed on a specific event, with optional filters for active status and currency mode."
 ---
 
-Retrieve all wagers associated with an event. Filter to active positions, past bets, or a specific currency mode to narrow the results.
+Retrieve all wagers associated with an event. Filter to active positions, past bets, or a specific currency mode to narrow the results. This endpoint returns a non-paginated array of `WagerList` objects.
 
 ## Endpoint
 
@@ -41,53 +41,49 @@ HMAC authentication is required. Include the following headers with every reques
 
 ## Response
 
-<ResponseField name="results" type="object[]" required>
-  Array of wager objects.
-  <Expandable title="properties">
-    <ResponseField name="id" type="integer">
-      Unique identifier for the wager.
+Returns a JSON array of `WagerList` objects (no `pagination` wrapper). Each element includes:
+
+<Expandable title="Wager properties">
+    <ResponseField name="id" type="integer" required>
+      Unique wager ID.
     </ResponseField>
-    <ResponseField name="market" type="integer">
-      ID of the market on which the wager was placed.
+    <ResponseField name="status" type="string" required>
+      Wager status: `purchased`, `sold`, `won`, `lost`, `cancelled`, or `disabled`.
     </ResponseField>
-    <ResponseField name="outcome" type="integer">
-      ID of the outcome the wager is placed on.
+    <ResponseField name="status_display" type="string" required>
+      Human-readable status label.
     </ResponseField>
-    <ResponseField name="outcome_name" type="string">
-      Display name of the outcome.
+    <ResponseField name="market" type="string" required>
+      Market resource reference (read-only).
     </ResponseField>
-    <ResponseField name="shares" type="number">
-      Number of shares held in this wager.
+    <ResponseField name="position" type="string" required>
+      Position direction: `long` or `short`.
     </ResponseField>
-    <ResponseField name="amount_spent" type="number">
-      Total currency amount spent to acquire this position.
+    <ResponseField name="position_display" type="string" required>
+      Human-readable position label.
     </ResponseField>
-    <ResponseField name="average_price" type="number">
-      Average price per share paid across all fills (0–1).
+    <ResponseField name="currency" type="string">
+      Currency code for the wager.
     </ResponseField>
-    <ResponseField name="current_value" type="number">
-      Current mark-to-market value of the position.
+    <ResponseField name="shares" type="number" required>
+      Consolidated shares held in this wager.
     </ResponseField>
-    <ResponseField name="currency_mode" type="string">
-      Currency mode of the wager: `play_money` or `real_money`.
+    <ResponseField name="total_amount" type="string" required>
+      Total amount associated with the wager.
     </ResponseField>
-    <ResponseField name="active" type="boolean">
-      Whether the wager is currently an open position.
+    <ResponseField name="purchases_amount" type="number">
+      Cost basis of the open position.
     </ResponseField>
-    <ResponseField name="settled" type="boolean">
-      Whether the wager has been settled after event resolution.
+    <ResponseField name="roi" type="string" required>
+      Return on investment for the wager.
     </ResponseField>
-    <ResponseField name="payout" type="number">
-      Amount paid out upon settlement. `null` if the wager has not been settled.
+    <ResponseField name="last_purchase" type="string" required>
+      ISO 8601 datetime of the most recent purchase.
     </ResponseField>
-    <ResponseField name="created_at" type="string">
-      ISO 8601 timestamp of when the wager was first created.
+    <ResponseField name="last_update" type="string" required>
+      ISO 8601 datetime of the most recent wager update.
     </ResponseField>
-    <ResponseField name="updated_at" type="string">
-      ISO 8601 timestamp of the most recent update to this wager.
-    </ResponseField>
-  </Expandable>
-</ResponseField>
+</Expandable>
 
 ## Example
 
@@ -100,24 +96,30 @@ curl --request GET \
 ```
 
 ```json Sample response
-{
-  "results": [
-    {
-      "id": 4401,
-      "market": 501,
-      "outcome": 1,
-      "outcome_name": "Yes",
-      "shares": 50.0,
-      "amount_spent": 31.0,
-      "average_price": 0.62,
-      "current_value": 33.5,
-      "currency_mode": "play_money",
-      "active": true,
-      "settled": false,
-      "payout": null,
-      "created_at": "2026-03-15T14:22:10Z",
-      "updated_at": "2026-03-15T14:22:10Z"
-    }
-  ]
-}
+[
+  {
+    "id": 4401,
+    "status": "purchased",
+    "status_display": "Purchased",
+    "user": "https://api.futuur.com/users/120/",
+    "event": "https://api.futuur.com/events/1023/",
+    "market": "https://api.futuur.com/markets/501/",
+    "position": "long",
+    "position_display": "Long",
+    "currency": "OOM",
+    "shares": 50.0,
+    "shares_in_canonical": 50.0,
+    "total_amount": "31.00",
+    "purchases_amount": 31.0,
+    "active_purchases_amount": "31.00",
+    "roi": "8.06",
+    "earnings": "2.50",
+    "amount_on_win": "50.00",
+    "amount_on_sell": "33.50",
+    "last_profit": null,
+    "last_purchase": "2026-03-15T14:22:10Z",
+    "last_update": "2026-03-15T14:22:10Z",
+    "actions_count": 1
+  }
+]
 ```

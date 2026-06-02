@@ -48,7 +48,7 @@ curl -G "https://api.futuur.com/wagers/" \
 
 </CodeGroup>
 
-The response includes each wager's `market` ID, the number of `shares` you hold, and the `position` (`l` for long, `s` for short).
+The response includes each wager's `market` ID, the number of `shares` you hold, and the `position` (`long` or `short`).
 
 </Step>
 
@@ -74,14 +74,14 @@ print(f"Selling {shares_held} shares on market {market_id} ({position} position)
 ```
 
 <Tip>
-  To check the current sell price before committing, fetch the order book with `GET /events/{id}/order_book/` and look at the `bids` array. The highest bid is the best price you can sell at. See [Reading the order book](/guides/reading-the-order-book).
+  To check the current sell price before committing, fetch the order book with `GET /events/{id}/order_book/` and look at the `bid` array. The highest bid is the best price you can sell at. See [Reading the order book](/guides/reading-the-order-book).
 </Tip>
 
 </Step>
 
 <Step title="Place an ask (sell) order">
 
-To sell, place a `POST /orders/` request with `side="ask"`. Match the `position` field to the position type you hold — `l` for long shares, `s` for short shares.
+To sell, place a `POST /orders/` request with `side="ask"`. Match the `position` field to the position type you hold — `long` for long shares, `short` for short shares.
 
 Use `shares` to specify exactly how many shares to sell. Set `price=null` for a market sell (executes immediately at the best available bid), or set a specific `price` to place a limit sell.
 

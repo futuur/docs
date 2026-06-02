@@ -115,8 +115,8 @@ response = requests.get(
 )
 
 order_book = response.json()
-best_ask = order_book["asks"][0]["price"] if order_book["asks"] else None
-best_bid = order_book["bids"][0]["price"] if order_book["bids"] else None
+best_ask = order_book["ask"][0]["price"] if order_book["ask"] else None
+best_bid = order_book["bid"][0]["price"] if order_book["bid"] else None
 print(f"Best ask: {best_ask}, Best bid: {best_bid}")
 ```
 
