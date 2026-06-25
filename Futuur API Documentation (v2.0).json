@@ -259,9 +259,9 @@
                 }
             }
         },
-        "/events/{id}/live_data/": {
+        "/events/{id}/get_tax/": {
             "get": {
-                "operationId": "Event Live Data",
+                "operationId": "Event Tax",
                 "parameters": [
                     {
                         "in": "path",
@@ -281,7 +281,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/EventDetail"
+                                    "$ref": "#/components/schemas/EventTax"
                                 }
                             }
                         },
@@ -444,6 +444,68 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/WagerList"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/markets/{id}/book/": {
+            "get": {
+                "operationId": "Get Market Order Book",
+                "description": "Retrieve the aggregated order book for a market, grouped by price level. The response includes both `ask` and `bid` sides with cumulative totals.",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "currency_mode",
+                        "schema": {
+                            "enum": [
+                                "play_money",
+                                "real_money"
+                            ],
+                            "type": "string",
+                            "x-spec-enum-id": "0deb4f1ad1c60037",
+                            "minLength": 1
+                        },
+                        "description": "* `play_money` - Play money\n* `real_money` - Real money",
+                        "required": true
+                    },
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this market.",
+                        "required": true
+                    },
+                    {
+                        "in": "query",
+                        "name": "position",
+                        "schema": {
+                            "enum": [
+                                "long",
+                                "short"
+                            ],
+                            "type": "string",
+                            "x-spec-enum-id": "530d4792b39a311d",
+                            "default": "long",
+                            "minLength": 1
+                        },
+                        "description": "* `long` - long\n* `short` - short"
+                    }
+                ],
+                "tags": [
+                    "Markets"
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/OrderBook"
                                 }
                             }
                         },
@@ -1257,6 +1319,48 @@
                     }
                 }
             }
+        },
+        "/wagers/rebates/": {
+            "get": {
+                "operationId": "Current rebated fees for maker",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "date",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "event",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Wagers"
+                ],
+                "security": [
+                    {
+                        "HMAC": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/WagerRebate"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -1363,6 +1467,90 @@
                     "currency",
                     "market",
                     "side"
+                ]
+            },
+            "AskLevel": {
+                "type": "object",
+                "properties": {
+                    "price": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 1000,
+                        "minimum": -1000,
+                        "exclusiveMaximum": true,
+                        "exclusiveMinimum": true
+                    },
+                    "total_shares": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 1000000000000000000,
+                        "minimum": -1000000000000000000,
+                        "exclusiveMaximum": true,
+                        "exclusiveMinimum": true
+                    },
+                    "total_amount": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 1000000000000000000,
+                        "minimum": -1000000000000000000,
+                        "exclusiveMaximum": true,
+                        "exclusiveMinimum": true
+                    },
+                    "total_fees": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 1000000000000000000,
+                        "minimum": -1000000000000000000,
+                        "exclusiveMaximum": true,
+                        "exclusiveMinimum": true
+                    },
+                    "cumulative_shares": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 1000000000000000000,
+                        "minimum": -1000000000000000000,
+                        "exclusiveMaximum": true,
+                        "exclusiveMinimum": true
+                    },
+                    "cumulative_amount": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 1000000000000000000,
+                        "minimum": -1000000000000000000,
+                        "exclusiveMaximum": true,
+                        "exclusiveMinimum": true
+                    },
+                    "cumulative_fees": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 1000000000000000000,
+                        "minimum": -1000000000000000000,
+                        "exclusiveMaximum": true,
+                        "exclusiveMinimum": true
+                    },
+                    "total_user_shares": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 1000000000000000000,
+                        "minimum": -1000000000000000000,
+                        "exclusiveMaximum": true,
+                        "exclusiveMinimum": true
+                    },
+                    "total_user_shares_requested": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 1000000000000000000,
+                        "minimum": -1000000000000000000,
+                        "exclusiveMaximum": true,
+                        "exclusiveMinimum": true
+                    }
+                },
+                "required": [
+                    "cumulative_amount",
+                    "cumulative_shares",
+                    "price",
+                    "total_amount",
+                    "total_shares"
                 ]
             },
             "BatchCancelLimitOrder": {
@@ -1480,6 +1668,90 @@
                 "required": [
                     "index",
                     "success"
+                ]
+            },
+            "BidLevel": {
+                "type": "object",
+                "properties": {
+                    "price": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 1000,
+                        "minimum": -1000,
+                        "exclusiveMaximum": true,
+                        "exclusiveMinimum": true
+                    },
+                    "total_shares": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 1000000000000000000,
+                        "minimum": -1000000000000000000,
+                        "exclusiveMaximum": true,
+                        "exclusiveMinimum": true
+                    },
+                    "total_amount": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 1000000000000000000,
+                        "minimum": -1000000000000000000,
+                        "exclusiveMaximum": true,
+                        "exclusiveMinimum": true
+                    },
+                    "total_fees": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 1000000000000000000,
+                        "minimum": -1000000000000000000,
+                        "exclusiveMaximum": true,
+                        "exclusiveMinimum": true
+                    },
+                    "cumulative_shares": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 1000000000000000000,
+                        "minimum": -1000000000000000000,
+                        "exclusiveMaximum": true,
+                        "exclusiveMinimum": true
+                    },
+                    "cumulative_amount": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 1000000000000000000,
+                        "minimum": -1000000000000000000,
+                        "exclusiveMaximum": true,
+                        "exclusiveMinimum": true
+                    },
+                    "cumulative_fees": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 1000000000000000000,
+                        "minimum": -1000000000000000000,
+                        "exclusiveMaximum": true,
+                        "exclusiveMinimum": true
+                    },
+                    "total_user_shares": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 1000000000000000000,
+                        "minimum": -1000000000000000000,
+                        "exclusiveMaximum": true,
+                        "exclusiveMinimum": true
+                    },
+                    "total_user_shares_requested": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 1000000000000000000,
+                        "minimum": -1000000000000000000,
+                        "exclusiveMaximum": true,
+                        "exclusiveMinimum": true
+                    }
+                },
+                "required": [
+                    "cumulative_amount",
+                    "cumulative_shares",
+                    "price",
+                    "total_amount",
+                    "total_shares"
                 ]
             },
             "CancelAllLimitOrder": {
@@ -1763,6 +2035,22 @@
                         "type": "string",
                         "readOnly": true
                     },
+                    "tax_play_money": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 1,
+                        "minimum": 0,
+                        "nullable": true,
+                        "description": "[0, 1] - Tax for play money. Applied on AMM(LsLmsr).<br>Leave blank to inherit from the category."
+                    },
+                    "tax_real_money": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 1,
+                        "minimum": 0,
+                        "nullable": true,
+                        "description": "[0, 1] - Tax for real money. Applied on AMM(LsLmsr).<br>Leave blank to inherit from the category."
+                    },
                     "resolution_mode": {
                         "enum": [
                             "exclusive",
@@ -1771,6 +2059,14 @@
                         "type": "string",
                         "x-spec-enum-id": "776277bccdee94d1",
                         "description": "<b>Exclusive:</b> Only one market can resolve to LONG.<br><b>Non Exclusive:</b> Multiple markets can resolve to LONG. Markets have independent rules.\n\n* `exclusive` - Exclusive\n* `non_exclusive` - Non Exclusive"
+                    },
+                    "event_type": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "is_live": {
+                        "type": "string",
+                        "readOnly": true
                     },
                     "wagers_count_play_money": {
                         "type": "integer",
@@ -1883,10 +2179,6 @@
                         "exclusiveMinimum": true,
                         "readOnly": true,
                         "nullable": true
-                    },
-                    "event_ui": {
-                        "type": "string",
-                        "readOnly": true
                     }
                 },
                 "required": [
@@ -1895,9 +2187,10 @@
                     "category",
                     "comment_count",
                     "event_extra_data",
-                    "event_ui",
+                    "event_type",
                     "id",
                     "is_following",
+                    "is_live",
                     "is_new",
                     "is_real_money_bets_forbidden",
                     "is_wagerable",
@@ -2058,6 +2351,22 @@
                         "type": "string",
                         "readOnly": true
                     },
+                    "tax_play_money": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 1,
+                        "minimum": 0,
+                        "nullable": true,
+                        "description": "[0, 1] - Tax for play money. Applied on AMM(LsLmsr).<br>Leave blank to inherit from the category."
+                    },
+                    "tax_real_money": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 1,
+                        "minimum": 0,
+                        "nullable": true,
+                        "description": "[0, 1] - Tax for real money. Applied on AMM(LsLmsr).<br>Leave blank to inherit from the category."
+                    },
                     "resolution_mode": {
                         "enum": [
                             "exclusive",
@@ -2066,6 +2375,14 @@
                         "type": "string",
                         "x-spec-enum-id": "776277bccdee94d1",
                         "description": "<b>Exclusive:</b> Only one market can resolve to LONG.<br><b>Non Exclusive:</b> Multiple markets can resolve to LONG. Markets have independent rules.\n\n* `exclusive` - Exclusive\n* `non_exclusive` - Non Exclusive"
+                    },
+                    "event_type": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "is_live": {
+                        "type": "string",
+                        "readOnly": true
                     },
                     "wagers_count_play_money": {
                         "type": "integer",
@@ -2129,8 +2446,10 @@
                     "category",
                     "comment_count",
                     "event_extra_data",
+                    "event_type",
                     "id",
                     "is_following",
+                    "is_live",
                     "is_new",
                     "is_wagerable",
                     "markets",
@@ -2162,6 +2481,25 @@
                 "required": [
                     "name",
                     "slug"
+                ]
+            },
+            "EventTax": {
+                "type": "object",
+                "properties": {
+                    "tax_play_money": {
+                        "type": "number",
+                        "format": "double",
+                        "nullable": true
+                    },
+                    "tax_real_money": {
+                        "type": "number",
+                        "format": "double",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "tax_play_money",
+                    "tax_real_money"
                 ]
             },
             "LimitOrder": {
@@ -2233,6 +2571,7 @@
                         "type": "string",
                         "format": "date-time",
                         "nullable": true,
+                        "title": "Expiration date",
                         "description": "Date and time when the order will expire."
                     },
                     "status": {
@@ -2352,6 +2691,27 @@
                     "resolution_display",
                     "thumbnail",
                     "title"
+                ]
+            },
+            "OrderBook": {
+                "type": "object",
+                "properties": {
+                    "ask": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AskLevel"
+                        }
+                    },
+                    "bid": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/BidLevel"
+                        }
+                    }
+                },
+                "required": [
+                    "ask",
+                    "bid"
                 ]
             },
             "PaginatedEventListList": {
@@ -2486,6 +2846,7 @@
                         "type": "string",
                         "format": "date-time",
                         "nullable": true,
+                        "title": "Expiration date",
                         "description": "Date and time when the order will expire."
                     },
                     "status": {
@@ -3599,6 +3960,18 @@
                     "status_display",
                     "total_amount",
                     "user"
+                ]
+            },
+            "WagerRebate": {
+                "type": "object",
+                "properties": {
+                    "rebated_fee_usd": {
+                        "type": "number",
+                        "format": "double"
+                    }
+                },
+                "required": [
+                    "rebated_fee_usd"
                 ]
             }
         },

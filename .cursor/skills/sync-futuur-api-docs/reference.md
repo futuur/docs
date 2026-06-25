@@ -6,19 +6,21 @@
 |-----------|--------|----------|------------------|
 | `/events/` | GET | `api-reference/events/list.mdx` | `api-reference/events/list` |
 | `/events/{id}/` | GET | `api-reference/events/retrieve.mdx` | `api-reference/events/retrieve` |
-| `/events/{id}/live_data/` | GET | `api-reference/events/live-data.mdx` | `api-reference/events/live-data` |
 | `/events/{id}/actions/` | GET | `api-reference/events/actions.mdx` | `api-reference/events/actions` |
-| `/events/{id}/order_book/` | GET | `api-reference/events/order-book.mdx` | `api-reference/events/order-book` |
+| `/events/{id}/get_tax/` | GET | `api-reference/events/get-tax.mdx` | `api-reference/events/get-tax` |
 | `/events/{id}/price_history/` | GET | `api-reference/events/price-history.mdx` | `api-reference/events/price-history` |
 | `/events/{id}/related_events/` | GET | `api-reference/events/related-events.mdx` | `api-reference/events/related-events` |
 | `/events/{id}/wagers/` | GET | `api-reference/events/wagers.mdx` | `api-reference/events/wagers` |
+| `/markets/{id}/book/` | GET | `api-reference/markets/order-book.mdx` | `api-reference/markets/order-book` |
 | `/orders/` | GET | `api-reference/orders/list.mdx` | `api-reference/orders/list` |
 | `/orders/` | POST | `api-reference/orders/create.mdx` | `api-reference/orders/create` |
 | `/orders/batch/` | POST | `api-reference/orders/batch-create.mdx` | `api-reference/orders/batch-create` |
+| `/orders/batch-update/` | POST | `api-reference/orders/batch-update.mdx` | `api-reference/orders/batch-update` |
 | `/orders/{id}/cancel/` | PATCH | `api-reference/orders/cancel.mdx` | `api-reference/orders/cancel` |
 | `/orders/batch-cancel/` | POST | `api-reference/orders/batch-cancel.mdx` | `api-reference/orders/batch-cancel` |
 | `/orders/cancel-all/` | POST | `api-reference/orders/cancel-all.mdx` | `api-reference/orders/cancel-all` |
 | `/wagers/` | GET | `api-reference/wagers/list.mdx` | `api-reference/wagers/list` |
+| `/wagers/rebates/` | GET | `api-reference/wagers/rebates.mdx` | `api-reference/wagers/rebates` |
 | `/wagers/{id}/` | GET | `api-reference/wagers/retrieve.mdx` | `api-reference/wagers/retrieve` |
 | `/me/` | GET | `api-reference/me/information.mdx` | `api-reference/me/information` |
 | `/me/balances/` | GET | `api-reference/me/balances.mdx` | `api-reference/me/balances` |

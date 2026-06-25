@@ -69,12 +69,17 @@
             "pages": [
               "api-reference/events/list",
               "api-reference/events/retrieve",
-              "api-reference/events/live-data",
               "api-reference/events/actions",
-              "api-reference/events/order-book",
+              "api-reference/events/get-tax",
               "api-reference/events/price-history",
               "api-reference/events/related-events",
               "api-reference/events/wagers"
+            ]
+          },
+          {
+            "group": "Markets",
+            "pages": [
+              "api-reference/markets/order-book"
             ]
           },
           {
@@ -83,6 +88,7 @@
               "api-reference/orders/list",
               "api-reference/orders/create",
               "api-reference/orders/batch-create",
+              "api-reference/orders/batch-update",
               "api-reference/orders/cancel",
               "api-reference/orders/batch-cancel",
               "api-reference/orders/cancel-all"
@@ -92,7 +98,8 @@
             "group": "Wagers",
             "pages": [
               "api-reference/wagers/list",
-              "api-reference/wagers/retrieve"
+              "api-reference/wagers/retrieve",
+              "api-reference/wagers/rebates"
             ]
           },
           {

@@ -74,7 +74,7 @@ print(f"Selling {shares_held} shares on market {market_id} ({position} position)
 ```
 
 <Tip>
-  To check the current sell price before committing, fetch the order book with `GET /events/{id}/order_book/` and look at the `bid` array. The highest bid is the best price you can sell at. See [Reading the order book](/guides/reading-the-order-book).
+  To check the current sell price before committing, fetch the order book with `GET /markets/{id}/book/` and look at the `bid` array. The highest bid is the best price you can sell at. See [Reading the order book](/guides/reading-the-order-book).
 </Tip>
 
 </Step>

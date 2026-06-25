@@ -1,0 +1,134 @@
+---
+title: "Batch update orders"
+description: "Update between 1 and 20 open limit orders in a single request."
+---
+
+Update multiple open limit orders in a single API call. Each update cancels the existing open order and creates a replacement with the updated fields, so all order-book validations run normally.
+
+Partial failures do not block successful updates in the same batch.
+
+## Endpoint
+
+```
+POST https://api.futuur.com/orders/batch-update/
+```
+
+## Authentication
+
+<Note>
+  This endpoint requires HMAC authentication. Include the `Key`, `Timestamp`, and `HMAC` headers on every request. See the [authentication guide](/authentication) for signing instructions.
+</Note>
+
+## Headers
+
+<ParamField header="Idempotency-Key" type="string">
+  Optional. A unique value chosen by the client for a logical operation. Replaying the same `POST` with the same key and the same JSON body returns the stored response without applying duplicate updates. A different body produces a new fingerprint, so requoting is not blocked.
+</ParamField>
+
+## Request
+
+<ParamField body="orders" type="object[]" required>
+  An array of 1 to 20 update objects. Each entry must include the `id` of an open order plus the fields to change.
+  <Expandable title="update properties">
+    <ResponseField name="id" type="integer" required>
+      ID of the open limit order to update.
+    </ResponseField>
+    <ResponseField name="shares" type="string">
+      Updated number of shares. Submitted as a decimal string.
+    </ResponseField>
+    <ResponseField name="price" type="string">
+      Updated limit price between 0 and 1. Submitted as a decimal string.
+    </ResponseField>
+    <ResponseField name="expired_at" type="string | null">
+      Updated ISO 8601 expiration datetime. Use `null` to remove expiration.
+    </ResponseField>
+  </Expandable>
+</ParamField>
+
+## Response
+
+Returns `200 OK` with one result per submitted update, in the same order as the request.
+
+<ResponseField name="index" type="integer" required>
+  Zero-based position of this update in the request payload.
+</ResponseField>
+
+<ResponseField name="order_id" type="integer">
+  The original order ID that was submitted for update.
+</ResponseField>
+
+<ResponseField name="success" type="boolean" required>
+  `true` if the order was updated.
+</ResponseField>
+
+<ResponseField name="order" type="object">
+  Replacement limit order. Present when `success` is `true`. See [List orders](/api-reference/orders/list) for the `LimitOrder` field reference.
+</ResponseField>
+
+<ResponseField name="errors" type="any">
+  Validation error for this update. Present when `success` is `false`. May be a string or an object describing field-level issues.
+</ResponseField>
+
+## Example
+
+<CodeGroup>
+
+```bash cURL
+curl --request POST \
+  --url "https://api.futuur.com/orders/batch-update/" \
+  --header "Key: YOUR_PUBLIC_KEY" \
+  --header "Timestamp: 1712500000" \
+  --header "HMAC: YOUR_HMAC_SIGNATURE" \
+  --header "Idempotency-Key: 5b1f0c0a-0b9f-4d3a-9f8c-1d2b3a4e5f60" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "orders": [
+      {
+        "id": 100,
+        "shares": "12",
+        "price": "0.48"
+      },
+      {
+        "id": 101,
+        "expired_at": null
+      }
+    ]
+  }'
+```
+
+</CodeGroup>
+
+```json Sample response (200 OK)
+[
+  {
+    "index": 0,
+    "order_id": 100,
+    "success": true,
+    "order": {
+      "id": 10550,
+      "event": "873",
+      "market": "2231",
+      "price": 0.48,
+      "shares": 12.0,
+      "shares_requested": 12.0,
+      "shares_filled": "0.0",
+      "currency": "OOM",
+      "side": "bid",
+      "position": "long",
+      "expired_at": null,
+      "status": "open",
+      "created": "2026-06-25T12:00:00Z"
+    }
+  },
+  {
+    "index": 1,
+    "order_id": 101,
+    "success": false,
+    "errors": "Order is being processed."
+  }
+]
+```
+
+<Tip>
+  To create new orders instead of updating existing ones, use [Batch create orders](/api-reference/orders/batch-create).
+</Tip>

@@ -6,7 +6,7 @@ description: "How to read and interpret the order book for a prediction market."
 The order book shows all open buy (bid) and sell (ask) orders for a market outcome, aggregated by price level. Use it to understand where the market is trading and to pick a good price for a limit order.
 
 <Note>
-  All examples use the base URL `https://api.futuur.com`. Every request requires HMAC authentication headers. See the [Authentication](/authentication) guide for how to generate them.
+  All examples use the base URL `https://api.futuur.com`. The order book endpoint does not require authentication.
 </Note>
 
 ## What the order book shows
@@ -20,7 +20,7 @@ Each level shows the quantity available and the cumulative depth of the book up 
 
 ## Fetching the order book
 
-Call `GET /events/{id}/order_book/` with the required `currency_mode` and `market` parameters.
+Call `GET /markets/{id}/book/` with the required `currency_mode` parameter and the market ID in the path.
 
 <CodeGroup>
 
@@ -28,16 +28,10 @@ Call `GET /events/{id}/order_book/` with the required `currency_mode` and `marke
 import requests
 
 response = requests.get(
-    "https://api.futuur.com/events/12345/order_book/",
+    "https://api.futuur.com/markets/67890/book/",
     params={
         "currency_mode": "play_money",
-        "market": 67890,
         "position": "long",
-    },
-    headers={
-        "Key": "YOUR_PUBLIC_KEY",
-        "Timestamp": "1712500000",
-        "HMAC": "YOUR_HMAC_SIGNATURE",
     },
 )
 
@@ -46,13 +40,9 @@ print(order_book)
 ```
 
 ```bash curl
-curl -G "https://api.futuur.com/events/12345/order_book/" \
+curl -G "https://api.futuur.com/markets/67890/book/" \
   --data-urlencode "currency_mode=play_money" \
-  --data-urlencode "market=67890" \
-  --data-urlencode "position=long" \
-  -H "Key: YOUR_PUBLIC_KEY" \
-  -H "Timestamp: 1712500000" \
-  -H "HMAC: YOUR_HMAC_SIGNATURE"
+  --data-urlencode "position=long"
 ```
 
 </CodeGroup>
@@ -61,8 +51,8 @@ curl -G "https://api.futuur.com/events/12345/order_book/" \
 
 | Parameter | Type | Description |
 |---|---|---|
+| `id` (path) | integer | The market ID to query |
 | `currency_mode` | string | `play_money` or `real_money` |
-| `market` | integer | The market ID to query |
 
 ### Optional parameters
 
@@ -208,16 +198,10 @@ Long and short positions trade in separate books. If you hold a short position a
 
 ```python python
 response = requests.get(
-    "https://api.futuur.com/events/12345/order_book/",
+    "https://api.futuur.com/markets/67890/book/",
     params={
         "currency_mode": "play_money",
-        "market": 67890,
         "position": "short",
-    },
-    headers={
-        "Key": "YOUR_PUBLIC_KEY",
-        "Timestamp": "1712500000",
-        "HMAC": "YOUR_HMAC_SIGNATURE",
     },
 )
 

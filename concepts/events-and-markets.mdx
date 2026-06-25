@@ -96,7 +96,7 @@ Use `GET /events/` to list events. The endpoint supports the following filters:
 | `pending_resolution` | Set to `true` to return events awaiting resolution |
 | `live` | Set to `true` to return only currently live events |
 
-For live or in-play markets that update frequently, poll [`GET /events/{id}/live_data/`](/api-reference/events/live-data) instead of the authenticated retrieve endpoint.
+For live or in-play markets, use the `live=true` filter on [`GET /events/`](/api-reference/events/list) to discover active events, then poll [`GET /events/{id}/`](/api-reference/events/retrieve) for updated details.
 
 ```bash
 # List events in a category using play money

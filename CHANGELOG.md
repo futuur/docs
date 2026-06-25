@@ -1,5 +1,36 @@
 # Changelog
 
+## 2026-06-25 — Sync with live API schema
+
+Refreshed `Futuur API Documentation (v2.0).json` from [https://api.futuur.com/docs/schema/](https://api.futuur.com/docs/schema/).
+
+### Added — new endpoint pages
+
+- `api-reference/events/get-tax.mdx` — `GET /events/{id}/get_tax/`. Returns play money and real money tax rates for an event. No authentication required.
+- `api-reference/markets/order-book.mdx` — `GET /markets/{id}/book/`. Replaces the removed event-scoped order book endpoint. No authentication required.
+- `api-reference/orders/batch-update.mdx` — `POST /orders/batch-update/`. Updates 1–20 open limit orders in one request, with optional `Idempotency-Key`.
+- `api-reference/wagers/rebates.mdx` — `GET /wagers/rebates/`. Returns current rebated maker fees, with optional `date` and `event` filters.
+
+### Removed — deprecated endpoint pages
+
+- `api-reference/events/live-data.mdx` — `GET /events/{id}/live_data/` removed from the live API.
+- `api-reference/events/order-book.mdx` — `GET /events/{id}/order_book/` replaced by `GET /markets/{id}/book/`.
+
+### Changed — navigation
+
+`docs.json` updates:
+
+- **Events**: removed `live-data` and `order-book`; added `get-tax`.
+- **Markets**: new group with `order-book`.
+- **Orders**: added `batch-update` after `batch-create`.
+- **Wagers**: added `rebates`.
+
+### Changed — cross-links and guides
+
+- `api-reference/events/retrieve.mdx`, `concepts/events-and-markets.mdx`, and `introduction.mdx`: removed `live_data` references; live events use `live=true` on list plus retrieve polling.
+- `guides/placing-a-bet.mdx`, `guides/selling-a-position.mdx`, and `guides/reading-the-order-book.mdx`: order book examples now call `GET /markets/{id}/book/`.
+- `concepts/orders.mdx`: documents batch update alongside batch create and cancel.
+
 ## 2026-06-02 — Sync with live API schema
 
 Refreshed `Futuur API Documentation (v2.0).json` from [https://api.futuur.com/docs/schema/](https://api.futuur.com/docs/schema/). The compare script reported no endpoint, parameter, or tracked schema diffs against the previous baseline.

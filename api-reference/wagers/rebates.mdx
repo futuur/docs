@@ -1,0 +1,50 @@
+---
+title: "Maker rebates"
+description: "Retrieve current rebated fees for the authenticated maker."
+---
+
+Return the total rebated maker fees for your account, optionally filtered by date or event.
+
+## Endpoint
+
+```
+GET https://api.futuur.com/wagers/rebates/
+```
+
+## Authentication
+
+<Note>
+  This endpoint requires HMAC authentication. Include the `Key`, `Timestamp`, and `HMAC` headers on every request. See the [authentication guide](/authentication) for signing instructions.
+</Note>
+
+## Parameters
+
+<ParamField query="date" type="string">
+  Filter rebates to a specific calendar date (`YYYY-MM-DD`).
+</ParamField>
+
+<ParamField query="event" type="integer">
+  Filter rebates to a specific event ID.
+</ParamField>
+
+## Response
+
+<ResponseField name="rebated_fee_usd" type="number" required>
+  Total rebated fees in USD for the selected scope.
+</ResponseField>
+
+## Example
+
+```bash cURL
+curl --request GET \
+  --url "https://api.futuur.com/wagers/rebates/?date=2026-06-25&event=1023" \
+  --header "Key: YOUR_PUBLIC_KEY" \
+  --header "Timestamp: 1712500000" \
+  --header "HMAC: YOUR_HMAC_SIGNATURE"
+```
+
+```json Sample response
+{
+  "rebated_fee_usd": 12.45
+}
+```

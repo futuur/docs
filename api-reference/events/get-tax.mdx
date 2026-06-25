@@ -1,0 +1,46 @@
+---
+title: "Event tax"
+description: "Retrieve play money and real money tax rates for an event."
+---
+
+Return the tax rates applied to trades on an event, split by currency mode.
+
+## Endpoint
+
+```
+GET https://api.futuur.com/events/{id}/get_tax/
+```
+
+## Authentication
+
+No authentication is required for this endpoint.
+
+## Parameters
+
+<ParamField path="id" type="integer" required>
+  The unique identifier of the event.
+</ParamField>
+
+## Response
+
+<ResponseField name="tax_play_money" type="number | null" required>
+  Tax rate for play money trades on this event. `null` when no play money tax applies.
+</ResponseField>
+
+<ResponseField name="tax_real_money" type="number | null" required>
+  Tax rate for real money trades on this event. `null` when no real money tax applies.
+</ResponseField>
+
+## Example
+
+```bash cURL
+curl --request GET \
+  --url "https://api.futuur.com/events/1023/get_tax/"
+```
+
+```json Sample response
+{
+  "tax_play_money": 0.02,
+  "tax_real_money": 0.05
+}
+```

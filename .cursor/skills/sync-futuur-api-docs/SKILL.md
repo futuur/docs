@@ -103,7 +103,7 @@ Applies to: `GET /events/`, `GET /orders/`, `GET /wagers/`.
 
 **Account** — `UserPrivate` uses `wallet` (dict) and `email_confirmed`; balances also on `GET /me/balances/`. Ranking is `{ "ranking": "..." }` only.
 
-**Auth** — copy `security` from OpenAPI per endpoint. These are **public** (no HMAC): `price_history`, `related_events`, `live_data`.
+**Auth** — copy `security` from OpenAPI per endpoint. These are **public** (no HMAC): `price_history`, `related_events`, `get_tax`, `markets/{id}/book`.
 
 **MDX style** — follow `AGENTS.md`: second person, sentence-case headings, `<ParamField>` / `<ResponseField>`.
 

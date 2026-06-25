@@ -1,38 +1,28 @@
 ---
 title: "Order book"
-description: "Retrieve aggregated order book data for a specific market within an event, including bids and asks at each price level."
+description: "Retrieve aggregated order book data for a market, including bids and asks at each price level."
 ---
 
-Get the aggregated order book for a market within an event. The response contains bid and ask arrays with cumulative depth data at each price level, allowing you to assess market liquidity and your position within it.
+Get the aggregated order book for a market. The response contains `bid` and `ask` arrays with cumulative depth data at each price level, allowing you to assess market liquidity and your position within it.
 
 ## Endpoint
 
 ```
-GET https://api.futuur.com/events/{id}/order_book/
+GET https://api.futuur.com/markets/{id}/book/
 ```
 
 ## Authentication
 
-HMAC authentication is required. Include the following headers with every request:
-
-| Header      | Description                              |
-| ----------- | ---------------------------------------- |
-| `Key`       | Your public API key                      |
-| `Timestamp` | Current Unix timestamp                   |
-| `HMAC`      | SHA-512 signature of the request payload |
+No authentication is required for this endpoint.
 
 ## Parameters
 
 <ParamField path="id" type="integer" required>
-  The unique identifier of the event.
+  The unique identifier of the market.
 </ParamField>
 
 <ParamField query="currency_mode" type="string" required>
   The currency mode to query. Accepted values: `play_money`, `real_money`.
-</ParamField>
-
-<ParamField query="market" type="integer" required>
-  The ID of the market within the event for which to retrieve the order book.
 </ParamField>
 
 <ParamField query="position" type="string" default="long">
@@ -66,10 +56,10 @@ HMAC authentication is required. Include the following headers with every reques
       Cumulative fees from the best bid down to and including this level.
     </ResponseField>
     <ResponseField name="total_user_shares" type="number">
-      Number of shares at this level belonging to you.
+      Number of shares at this level belonging to you. Present when authenticated.
     </ResponseField>
     <ResponseField name="total_user_shares_requested" type="number">
-      Number of shares at this level you have requested but that have not yet been filled.
+      Number of shares at this level you have requested but that have not yet been filled. Present when authenticated.
     </ResponseField>
   </Expandable>
 </ResponseField>
@@ -99,10 +89,10 @@ HMAC authentication is required. Include the following headers with every reques
       Cumulative fees from the best ask up to and including this level.
     </ResponseField>
     <ResponseField name="total_user_shares" type="number">
-      Number of shares at this level belonging to you.
+      Number of shares at this level belonging to you. Present when authenticated.
     </ResponseField>
     <ResponseField name="total_user_shares_requested" type="number">
-      Number of shares at this level you have requested but that have not yet been filled.
+      Number of shares at this level you have requested but that have not yet been filled. Present when authenticated.
     </ResponseField>
   </Expandable>
 </ResponseField>
@@ -111,10 +101,7 @@ HMAC authentication is required. Include the following headers with every reques
 
 ```bash cURL
 curl --request GET \
-  --url "https://api.futuur.com/events/1023/order_book/?currency_mode=play_money&market=501&position=long" \
-  --header "Key: YOUR_PUBLIC_KEY" \
-  --header "Timestamp: 1712500000" \
-  --header "HMAC: YOUR_HMAC_SIGNATURE"
+  --url "https://api.futuur.com/markets/501/book/?currency_mode=play_money&position=long"
 ```
 
 ```json Sample response

@@ -101,16 +101,10 @@ Before placing an order, check the live order book to see current bid and ask pr
 
 ```python python
 response = requests.get(
-    "https://api.futuur.com/events/12345/order_book/",
+    "https://api.futuur.com/markets/67890/book/",
     params={
         "currency_mode": "play_money",
-        "market": 67890,
         "position": "long",
-    },
-    headers={
-        "Key": "YOUR_PUBLIC_KEY",
-        "Timestamp": "1712500000",
-        "HMAC": "YOUR_HMAC_SIGNATURE",
     },
 )
 
@@ -121,13 +115,9 @@ print(f"Best ask: {best_ask}, Best bid: {best_bid}")
 ```
 
 ```bash curl
-curl -G "https://api.futuur.com/events/12345/order_book/" \
+curl -G "https://api.futuur.com/markets/67890/book/" \
   --data-urlencode "currency_mode=play_money" \
-  --data-urlencode "market=67890" \
-  --data-urlencode "position=long" \
-  -H "Key: YOUR_PUBLIC_KEY" \
-  -H "Timestamp: 1712500000" \
-  -H "HMAC: YOUR_HMAC_SIGNATURE"
+  --data-urlencode "position=long"
 ```
 
 </CodeGroup>
