@@ -6,7 +6,7 @@ description: "Step-by-step guide to placing your first order on a Futuur predict
 This guide walks you through finding an event, checking the current price, and placing an order — from a quick market order to a precise limit order.
 
 <Note>
-  All examples use the base URL `https://api.futuur.com`. Every request requires HMAC authentication headers. See the [Authentication](/authentication) guide for how to generate them.
+  All examples use `https://api.futuur.com/v2.0`. Every request requires HMAC authentication headers. See the [Authentication](/authentication) guide for how to generate them.
 </Note>
 
 <Steps>
@@ -21,7 +21,7 @@ Use `GET /events/` to browse available prediction markets. You can search by key
 import requests
 
 response = requests.get(
-    "https://api.futuur.com/events/",
+    "https://api.futuur.com/v2.0/events/",
     params={
         "search": "US election",
         "currency_mode": "play_money",
@@ -40,7 +40,7 @@ for event in events:
 ```
 
 ```bash curl
-curl -G "https://api.futuur.com/events/" \
+curl -G "https://api.futuur.com/v2.0/events/" \
   --data-urlencode "search=US election" \
   --data-urlencode "currency_mode=play_money" \
   --data-urlencode "limit=5" \
@@ -67,7 +67,7 @@ Each event has one or more markets, each representing a possible outcome. Retrie
 
 ```python python
 response = requests.get(
-    "https://api.futuur.com/events/12345/",
+    "https://api.futuur.com/v2.0/events/12345/",
     headers={
         "Key": "YOUR_PUBLIC_KEY",
         "Timestamp": "1712500000",
@@ -81,7 +81,7 @@ for market in event["markets"]:
 ```
 
 ```bash curl
-curl "https://api.futuur.com/events/12345/" \
+curl "https://api.futuur.com/v2.0/events/12345/" \
   -H "Key: YOUR_PUBLIC_KEY" \
   -H "Timestamp: 1712500000" \
   -H "HMAC: YOUR_HMAC_SIGNATURE"
@@ -101,7 +101,7 @@ Before placing an order, check the live order book to see current bid and ask pr
 
 ```python python
 response = requests.get(
-    "https://api.futuur.com/markets/67890/book/",
+    "https://api.futuur.com/v2.0/markets/67890/book/",
     params={
         "currency_mode": "play_money",
         "position": "long",
@@ -115,7 +115,7 @@ print(f"Best ask: {best_ask}, Best bid: {best_bid}")
 ```
 
 ```bash curl
-curl -G "https://api.futuur.com/markets/67890/book/" \
+curl -G "https://api.futuur.com/v2.0/markets/67890/book/" \
   --data-urlencode "currency_mode=play_money" \
   --data-urlencode "position=long"
 ```
@@ -137,7 +137,7 @@ To buy shares in a market outcome, set `side="bid"` (buying) and `position="long
 ```python python
 # Play money market order
 response = requests.post(
-    "https://api.futuur.com/orders/",
+    "https://api.futuur.com/v2.0/orders/",
     json={
         "market": 67890,
         "side": "bid",
@@ -160,7 +160,7 @@ print("Order ID:", order["id"], "Status:", order["status"])
 
 ```bash curl
 # Play money market order
-curl -X POST "https://api.futuur.com/orders/" \
+curl -X POST "https://api.futuur.com/v2.0/orders/" \
   -H "Key: YOUR_PUBLIC_KEY" \
   -H "Timestamp: 1712500000" \
   -H "HMAC: YOUR_HMAC_SIGNATURE" \
@@ -184,7 +184,7 @@ For real money, replace `"OOM"` with `"USDC"`, `"USDT"`, or `"USD"`:
 ```python python
 # Real money market order (USDC)
 response = requests.post(
-    "https://api.futuur.com/orders/",
+    "https://api.futuur.com/v2.0/orders/",
     json={
         "market": 67890,
         "side": "bid",
@@ -204,7 +204,7 @@ response = requests.post(
 
 ```bash curl
 # Real money market order (USDC)
-curl -X POST "https://api.futuur.com/orders/" \
+curl -X POST "https://api.futuur.com/v2.0/orders/" \
   -H "Key: YOUR_PUBLIC_KEY" \
   -H "Timestamp: 1712500000" \
   -H "HMAC: YOUR_HMAC_SIGNATURE" \
@@ -238,7 +238,7 @@ For example, `price=0.55` means you're only willing to buy at 55 cents per share
 ```python python
 # Limit order: buy at 0.55 or lower
 response = requests.post(
-    "https://api.futuur.com/orders/",
+    "https://api.futuur.com/v2.0/orders/",
     json={
         "market": 67890,
         "side": "bid",
@@ -261,7 +261,7 @@ print("Limit order placed. ID:", order["id"])
 
 ```bash curl
 # Limit order: buy at 0.55 or lower
-curl -X POST "https://api.futuur.com/orders/" \
+curl -X POST "https://api.futuur.com/v2.0/orders/" \
   -H "Key: YOUR_PUBLIC_KEY" \
   -H "Timestamp: 1712500000" \
   -H "HMAC: YOUR_HMAC_SIGNATURE" \
@@ -303,7 +303,7 @@ You can also retrieve your active wagers to confirm the position was created:
 
 ```python python
 response = requests.get(
-    "https://api.futuur.com/wagers/",
+    "https://api.futuur.com/v2.0/wagers/",
     params={"active": True},
     headers={
         "Key": "YOUR_PUBLIC_KEY",
@@ -317,7 +317,7 @@ for wager in response.json()["results"]:
 ```
 
 ```bash curl
-curl -G "https://api.futuur.com/wagers/" \
+curl -G "https://api.futuur.com/v2.0/wagers/" \
   --data-urlencode "active=true" \
   -H "Key: YOUR_PUBLIC_KEY" \
   -H "Timestamp: 1712500000" \

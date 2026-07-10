@@ -11,6 +11,7 @@ Futuur is a prediction market platform where users trade on the outcomes of real
 - **Place limit orders** — submit bids and asks on event outcomes in both play money and real money modes.
 - **Manage wagers** — retrieve active and settled wager positions for any account.
 - **Read the order book** — access the full depth of bids and asks for any market.
+- **Subscribe to realtime updates** — receive price, order-book, and account events over Pusher WebSockets.
 - **Check balances** — fetch per-currency ledger balances for your account.
 
 ## Base URL
@@ -18,10 +19,10 @@ Futuur is a prediction market platform where users trade on the outcomes of real
 All API requests go to:
 
 ```
-https://api.futuur.com
+https://api.futuur.com/v2.0
 ```
 
-The current version is **v2.0**.
+That is `https://api.futuur.com` + `/v2.0`. Include the version in every request path.
 
 ## Key resources
 
@@ -49,7 +50,7 @@ Every request requires HMAC-SHA512 authentication using a public/private key pai
 
 ## For AI agents
 
-The full OpenAPI schema is available at `https://api.futuur.com/docs/schema/`. Use this to explore all available endpoints, parameters, and response shapes.
+The full OpenAPI schema is available at [https://api.futuur.com/docs/schema/](https://api.futuur.com/docs/schema/). Use this to explore all available endpoints, parameters, and response shapes.
 
 ## Next steps
 
@@ -68,6 +69,9 @@ The full OpenAPI schema is available at `https://api.futuur.com/docs/schema/`. U
   </Card>
   <Card title="My balances" icon="wallet" href="/api-reference/me/balances">
     Fetch per-currency ledger balances for your account.
+  </Card>
+  <Card title="Websocket overview" icon="radio" href="/api-reference/websocket/overview">
+    Subscribe to realtime market and account events over Pusher.
   </Card>
 </CardGroup>
 

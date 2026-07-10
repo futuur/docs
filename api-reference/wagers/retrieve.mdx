@@ -8,7 +8,7 @@ Retrieve full details for a specific wager, including share count, cost basis, R
 ## Endpoint
 
 ```
-GET https://api.futuur.com/wagers/{id}/
+GET https://api.futuur.com/v2.0/wagers/{id}/
 ```
 
 ## Authentication
@@ -137,7 +137,7 @@ Returns a `WagerDetail` object. Fields match `WagerList` with the addition of `a
 
 ```bash cURL
 curl --request GET \
-  --url "https://api.futuur.com/wagers/88201/" \
+  --url "https://api.futuur.com/v2.0/wagers/88201/" \
   --header "Key: pk_live_abc123def456" \
   --header "Timestamp: 1712534400" \
   --header "HMAC: 3a9f2c1b...sha512signature"
@@ -150,9 +150,9 @@ curl --request GET \
   "id": 88201,
   "status": "purchased",
   "status_display": "Purchased",
-  "user": "https://api.futuur.com/users/5042/",
-  "event": "https://api.futuur.com/events/901/",
-  "market": "https://api.futuur.com/markets/3801/",
+  "user": "https://api.futuur.com/v2.0/users/5042/",
+  "event": "https://api.futuur.com/v2.0/events/901/",
+  "market": "https://api.futuur.com/v2.0/markets/3801/",
   "position": "long",
   "position_display": "Long",
   "currency": "USDC",
@@ -171,6 +171,6 @@ curl --request GET \
   "last_update": "2026-04-07T08:15:44Z",
   "last_action": null,
   "actions_count": 1,
-  "actions": "https://api.futuur.com/wagers/88201/actions/"
+  "actions": "https://api.futuur.com/v2.0/wagers/88201/actions/"
 }
 ```

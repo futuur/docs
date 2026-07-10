@@ -8,7 +8,7 @@ List all betting actions (wager activity) associated with an event. For real mon
 ## Endpoint
 
 ```
-GET https://api.futuur.com/events/{id}/actions/
+GET https://api.futuur.com/v2.0/events/{id}/actions/
 ```
 
 ## Authentication
@@ -97,7 +97,7 @@ HMAC authentication is required. Include the following headers with every reques
 
 ```bash cURL
 curl --request GET \
-  --url "https://api.futuur.com/events/1023/actions/?currency_mode=play_money&my_bets=false" \
+  --url "https://api.futuur.com/v2.0/events/1023/actions/?currency_mode=play_money&my_bets=false" \
   --header "Key: YOUR_PUBLIC_KEY" \
   --header "Timestamp: 1712500000" \
   --header "HMAC: YOUR_HMAC_SIGNATURE"

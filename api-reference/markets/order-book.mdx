@@ -8,7 +8,7 @@ Get the aggregated order book for a market. The response contains `bid` and `ask
 ## Endpoint
 
 ```
-GET https://api.futuur.com/markets/{id}/book/
+GET https://api.futuur.com/v2.0/markets/{id}/book/
 ```
 
 ## Authentication
@@ -101,7 +101,7 @@ No authentication is required for this endpoint.
 
 ```bash cURL
 curl --request GET \
-  --url "https://api.futuur.com/markets/501/book/?currency_mode=play_money&position=long"
+  --url "https://api.futuur.com/v2.0/markets/501/book/?currency_mode=play_money&position=long"
 ```
 
 ```json Sample response

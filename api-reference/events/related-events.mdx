@@ -8,7 +8,7 @@ Fetch events related to a specific event. Use this endpoint to surface similar m
 ## Endpoint
 
 ```
-GET https://api.futuur.com/events/{id}/related_events/
+GET https://api.futuur.com/v2.0/events/{id}/related_events/
 ```
 
 ## Authentication
@@ -69,7 +69,7 @@ Returns an array of related event objects.
 
 ```bash cURL
 curl --request GET \
-  --url "https://api.futuur.com/events/1023/related_events/"
+  --url "https://api.futuur.com/v2.0/events/1023/related_events/"
 ```
 
 ```json Sample response

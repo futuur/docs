@@ -8,7 +8,7 @@ Place a new limit order or market order on a specific market outcome. Set `price
 ## Endpoint
 
 ```
-POST https://api.futuur.com/orders/
+POST https://api.futuur.com/v2.0/orders/
 ```
 
 ## Authentication
@@ -136,7 +136,7 @@ Returns `201 Created` with the newly created order object.
 
 ```bash cURL
 curl --request POST \
-  --url "https://api.futuur.com/orders/" \
+  --url "https://api.futuur.com/v2.0/orders/" \
   --header "Key: pk_live_abc123def456" \
   --header "Timestamp: 1712534400" \
   --header "HMAC: 3a9f2c1b...sha512signature" \

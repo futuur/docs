@@ -27,6 +27,7 @@
 - Use sentence case for headings
 - Bold for UI elements: Click **Settings**
 - Code formatting for file names, commands, paths, and code references
+- API URLs in MDX examples: use the literal base `https://api.futuur.com/v2.0` (see `snippets/constants.mdx` for the canonical values). Do not use `{apiUrl}` template tags — Mintlify does not interpolate imported consts inside page code fences.
 
 ## Content boundaries
 

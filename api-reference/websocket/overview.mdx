@@ -1,0 +1,321 @@
+---
+title: "Websocket overview"
+description: "Subscribe to realtime market, order, and account updates over Pusher WebSockets."
+---
+
+Futuur uses [Pusher](https://pusher.com/docs/channels/using_channels/client-api-overview/) to deliver realtime data to clients over WebSocket connections. Use public channels for market-wide feeds and per-event order-book pings; use private channels for account-specific updates.
+
+<Note>
+  Examples below use `https://api.futuur.com/v2.0`. Private channel authorization calls `POST https://api.futuur.com/v2.0/pusher/auth/`. See [Authentication](/authentication) for HMAC signing.
+</Note>
+
+## Channels and events
+
+### Channels
+
+| Channel | Type | Auth | Purpose |
+|---------|------|------|---------|
+| `event` | public | none | Global feed of event and market activity |
+| `event-{event_id}` | public | none | Per-event order-book change pings |
+| `private-user-{user_id}` | private | `POST https://api.futuur.com/v2.0/pusher/auth/` | Per-user balance, deposit, and order updates |
+
+### Events at a glance
+
+| Event | Channel | Emitted when |
+|-------|---------|--------------|
+| `best-prices-change` | `event` | A wagerable market's best bid/ask changes |
+| `price-change` | `event` | An event's price or volume state changes |
+| `new-market` | `event` | A new market is added to an event |
+| `live-data-update` | `event` | Live data, status, or resolution changes |
+| `new-comment` | `event` | A user posts a comment on an event |
+| `order-book-update` | `event-{event_id}` | The event's order book changes (refetch ping) |
+| `balance-change` | `private-user-{user_id}` | The user's balance changes |
+| `deposit-success` | `private-user-{user_id}` | A deposit completes |
+| `order-update` | `private-user-{user_id}` | An order status changes |
+
+## Client setup
+
+Include the Pusher JS client:
+
+```html
+<script src="https://js.pusher.com/8.4.0/pusher.min.js"></script>
+```
+
+Initialize Pusher and subscribe to a channel:
+
+```html
+<script>
+    Pusher.logToConsole = true; // omit in production
+
+    var pusher = new Pusher("0bc4bea57c1381a89b96", {
+        cluster: "us2",
+    });
+
+    var channel = pusher.subscribe("event");
+    channel.bind("best-prices-change", function (data) {
+        console.log("Best prices changed:", data);
+    });
+</script>
+```
+
+## Channel authorization
+
+Pusher requires an authorization token before a client can subscribe to a private channel. When subscribing, the Pusher client sends `socket_id` and `channel_name` to your authorization endpoint.
+
+API bots call Futuur's endpoint directly:
+
+```
+POST https://api.futuur.com/v2.0/pusher/auth/
+```
+
+Authenticate with HMAC headers (`Key`, `Timestamp`, `HMAC`). Sign the request using alphabetically sorted parameters:
+
+```
+Key={{your_public_key}}&Timestamp={{current_timestamp}}&channel_name={{channel_name}}&socket_id={{socket_id}}
+```
+
+<CodeGroup>
+
+```javascript Node.js
+const crypto = require("crypto");
+
+const API_PUBLIC_KEY = "your_public_key";
+const API_PRIVATE_KEY = "your_private_key";
+const CHANNEL_AUTH_ENDPOINT = "https://api.futuur.com/v2.0/pusher/auth/";
+
+async function authorizeChannel(socketId, channelName) {
+  const timestamp = String(Math.floor(Date.now() / 1000));
+  const paramsToSign = {
+    Key: API_PUBLIC_KEY,
+    Timestamp: timestamp,
+    channel_name: channelName,
+    socket_id: socketId,
+  };
+  const rawToSign = new URLSearchParams(
+    Object.entries(paramsToSign).sort(([a], [b]) => a.localeCompare(b)),
+  ).toString();
+  const signature = crypto
+    .createHmac("sha512", API_PRIVATE_KEY)
+    .update(rawToSign)
+    .digest("hex");
+
+  const response = await fetch(CHANNEL_AUTH_ENDPOINT, {
+    method: "POST",
+    headers: {
+      Key: API_PUBLIC_KEY,
+      Timestamp: timestamp,
+      HMAC: signature,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({
+      socket_id: socketId,
+      channel_name: channelName,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Forbidden");
+  }
+
+  return response.json(); // { auth: "..." }
+}
+```
+
+```javascript pusher-js
+const Pusher = require("pusher-js");
+
+const pusher = new Pusher("0bc4bea57c1381a89b96", {
+  cluster: "us2",
+  channelAuthorization: {
+    customHandler: ({ socketId, channelName }, callback) => {
+      authorizeChannel(socketId, channelName)
+        .then((authResponse) => callback(null, authResponse))
+        .catch((err) => callback(err, null));
+    },
+  },
+});
+
+const channel = pusher.subscribe("private-user-1");
+```
+
+</CodeGroup>
+
+A user may only subscribe to their own `private-user-{user_id}` channel.
+
+## Event channel (public)
+
+Global public feed on channel `event`. Subscribe with `pusher.subscribe("event")`; no authentication required.
+
+### best-prices-change
+
+Emitted when the best bid/ask of a **wagerable** market changes. Non-wagerable markets are skipped to stay within Pusher limits.
+
+<ResponseField name="market_id" type="integer">Market (outcome) ID.</ResponseField>
+<ResponseField name="event_id" type="integer">Event ID.</ResponseField>
+<ResponseField name="currency_mode" type="string">`play_money` or `real_money`.</ResponseField>
+<ResponseField name="best_ask" type="number | null">Best ask price.</ResponseField>
+<ResponseField name="best_bid" type="number | null">Best bid price.</ResponseField>
+<ResponseField name="spread" type="number | null">`best_ask - best_bid`.</ResponseField>
+
+### price-change
+
+Emitted when an event's price or volume state changes. `currency_mode` controls the ordering of `markets` in the payload.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | number | Event ID |
+| `title` | string | Event title |
+| `status` | string | Event status code |
+| `currency_mode` | string | `play_money` or `real_money` |
+| `is_wagerable` | boolean | Whether the event accepts wagers |
+| `wagers_count_play_money` | number | Play-money wager count |
+| `wagers_count_real_money` | number | Real-money wager count |
+| `wagers_count_total` | number | Sum of play and real counts |
+| `volume_play_money` | number | null |
+| `volume_real_money` | number | null |
+| `markets` | array | Visible markets (see below) |
+
+Each element of `markets`:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | number | Market ID |
+| `title` | string | Market title |
+| `status` | string | Market status |
+| `price` | object | Long mid-price per currency: `{ "OOM": ..., "USDC": ... }` |
+| `long_label` | string | Long side label (e.g. `"Yes"`) |
+| `short_label` | string | Short side label (e.g. `"No"`) |
+| `resolution` | string | `long`, `short`, or null |
+
+### new-market
+
+Emitted when a new market is added to an event.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | number | Market ID |
+| `title` | string | Market title |
+| `title_verbose` | string | Verbose title |
+| `event` | object | `{ id, title, status, category }` |
+| `status` | string | Market status |
+| `suggested_price_play_money` | number | null |
+| `suggested_price_real_money` | number | null |
+| `bet_start_date` | string | null |
+| `bet_end_date` | string | null |
+
+### live-data-update
+
+Emitted when an event's live data changes.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | number | Event ID |
+| `status` | string | Event status |
+| `resolution` | string | null |
+| `resolve_date` | string | null |
+| `event_start_date` | string | null |
+| `event_end_date` | string | null |
+| `event_extra_data` | object | null |
+| `is_live` | boolean | Whether the event is currently live |
+
+### new-comment
+
+Emitted when a user posts a comment. Sent with a ~5s delay so replicas can catch up before clients refetch.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | number | Comment ID |
+| `content` | string | Comment text |
+| `created_on` | string | ISO 8601 timestamp |
+| `user` | object | `{ id, username, picture, win_rate, wagers_count, net_earnings }` |
+| `question` | object | `{ id, title, slug, status, resolve_date, bet_end_date, is_binary }` |
+
+## Per-event channel (public)
+
+Channel name pattern: `event-{event_id}` (e.g. `event-1234`). Subscribe with `pusher.subscribe("event-" + eventId)`; no authentication required.
+
+### order-book-update
+
+A lightweight refetch ping — no book diff payload. Emitted when the event's order book changes. On receipt, refetch via [GET /markets/{id}/book/](/api-reference/markets/order-book).
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `endpoint` | string | Always `"book"` |
+| `question` | number | Event ID |
+| `currency` | string | Currency code (e.g. `USDC`, `OOM`) |
+
+```html
+<script>
+    var pusher = new Pusher("0bc4bea57c1381a89b96", { cluster: "us2" });
+    var channel = pusher.subscribe("event-" + eventId);
+    channel.bind("order-book-update", function (data) {
+        refetchOrderBook(data.question, data.currency);
+    });
+</script>
+```
+
+## Private user channel
+
+Channel name pattern: `private-user-{user_id}`. Requires authorization via `POST https://api.futuur.com/v2.0/pusher/auth/`. Subscribe with `pusher.subscribe("private-user-" + userId)`.
+
+### balance-change
+
+Emitted when the user's balance changes. Carries no amount — refetch [GET /me/balances/](/api-reference/me/balances).
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `timestamp` | number | Unix epoch seconds when emitted |
+
+### deposit-success
+
+Emitted when a deposit completes.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `amount` | number | Deposited amount |
+| `currency` | string | Currency code |
+
+### order-update
+
+Real-time order status transitions (fill, cancel, expire). Useful for keeping a local order model in sync.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `order_id` | number | Order ID |
+| `market_id` | number | Market ID |
+| `event_id` | number | Event ID |
+| `status` | string | New status |
+| `previous_status` | string | null |
+| `side` | string | `bid` |
+| `position` | string | `l` (long) |
+| `price` | number | null |
+| `shares_requested` | number | Requested quantity |
+| `shares_filled` | number | Total filled so far |
+| `shares_filled_delta` | number | Optional — filled in this update |
+| `avg_fill_price` | number | null |
+| `currency` | string | Currency code |
+| `timestamp` | string | ISO 8601 with milliseconds |
+| `cancel_reason` | string | Optional — e.g. `user_requested` |
+| `expired_at` | string | Optional — ISO 8601 |
+| `is_system_initiated` | boolean | Optional |
+
+```html
+<script>
+    var pusher = new Pusher("0bc4bea57c1381a89b96", { cluster: "us2" });
+    var privateChannel = pusher.subscribe("private-user-" + userId);
+    privateChannel.bind("order-update", function (data) {
+        if (data.status === "filled" || data.status === "partial_filled") {
+            // handle fill
+        }
+        if (data.status === "canceled" || data.status === "expired") {
+            // remove from local open-orders model
+        }
+    });
+</script>
+```
+
+## Related
+
+- [Order book](/api-reference/markets/order-book) — REST endpoint to refetch after `order-book-update`
+- [Reading the order book](/guides/reading-the-order-book) — interpret bid/ask depth
+- [Authentication](/authentication) — HMAC signing for private channel auth

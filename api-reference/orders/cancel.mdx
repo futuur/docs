@@ -8,7 +8,7 @@ Cancel an open limit order. Only orders with a status of `open` or `partial_fill
 ## Endpoint
 
 ```
-PATCH https://api.futuur.com/orders/{id}/cancel/
+PATCH https://api.futuur.com/v2.0/orders/{id}/cancel/
 ```
 
 ## Authentication
@@ -39,7 +39,7 @@ Returns `204 No Content` on success. No response body is returned.
 
 ```bash cURL
 curl --request PATCH \
-  --url "https://api.futuur.com/orders/10482/cancel/" \
+  --url "https://api.futuur.com/v2.0/orders/10482/cancel/" \
   --header "Key: pk_live_abc123def456" \
   --header "Timestamp: 1712534400" \
   --header "HMAC: 3a9f2c1b...sha512signature"

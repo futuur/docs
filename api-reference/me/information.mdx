@@ -10,7 +10,7 @@ For ledger balances broken out by currency, use [`GET /me/balances/`](/api-refer
 ## Endpoint
 
 ```
-GET https://api.futuur.com/me/
+GET https://api.futuur.com/v2.0/me/
 ```
 
 ## Authentication
@@ -71,7 +71,7 @@ If you use a [Safe](https://safe.global) smart account, register it with Futuur 
 
 ```bash
 curl --request GET \
-  --url https://api.futuur.com/me/ \
+  --url https://api.futuur.com/v2.0/me/ \
   --header 'Key: YOUR_PUBLIC_KEY' \
   --header 'Timestamp: 1712345678' \
   --header 'HMAC: YOUR_HMAC_SIGNATURE'

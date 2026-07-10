@@ -6,7 +6,7 @@ description: "How to read and interpret the order book for a prediction market."
 The order book shows all open buy (bid) and sell (ask) orders for a market outcome, aggregated by price level. Use it to understand where the market is trading and to pick a good price for a limit order.
 
 <Note>
-  All examples use the base URL `https://api.futuur.com`. The order book endpoint does not require authentication.
+  All examples use `https://api.futuur.com/v2.0`. The order book endpoint does not require authentication.
 </Note>
 
 ## What the order book shows
@@ -28,7 +28,7 @@ Call `GET /markets/{id}/book/` with the required `currency_mode` parameter and t
 import requests
 
 response = requests.get(
-    "https://api.futuur.com/markets/67890/book/",
+    "https://api.futuur.com/v2.0/markets/67890/book/",
     params={
         "currency_mode": "play_money",
         "position": "long",
@@ -40,7 +40,7 @@ print(order_book)
 ```
 
 ```bash curl
-curl -G "https://api.futuur.com/markets/67890/book/" \
+curl -G "https://api.futuur.com/v2.0/markets/67890/book/" \
   --data-urlencode "currency_mode=play_money" \
   --data-urlencode "position=long"
 ```
@@ -198,7 +198,7 @@ Long and short positions trade in separate books. If you hold a short position a
 
 ```python python
 response = requests.get(
-    "https://api.futuur.com/markets/67890/book/",
+    "https://api.futuur.com/v2.0/markets/67890/book/",
     params={
         "currency_mode": "play_money",
         "position": "short",
@@ -209,3 +209,7 @@ short_book = response.json()
 best_short_bid = short_book["bid"][0]["price"] if short_book["bid"] else None
 print("Best bid for short shares:", best_short_bid)
 ```
+
+## Realtime order-book updates
+
+Instead of polling `GET /markets/{id}/book/`, subscribe to the per-event Pusher channel `event-{event_id}` and listen for `order-book-update`. The event carries a refetch ping — call the REST [order book](/api-reference/markets/order-book) endpoint when you receive it. See the [Websocket overview](/api-reference/websocket/overview) for setup and payload details.

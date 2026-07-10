@@ -110,6 +110,12 @@
               "api-reference/me/ranking",
               "api-reference/me/safe"
             ]
+          },
+          {
+            "group": "Realtime",
+            "pages": [
+              "api-reference/websocket/overview"
+            ]
           }
         ]
       }

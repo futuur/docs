@@ -10,7 +10,7 @@ Use this endpoint to quote ladders, hedge positions, or rebalance across multipl
 ## Endpoint
 
 ```
-POST https://api.futuur.com/orders/batch/
+POST https://api.futuur.com/v2.0/orders/batch/
 ```
 
 ## Authentication
@@ -95,7 +95,7 @@ Returns `200 OK` with one result per submitted order, plus the IDs of any confli
 
 ```bash cURL
 curl --request POST \
-  --url "https://api.futuur.com/orders/batch/" \
+  --url "https://api.futuur.com/v2.0/orders/batch/" \
   --header "Key: YOUR_PUBLIC_KEY" \
   --header "Timestamp: 1712500000" \
   --header "HMAC: YOUR_HMAC_SIGNATURE" \
