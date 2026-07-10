@@ -1,9 +1,9 @@
 ---
 title: "Events & Markets"
-description: "Understand events (predictions) and markets (outcomes) in Futuur."
+description: "Understand events, binary markets, and long/short positions in Futuur."
 ---
 
-An **event** is a prediction question that you can bet on — for example, "Who will win the 2024 US Presidential Election?" or "Will Bitcoin exceed $100,000 by end of year?" Each event has multiple **markets**, which represent the possible outcomes you can bet on.
+An **event** is a prediction question that you can bet on — for example, "Who will win the 2024 US Presidential Election?" or "Will Bitcoin exceed $100,000 by end of year?" Each event has one or more **markets**, which are the outcomes you can trade.
 
 <Note>
   The API uses the term `markets` for what were previously called "Outcomes" in older versions of the API. Events were previously called "Questions."
@@ -53,17 +53,64 @@ An event defines the question, the resolution criteria, and the timeframe. Key f
 
 Each market is a single outcome within an event. For example, the event "Who will win the 2024 US Presidential Election?" might have markets for "Candidate A", "Candidate B", and "Other."
 
-Key fields on a market object include:
+Every market is **binary**: it resolves to exactly one of two sides — **long** or **short**. You never get a third outcome on a single market.
+
+| Position | Meaning |
+|---|---|
+| `long` | One side of the binary market — the side `price` refers to |
+| `short` | The opposite side |
+
+When the market resolves to **long**, long holders are paid and short holders lose. When it resolves to **short**, short holders are paid and long holders lose.
+
+### Position labels
+
+Display labels for each side come from `long_label` and `short_label`. The `position_labels` field indicates the label style:
+
+| `position_labels` | Long side | Short side |
+|---|---|---|
+| `yesno` | Yes | No |
+| `updown` | Up | Down |
+| `custom` | Value of `long_label` | Value of `short_label` |
+
+Always read `long_label` and `short_label` when rendering UI — they hold the strings to show for each side, including for `yesno` and `updown`.
+
+With `yesno` or `updown`, long/short map to a positive vs negative claim (Yes/No, Up/Down). With `custom`, the two sides are named outcomes — not necessarily yes/no.
+
+For example, an NBA game with no ties is one event ("Bulls vs. Lakers") with a single market. Long stands for Bulls and short for Lakers:
+
+```json
+{
+  "id": 501,
+  "title": "Bulls vs. Lakers",
+  "price": 0.58,
+  "status": "active",
+  "position_labels": "custom",
+  "long_label": "Bulls",
+  "short_label": "Lakers"
+}
+```
+
+Here betting `position: "long"` is betting on the Bulls; `position: "short"` is betting on the Lakers.
+
+### Price is always the long side
+
+The market `price` is the current implied probability of the **long** position (0–1). In the Bulls vs. Lakers example, `0.58` means a 58% chance long (Bulls) wins.
+
+The implied short price is `1 - price` (here, `0.42` for the Lakers).
+
+When you place orders, `position: "long"` or `position: "short"` selects which side you trade. See [Orders](/concepts/orders) for how `side` (bid/ask) combines with `position`.
+
+### Market fields
 
 | Field | Description |
 |---|---|
 | `id` | Unique identifier |
 | `title` | The outcome this market represents |
-| `price` | Current implied probability (0–1) |
+| `price` | Current implied probability of **long** (0–1) |
 | `status` | Market status: `active`, `resolved`, `paused`, `stopped`, `cancelled`, or `reversed` |
 | `position_labels` | Label style: `yesno`, `updown`, or `custom` |
-
-The `price` field reflects the market's current probability. A price of `0.65` means the market is trading at a 65% chance of that outcome occurring.
+| `long_label` | Display label for the long side |
+| `short_label` | Display label for the short side |
 
 ## Resolution modes
 
@@ -73,7 +120,7 @@ Events use a `resolution_mode` field that determines how many markets can resolv
   <Tab title="exclusive">
     Only one market within the event can resolve to long. This is the default for mutually exclusive outcomes where exactly one result wins.
 
-    **Example:** A presidential election event where only one candidate can win.
+    **Example:** A presidential election event where only one candidate can win. Each candidate is its own binary market (long = that candidate wins, short = they do not).
   </Tab>
   <Tab title="non_exclusive">
     Multiple markets can resolve to long. Each market has independent resolution rules.
