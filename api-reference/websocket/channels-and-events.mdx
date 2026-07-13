@@ -3,29 +3,38 @@ title: "Channels and events"
 description: "Catalog of Pusher channels and realtime events for markets, order books, and account updates."
 ---
 
-This is the complete catalog of realtime channels and the events published on each. For client setup, see [Overview](/api-reference/websocket/overview). Private channels require [Authorization](/api-reference/websocket/authorization).
+This is the complete catalog of realtime channels and the events published on each. Terminology: **event** = a question; **market** = an outcome.
+
+For client setup, see [Overview](/api-reference/websocket/overview). Private channels require [Authorization](/api-reference/websocket/authorization).
 
 ## Channels
 
 | Channel | Type | Auth | Purpose |
 |---------|------|------|---------|
 | `event` | public | none | Global feed of event and market activity |
-| `event-{event_id}` | public | none | Per-event order-book change pings |
-| `private-user-{user_id}` | private | `POST https://api.futuur.com/v2.0/pusher/auth/` | Per-user balance, deposit, and order updates |
+| `event-{event_id}` | public | none | Per-event BBO, order-book, and status updates |
+| `private-user-{user_id}` | private | `POST https://api.futuur.com/v2.0/pusher/auth/` | Per-user balance, deposit, order, and position updates |
+| `test-channel` | public | none | Connectivity testing (`test-event` only) |
 
 ## Events at a glance
 
 | Event | Channel | Emitted when |
 |-------|---------|--------------|
-| `best-prices-change` | `event` | A wagerable market's best bid/ask changes |
+| `best-prices-change` | `event`, `event-{event_id}` | A wagerable market's best bid/ask changes |
 | `price-change` | `event` | An event's price or volume state changes |
 | `new-market` | `event` | A new market is added to an event |
 | `live-data-update` | `event` | Live data, status, or resolution changes |
-| `new-comment` | `event` | A user posts a comment on an event |
-| `order-book-update` | `event-{event_id}` | The event's order book changes (refetch ping) |
-| `balance-change` | `private-user-{user_id}` | The user's balance changes |
+| `market-status-change` | `event`, `event-{event_id}` | Tradability fields change (status, bet window, disabled) |
+| `market-comment` | `event` | A user posts a comment on an event |
+| `order-book-update` | `event-{event_id}` | Absolute top-N bid/ask levels for a changed market |
+| `balance-changed` | `private-user-{user_id}` | The user's balance changes |
 | `deposit-success` | `private-user-{user_id}` | A deposit completes |
-| `order-update` | `private-user-{user_id}` | An order status changes |
+| `order-update` | `private-user-{user_id}` | An order is created or its status changes |
+| `position-update` | `private-user-{user_id}` | The user's wager shares change |
+
+<Note>
+  Full-depth `order-book-snapshot` pushes are **not** emitted (Pusher message size limits). `order-book-update` carries top-N levels per market. For depth beyond top-N, call the REST [order book](/api-reference/markets/order-book) API.
+</Note>
 
 ## Event channel (public)
 
@@ -34,6 +43,12 @@ Global public feed on channel `event`. Subscribe with `pusher.subscribe("event")
 ### best-prices-change
 
 Emitted when the best bid/ask of a **wagerable** market changes. Non-wagerable markets are skipped to stay within Pusher limits.
+
+Also published on `event-{event_id}` with the same payload, so quoting bots can avoid the global `event` fanout:
+
+```javascript
+pusher.subscribe("event-" + eventId).bind("best-prices-change", ...);
+```
 
 <ResponseField name="market_id" type="integer">Market (outcome) ID.</ResponseField>
 <ResponseField name="event_id" type="integer">Event ID.</ResponseField>
@@ -103,7 +118,11 @@ Emitted when an event's live data changes.
 | `event_extra_data` | object | null |
 | `is_live` | boolean | Whether the event is currently live |
 
-### new-comment
+### market-status-change
+
+Emitted on `event` and `event-{event_id}` when tradability fields change (`status`, bet window, or market `disabled`). Use this to start or stop quoting — do not rely on BBO alone.
+
+### market-comment
 
 Emitted when a user posts a comment. Sent with a ~5s delay so replicas can catch up before clients refetch.
 
@@ -119,22 +138,31 @@ Emitted when a user posts a comment. Sent with a ~5s delay so replicas can catch
 
 Channel name pattern: `event-{event_id}` (e.g. `event-1234`). Subscribe with `pusher.subscribe("event-" + eventId)`; no authentication required.
 
+Events on this channel: `order-book-update`, `best-prices-change`, and `market-status-change`.
+
 ### order-book-update
 
-A lightweight refetch ping — no book diff payload. Emitted when the event's order book changes. On receipt, refetch via [GET /markets/{id}/book/](/api-reference/markets/order-book).
+Absolute top-N (default 5) bid/ask levels for the affected market — one message per market. The legacy refetch ping (`{ endpoint, question, currency }`) and the separate `order-book-delta` event are removed; use this payload only.
+
+For depth beyond top-N, call [GET /markets/{id}/book/](/api-reference/markets/order-book).
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `endpoint` | string | Always `"book"` |
-| `question` | number | Event ID |
-| `currency` | string | Currency code (e.g. `USDC`, `OOM`) |
+| `market_id` | number | Market (outcome) ID |
+| `event_id` | number | Event ID |
+| `currency` | string | Currency code (e.g. `USDC`) |
+| `currency_mode` | string | `play_money` or `real_money` |
+| `top_n` | number | Number of levels (default `5`) |
+| `ask` | array | Ask levels: `{ price, total_shares, total_amount }` |
+| `bid` | array | Bid levels: `{ price, total_shares, total_amount }` |
+| `timestamp` | string | Emission timestamp |
 
 ```html
 <script>
     var pusher = new Pusher("9011f7eac38e825792d5", { cluster: "us2" });
     var channel = pusher.subscribe("event-" + eventId);
     channel.bind("order-book-update", function (data) {
-        refetchOrderBook(data.question, data.currency);
+        applyTopOfBook(data.market_id, data.bid, data.ask);
     });
 </script>
 ```
@@ -143,7 +171,7 @@ A lightweight refetch ping — no book diff payload. Emitted when the event's or
 
 Channel name pattern: `private-user-{user_id}`. Requires authorization via `POST https://api.futuur.com/v2.0/pusher/auth/`. Subscribe with `pusher.subscribe("private-user-" + userId)`.
 
-### balance-change
+### balance-changed
 
 Emitted when the user's balance changes. Carries no amount — refetch [GET /me/balances/](/api-reference/me/balances).
 
@@ -162,14 +190,14 @@ Emitted when a deposit completes.
 
 ### order-update
 
-Real-time order status transitions (fill, cancel, expire). Useful for keeping a local order model in sync.
+Real-time order lifecycle updates: create / open acks (`pending`, `open`, including PROCESSING → OPEN) plus fill, partial fill, cancel, and expire. Useful for syncing resting orders without relying only on the REST response.
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `order_id` | number | Order ID |
 | `market_id` | number | Market ID |
 | `event_id` | number | Event ID |
-| `status` | string | New status |
+| `status` | string | New status (e.g. `pending`, `open`, `filled`, `partial_filled`, `canceled`, `expired`) |
 | `previous_status` | string | null |
 | `side` | string | `bid` |
 | `position` | string | `l` (long) |
@@ -189,6 +217,9 @@ Real-time order status transitions (fill, cancel, expire). Useful for keeping a 
     var pusher = new Pusher("9011f7eac38e825792d5", { cluster: "us2" });
     var privateChannel = pusher.subscribe("private-user-" + userId);
     privateChannel.bind("order-update", function (data) {
+        if (data.status === "pending" || data.status === "open") {
+            // create / open ack — sync resting order
+        }
         if (data.status === "filled" || data.status === "partial_filled") {
             // handle fill
         }
@@ -199,9 +230,23 @@ Real-time order status transitions (fill, cancel, expire). Useful for keeping a 
 </script>
 ```
 
+### position-update
+
+Emitted when a user's wager shares change. Use for inventory sync.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `market_id` | number | Market (outcome) ID |
+| `event_id` | number | Event ID |
+| `position` | string | Position side |
+| `currency` | string | Currency code |
+| `shares` | number | Current share quantity |
+| `purchases_amount` | number | Amount spent on purchases |
+| `avg_price` | number | Average purchase price |
+
 ## Related
 
 - [Overview](/api-reference/websocket/overview) — Pusher client setup
 - [Authorization](/api-reference/websocket/authorization) — private channel HMAC auth
-- [Order book](/api-reference/markets/order-book) — REST endpoint to refetch after `order-book-update`
+- [Order book](/api-reference/markets/order-book) — REST endpoint for full depth beyond top-N
 - [Reading the order book](/guides/reading-the-order-book) — interpret bid/ask depth

@@ -212,4 +212,6 @@ print("Best bid for short shares:", best_short_bid)
 
 ## Realtime order-book updates
 
-Instead of polling `GET /markets/{id}/book/`, subscribe to the per-event Pusher channel `event-{event_id}` and listen for `order-book-update`. The event carries a refetch ping — call the REST [order book](/api-reference/markets/order-book) endpoint when you receive it. See [Channels and events](/api-reference/websocket/channels-and-events) for setup and payload details.
+Subscribe to the per-event Pusher channel `event-{event_id}` and listen for `order-book-update`. That event carries absolute top-N bid/ask levels for the affected market — apply them directly for top-of-book quoting.
+
+Full-depth snapshots are not streamed over Pusher. When you need depth beyond top-N, call the REST [order book](/api-reference/markets/order-book) endpoint. See [Channels and events](/api-reference/websocket/channels-and-events) for the payload.

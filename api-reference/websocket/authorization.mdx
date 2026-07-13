@@ -5,13 +5,13 @@ description: "Authorize private Pusher channels with HMAC-signed requests to the
 
 Pusher requires an authorization token before a client can subscribe to a private channel. When subscribing, the Pusher client sends `socket_id` and `channel_name` to your authorization endpoint.
 
-API bots call Futuur's endpoint directly:
+API bots call Futuur's channel authorization endpoint:
 
 ```
 POST https://api.futuur.com/v2.0/pusher/auth/
 ```
 
-Authenticate with HMAC headers (`Key`, `Timestamp`, `HMAC`). Sign the request using alphabetically sorted parameters:
+`POST https://api.futuur.com/v2.0/pusher/user-auth/` is also available and unchanged. Authenticate with HMAC headers (`Key`, `Timestamp`, `HMAC`). Sign the request using alphabetically sorted parameters:
 
 ```
 Key={{your_public_key}}&Timestamp={{current_timestamp}}&channel_name={{channel_name}}&socket_id={{socket_id}}

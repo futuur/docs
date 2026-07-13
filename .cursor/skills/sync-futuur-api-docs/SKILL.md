@@ -99,27 +99,32 @@ When syncing, extract that tag from the fetched schema and align Mintlify pages 
 
 | Channel | Type | Auth | Purpose |
 |---------|------|------|---------|
-| `event` | public | none | Global feed: prices, volumes, new markets, comments, live data |
-| `event-{event_id}` | public | none | Per-event order-book change pings |
-| `private-user-{user_id}` | private | `POST /v2.0/pusher/auth/` | Per-user balance, deposits, order updates |
+| `event` | public | none | Global feed: prices, volumes, new markets, comments, live data, status |
+| `event-{event_id}` | public | none | Per-event BBO, order-book, and status updates |
+| `private-user-{user_id}` | private | `POST /v2.0/pusher/auth/` | Per-user balance, deposits, orders, positions |
+| `test-channel` | public | none | Connectivity testing (`test-event`) |
 
 #### Event catalog
 
 | Event | Channel | Emitted when |
 |-------|---------|--------------|
-| `best-prices-change` | `event` | A wagerable market's best bid/ask changes |
+| `best-prices-change` | `event`, `event-{event_id}` | A wagerable market's best bid/ask changes |
 | `price-change` | `event` | An event's price/volume state changes |
 | `new-market` | `event` | A new market is added to an event |
 | `live-data-update` | `event` | Live data / status / resolution changes |
-| `new-comment` | `event` | A user posts a comment (~5s delay for replica lag) |
-| `order-book-update` | `event-{event_id}` | Order book changed — refetch via REST `GET /markets/{id}/book/` |
-| `balance-change` | `private-user-{user_id}` | User balance changed (no amount — refetch balances) |
+| `market-status-change` | `event`, `event-{event_id}` | Tradability fields change (status, bet window, disabled) |
+| `market-comment` | `event` | A user posts a comment (~5s delay for replica lag) |
+| `order-book-update` | `event-{event_id}` | Absolute top-N bid/ask levels for a changed market |
+| `balance-changed` | `private-user-{user_id}` | User balance changed (no amount — refetch balances) |
 | `deposit-success` | `private-user-{user_id}` | Deposit completed |
-| `order-update` | `private-user-{user_id}` | Order status transition (fill/cancel/expire) |
+| `order-update` | `private-user-{user_id}` | Order create/open ack or status transition (fill/cancel/expire) |
+| `position-update` | `private-user-{user_id}` | User wager shares changed |
+
+Also see `WS-CHANGELOG.md` in the repo root for the current realtime contract (including breaking `order-book-update` changes).
 
 #### Private channel authorization
 
-Bots authorize with HMAC on `POST /v2.0/pusher/auth/`:
+Bots authorize with HMAC on `POST /v2.0/pusher/auth/` (`POST /v2.0/pusher/user-auth/` also exists):
 
 - Body: `socket_id`, `channel_name`
 - Sign (alphabetically sorted): `Key`, `Timestamp`, `channel_name`, `socket_id`
@@ -129,20 +134,23 @@ Copy Pusher client setup from the tag (JS client `8.4.0`, `cluster: "us2"`, app 
 
 #### Key payload shapes to match
 
-- **`best-prices-change`**: `market_id`, `event_id`, `currency_mode`, `best_ask`, `best_bid`, `spread`
+- **`best-prices-change`**: `market_id`, `event_id`, `currency_mode`, `best_ask`, `best_bid`, `spread` (also on `event-{event_id}`)
 - **`price-change`**: event summary + `markets[]` with `price` object keyed by currency (`OOM`, `USDC`, …)
-- **`order-book-update`** (per-event): `{ endpoint: "book", question: <event_id>, currency: "USDC" }` — a refetch ping, **not** a full book diff
-- **`order-update`** (private): `order_id`, `market_id`, `event_id`, `status`, `previous_status`, `side`, `position`, fill fields, optional `cancel_reason` / `expired_at`
+- **`order-book-update`** (per-event): `market_id`, `event_id`, `currency`, `currency_mode`, `top_n`, `ask[]`, `bid[]`, `timestamp` — top-N per market (not a refetch ping; not `order-book-delta`)
+- **`order-update`** (private): create/open acks (`pending`/`open`) plus fill/cancel/expire — `order_id`, `market_id`, `event_id`, `status`, fill fields, optional `cancel_reason` / `expired_at`
+- **`position-update`** (private): `market_id`, `event_id`, `position`, `currency`, `shares`, `purchases_amount`, `avg_price`
+- **`order-book-snapshot`**: not emitted; full depth via REST only
 
 #### Stale websocket patterns
 
-| Wrong (old schema / docs) | Correct (current local schema) |
+| Wrong (old schema / docs) | Correct (current contract) |
 |---------------------------|--------------------------------|
 | Global feed on `market` channel | Global feed on `event` channel |
-| Full-depth `order-book-update` on `market` with `updates[]` / `is_snapshot` | Lightweight `order-book-update` on `event-{event_id}`; refetch book via REST |
-| Only `best-prices-change` and `order-update` documented | All nine events in the catalog above |
-| `POST /pusher/user-auth/` as primary auth flow | `POST /v2.0/pusher/auth/` for private channel subscription |
-| Portuguese field descriptions in `order-update` table | English, matching OpenAPI tag text |
+| Refetch ping `{ endpoint, question, currency }` or `order-book-delta` | Top-N `order-book-update` payload; full depth via REST |
+| Full-depth `order-book-snapshot` streaming | Not emitted |
+| `new-comment` / `balance-change` | `market-comment` / `balance-changed` |
+| `best-prices-change` only on `event` | Also mirrored on `event-{event_id}` |
+| `order-update` only fill/cancel/expire | Also create/open acks (`pending`/`open`) |
 
 #### Mintlify pages to create or update
 
@@ -203,9 +211,9 @@ Applies to: `GET /events/`, `GET /orders/`, `GET /wagers/`.
 
 **Websocket / Pusher**
 
-- Copy channel names, event names, and payload field tables from the `Websocket` OpenAPI tag — do not invent fields.
+- Prefer `WS-CHANGELOG.md` and Mintlify websocket pages when the OpenAPI `Websocket` tag lags; otherwise copy channel/event/payload tables from the tag.
 - Use environment-specific auth URLs (`<base_url>/v2.0/pusher/auth/`).
-- Document `order-book-update` on `event-{event_id}` as a REST refetch trigger, not inline book data.
+- Document `order-book-update` on `event-{event_id}` as top-N bid/ask levels per market (not a refetch ping; `order-book-delta` is removed). Full depth via REST only.
 - Include HMAC signing example for API bots (Node or Python from the tag).
 
 **MDX style** — follow `AGENTS.md`: second person, sentence-case headings, `<ParamField>` / `<ResponseField>`.
