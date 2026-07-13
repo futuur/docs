@@ -112,9 +112,11 @@
             ]
           },
           {
-            "group": "Realtime",
+            "group": "Realtime (websockets)",
             "pages": [
-              "api-reference/websocket/overview"
+              "api-reference/websocket/overview",
+              "api-reference/websocket/authorization",
+              "api-reference/websocket/channels-and-events"
             ]
           }
         ]

@@ -33,7 +33,9 @@ Documented in the OpenAPI **`Websocket` tag** (not in `paths`).
 
 | Mintlify page | Content |
 |---------------|---------|
-| `api-reference/websocket/overview.mdx` | Pusher channels, events, auth, payloads |
+| `api-reference/websocket/overview.mdx` | Pusher client setup |
+| `api-reference/websocket/authorization.mdx` | Private channel HMAC auth |
+| `api-reference/websocket/channels-and-events.mdx` | Channel and event catalog, payloads |
 
 Slug convention: path segments → kebab-case file names (`live_data` → `live-data`).
 

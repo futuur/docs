@@ -148,8 +148,8 @@ Copy Pusher client setup from the tag (JS client `8.4.0`, `cluster: "us2"`, app 
 
 There is currently **no** websocket page in `docs.json`. When the tag differs from Mintlify (or pages are missing):
 
-1. Add `api-reference/websocket/overview.mdx` (or split into focused pages) covering setup, channel/event catalog, auth, and payload tables copied from the tag.
-2. Add a **Realtime** (or **Websocket**) group to `docs.json` under **API Reference**.
+1. Keep `api-reference/websocket/` pages in sync: `overview.mdx` (setup), `authorization.mdx` (private channel HMAC auth), and `channels-and-events.mdx` (channel/event catalog and payloads) — copy tables from the tag.
+2. Ensure the **Realtime (websockets)** group exists in `docs.json` under **API Reference**.
 3. Cross-link from `introduction.mdx`, `guides/reading-the-order-book.mdx`, and order/wager guides where clients should subscribe after placing orders.
 
 Mirror the OpenAPI tag structure: client setup → channel authorization → public `event` events → per-event channel → private user channel.

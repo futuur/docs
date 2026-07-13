@@ -1,0 +1,94 @@
+---
+title: "Authorization"
+description: "Authorize private Pusher channels with HMAC-signed requests to the Futuur auth endpoint."
+---
+
+Pusher requires an authorization token before a client can subscribe to a private channel. When subscribing, the Pusher client sends `socket_id` and `channel_name` to your authorization endpoint.
+
+API bots call Futuur's endpoint directly:
+
+```
+POST https://api.futuur.com/v2.0/pusher/auth/
+```
+
+Authenticate with HMAC headers (`Key`, `Timestamp`, `HMAC`). Sign the request using alphabetically sorted parameters:
+
+```
+Key={{your_public_key}}&Timestamp={{current_timestamp}}&channel_name={{channel_name}}&socket_id={{socket_id}}
+```
+
+See [Authentication](/authentication) for the general HMAC signing flow.
+
+<CodeGroup>
+
+```javascript Node.js
+const crypto = require("crypto");
+
+const API_PUBLIC_KEY = "your_public_key";
+const API_PRIVATE_KEY = "your_private_key";
+const CHANNEL_AUTH_ENDPOINT = "https://api.futuur.com/v2.0/pusher/auth/";
+
+async function authorizeChannel(socketId, channelName) {
+  const timestamp = String(Math.floor(Date.now() / 1000));
+  const paramsToSign = {
+    Key: API_PUBLIC_KEY,
+    Timestamp: timestamp,
+    channel_name: channelName,
+    socket_id: socketId,
+  };
+  const rawToSign = new URLSearchParams(
+    Object.entries(paramsToSign).sort(([a], [b]) => a.localeCompare(b)),
+  ).toString();
+  const signature = crypto
+    .createHmac("sha512", API_PRIVATE_KEY)
+    .update(rawToSign)
+    .digest("hex");
+
+  const response = await fetch(CHANNEL_AUTH_ENDPOINT, {
+    method: "POST",
+    headers: {
+      Key: API_PUBLIC_KEY,
+      Timestamp: timestamp,
+      HMAC: signature,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({
+      socket_id: socketId,
+      channel_name: channelName,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Forbidden");
+  }
+
+  return response.json(); // { auth: "..." }
+}
+```
+
+```javascript pusher-js
+const Pusher = require("pusher-js");
+
+const pusher = new Pusher("0bc4bea57c1381a89b96", {
+  cluster: "us2",
+  channelAuthorization: {
+    customHandler: ({ socketId, channelName }, callback) => {
+      authorizeChannel(socketId, channelName)
+        .then((authResponse) => callback(null, authResponse))
+        .catch((err) => callback(err, null));
+    },
+  },
+});
+
+const channel = pusher.subscribe("private-user-1");
+```
+
+</CodeGroup>
+
+A user may only subscribe to their own `private-user-{user_id}` channel. Public channels (`event` and `event-{event_id}`) do not require authorization.
+
+## Related
+
+- [Overview](/api-reference/websocket/overview) — Pusher client setup
+- [Channels and events](/api-reference/websocket/channels-and-events) — private user channel events
+- [Authentication](/authentication) — HMAC signing details
