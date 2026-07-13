@@ -18,7 +18,7 @@ REPLACEMENTS = [
     ("{apiUrl}", "https://api.futuur.com/v2.0"),
     ("{baseUrl}", "https://api.futuur.com"),
     ("{apiVersion}", "v2.0"),
-    ("{pusherKey}", "0bc4bea57c1381a89b96"),
+    ("{pusherKey}", "9011f7eac38e825792d5"),
     ("{pusherCluster}", "us2"),
     ("{pathId}", "{id}"),
 ]
