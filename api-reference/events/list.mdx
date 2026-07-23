@@ -8,18 +8,12 @@ Fetch a paginated list of events available on the Futuur prediction market. Use 
 ## Endpoint
 
 ```
-GET https://api.futuur.com/events/
+GET https://api.futuur.com/v2.0/events/
 ```
 
 ## Authentication
 
-HMAC authentication is required. Include the following headers with every request:
-
-| Header      | Description                              |
-| ----------- | ---------------------------------------- |
-| `Key`       | Your public API key                      |
-| `Timestamp` | Current Unix timestamp                   |
-| `HMAC`      | SHA-512 signature of the request payload |
+No authentication is required for this endpoint.
 
 ## Parameters
 
@@ -64,123 +58,71 @@ HMAC authentication is required. Include the following headers with every reques
 </ParamField>
 
 <ParamField query="search" type="string">
-  Full-text search query. Maximum 100 characters.
+  Full-text search query to filter events. Maximum 100 characters.
 </ParamField>
 
 <ParamField query="tag" type="string">
-  Filter results by tag name. Maximum 100 characters.
+  Filter results to events with a specific tag. Maximum 100 characters.
 </ParamField>
 
 ## Response
 
-<ResponseField name="pagination" type="object" required>
-  Pagination metadata for the result set.
-  <Expandable title="properties">
-    <ResponseField name="total" type="integer">
-      Total number of events matching the query.
-    </ResponseField>
-    <ResponseField name="next" type="string">
-      URL for the next page of results. `null` if you are on the last page.
-    </ResponseField>
-    <ResponseField name="previous" type="string">
-      URL for the previous page of results. `null` if you are on the first page.
-    </ResponseField>
-    <ResponseField name="page_size" type="integer">
-      Number of results returned per page.
-    </ResponseField>
-    <ResponseField name="offset" type="integer">
-      Current pagination offset.
-    </ResponseField>
-  </Expandable>
+Returns a paginated list of `EventList` objects.
+
+<ResponseField name="count" type="integer" required>
+  Total number of events matching the query.
+</ResponseField>
+
+<ResponseField name="next" type="string">
+  URL to the next page of results. `null` if this is the last page.
+</ResponseField>
+
+<ResponseField name="previous" type="string">
+  URL to the previous page of results. `null` if this is the first page.
 </ResponseField>
 
 <ResponseField name="results" type="object[]" required>
-  Array of event objects (`EventList`).
-  <Expandable title="properties">
-    <ResponseField name="id" type="integer">
-      Unique identifier for the event.
-    </ResponseField>
-    <ResponseField name="title" type="string">
-      Display title of the event.
-    </ResponseField>
-    <ResponseField name="slug" type="string">
-      URL-friendly identifier for the event.
-    </ResponseField>
-    <ResponseField name="status" type="string">
-      Current event status: `open`, `stopped`, `resolved`, `cancelled`, `paused`, or `reversed`.
-    </ResponseField>
-    <ResponseField name="resolution_mode" type="string">
-      How markets resolve within the event: `exclusive` (only one market can resolve to long) or `non_exclusive` (multiple markets can resolve to long).
-    </ResponseField>
-    <ResponseField name="bet_end_date" type="string">
-      ISO 8601 timestamp when betting closes. `null` if not set.
-    </ResponseField>
-    <ResponseField name="resolve_date" type="string">
-      ISO 8601 timestamp when the event was resolved. `null` if unresolved.
-    </ResponseField>
-    <ResponseField name="tags" type="object[]">
-      Tags associated with the event. Each tag has `name` and `slug`.
-    </ResponseField>
-    <ResponseField name="category" type="object[]">
-      Categories the event belongs to. Each category has `id`, `title`, and `slug`.
-    </ResponseField>
-    <ResponseField name="markets" type="object[]">
-      Outcome markets for this event. Each market includes `id`, `title`, `price`, and `status`.
-    </ResponseField>
-    <ResponseField name="volume_play_money" type="string">
-      Total play money volume traded on this event.
-    </ResponseField>
-    <ResponseField name="volume_real_money" type="string">
-      Total real money volume traded on this event.
-    </ResponseField>
-    <ResponseField name="order_book_enabled" type="boolean">
-      Whether this event uses the order book for trading.
-    </ResponseField>
-  </Expandable>
+  Array of event objects.
 </ResponseField>
 
 ## Example
 
+<CodeGroup>
+
 ```bash cURL
 curl --request GET \
-  --url "https://api.futuur.com/events/?currency_mode=play_money&limit=10&offset=0" \
-  --header "Key: YOUR_PUBLIC_KEY" \
-  --header "Timestamp: 1712500000" \
-  --header "HMAC: YOUR_HMAC_SIGNATURE"
+  --url "https://api.futuur.com/v2.0/events/?currency_mode=play_money&limit=10&search=election"
 ```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://api.futuur.com/v2.0/events/",
+    params={
+        "currency_mode": "play_money",
+        "limit": 10,
+        "search": "election",
+    },
+)
+
+print(response.json())
+```
+
+</CodeGroup>
 
 ```json Sample response
 {
-  "pagination": {
-    "total": 142,
-    "next": "https://api.futuur.com/events/?limit=10&offset=10",
-    "previous": null,
-    "page_size": 10,
-    "offset": 0
-  },
+  "count": 42,
+  "next": "https://api.futuur.com/v2.0/events/?limit=10&offset=10",
+  "previous": null,
   "results": [
     {
       "id": 1023,
-      "title": "Will the S&P 500 close above 5000 by end of Q2 2026?",
-      "slug": "sp500-above-5000-q2-2026",
+      "title": "Who will win the 2024 US Presidential Election?",
+      "slug": "2024-us-presidential-election",
       "status": "open",
-      "resolution_mode": "exclusive",
-      "bet_end_date": "2026-06-30T23:59:59Z",
-      "resolve_date": null,
-      "tags": [
-        { "name": "finance", "slug": "finance" },
-        { "name": "stocks", "slug": "stocks" }
-      ],
-      "category": [
-        { "id": 4, "title": "Finance", "slug": "finance", "parent": null }
-      ],
-      "markets": [
-        { "id": 501, "title": "Yes", "price": 0.62, "status": "active" },
-        { "id": 502, "title": "No", "price": 0.38, "status": "active" }
-      ],
-      "volume_play_money": "125000.00",
-      "volume_real_money": "42000.00",
-      "order_book_enabled": true
+      "markets": [...]
     }
   ]
 }

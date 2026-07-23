@@ -5,13 +5,13 @@ description: "Fetch detailed information for a single prediction market event by
 
 Retrieve the full details of a specific event, including its markets, resolution status, and metadata.
 
-- For related events, call [`GET /events/{id}/related_events/`](/api-reference/events/related-events) — no authentication required.
-- For event tax rates, call [`GET /events/{id}/get_tax/`](/api-reference/events/get-tax) — no authentication required.
+- For related events, call [`GET /v2.0/events/{id}/related_events/`](/api-reference/events/related-events) — no authentication required.
+- For event tax rates, call [`GET /v2.0/events/{id}/get_tax/`](/api-reference/events/get-tax) — no authentication required.
 
 ## Endpoint
 
 ```
-GET https://api.futuur.com/events/{id}/
+GET https://api.futuur.com/v2.0/events/{id}/
 ```
 
 ## Authentication
@@ -62,131 +62,59 @@ Returns an `EventDetail` object.
   ID of the winning market, if resolved. `null` for unresolved events.
 </ResponseField>
 
-<ResponseField name="bet_end_date" type="string">
-  ISO 8601 timestamp when betting closes. `null` if not set.
-</ResponseField>
-
-<ResponseField name="resolve_date" type="string">
-  ISO 8601 timestamp when the event was resolved. `null` if unresolved.
-</ResponseField>
-
-<ResponseField name="event_start_date" type="string">
-  ISO 8601 timestamp when the underlying event starts. `null` if not applicable.
-</ResponseField>
-
-<ResponseField name="event_end_date" type="string">
-  ISO 8601 timestamp when the underlying event ends. `null` if not applicable.
-</ResponseField>
-
-<ResponseField name="tags" type="object[]" required>
-  Tags associated with the event. Each tag has `name` and `slug`.
-</ResponseField>
-
-<ResponseField name="category" type="object[]" required>
-  Categories the event belongs to. Each category has `id`, `title`, and `slug`.
-</ResponseField>
-
-<ResponseField name="available_currencies" type="string[]">
-  Currencies accepted for this event (for example, `OOM`, `USDC`, `USDT`, `USD`).
-</ResponseField>
-
-<ResponseField name="canonical_currency" type="string">
-  Real-money bets on this event are converted to this currency.
-</ResponseField>
-
-<ResponseField name="order_book_enabled" type="boolean">
-  Whether this event uses the order book for trading.
-</ResponseField>
-
-<ResponseField name="markets" type="object[]" required>
-  Outcome markets for this event.
-  <Expandable title="properties">
-    <ResponseField name="id" type="integer">
-      Unique identifier for the market.
-    </ResponseField>
-    <ResponseField name="title" type="string">
-      Display name of the market outcome.
-    </ResponseField>
-    <ResponseField name="price" type="number">
-      Current implied probability price (0–1).
-    </ResponseField>
-    <ResponseField name="status" type="string">
-      Market status: `active`, `resolved`, `paused`, `stopped`, `cancelled`, or `reversed`.
-    </ResponseField>
-    <ResponseField name="position_labels" type="string">
-      Label style for long/short positions: `yesno`, `updown`, or `custom`.
-    </ResponseField>
-    <ResponseField name="long_label" type="string">
-      Custom label for long positions, if set.
-    </ResponseField>
-    <ResponseField name="short_label" type="string">
-      Custom label for short positions, if set.
-    </ResponseField>
-  </Expandable>
-</ResponseField>
-
-<ResponseField name="volume_play_money" type="string" required>
-  Total play money volume traded on this event.
-</ResponseField>
-
-<ResponseField name="volume_real_money" type="string" required>
-  Total real money volume traded on this event.
+<ResponseField name="markets" type="object[]">
+  Array of market objects representing possible outcomes.
 </ResponseField>
 
 ## Example
 
+<CodeGroup>
+
 ```bash cURL
 curl --request GET \
-  --url "https://api.futuur.com/events/1023/" \
+  --url "https://api.futuur.com/v2.0/events/1023/" \
   --header "Key: YOUR_PUBLIC_KEY" \
   --header "Timestamp: 1712500000" \
   --header "HMAC: YOUR_HMAC_SIGNATURE"
 ```
 
+```python Python
+import requests
+
+response = requests.get(
+    "https://api.futuur.com/v2.0/events/1023/",
+    headers={
+        "Key": "YOUR_PUBLIC_KEY",
+        "Timestamp": "1712500000",
+        "HMAC": "YOUR_HMAC_SIGNATURE",
+    },
+)
+
+print(response.json())
+```
+
+</CodeGroup>
+
 ```json Sample response
 {
   "id": 1023,
-  "title": "Will the S&P 500 close above 5000 by end of Q2 2026?",
-  "slug": "sp500-above-5000-q2-2026",
-  "description": "This event resolves YES if the S&P 500 index closing price is above 5000 on the last trading day of Q2 2026.",
+  "title": "Who will win the 2024 US Presidential Election?",
+  "slug": "2024-us-presidential-election",
   "status": "open",
+  "description": "This market resolves to the candidate who wins...",
   "resolution_mode": "exclusive",
   "resolution": null,
-  "bet_end_date": "2026-06-30T23:59:59Z",
-  "resolve_date": null,
-  "event_start_date": "2026-04-01T00:00:00Z",
-  "event_end_date": "2026-06-30T23:59:59Z",
-  "tags": [
-    { "name": "finance", "slug": "finance" },
-    { "name": "stocks", "slug": "stocks" }
-  ],
-  "category": [
-    { "id": 4, "title": "Finance", "slug": "finance", "parent": null }
-  ],
-  "available_currencies": ["OOM", "USDC"],
-  "canonical_currency": "USDC",
-  "order_book_enabled": true,
   "markets": [
     {
-      "id": 501,
-      "title": "Yes",
-      "price": 0.62,
-      "status": "active",
-      "position_labels": "yesno",
-      "long_label": "Yes",
-      "short_label": "No"
+      "id": 5001,
+      "title": "Candidate A",
+      "price": 0.52
     },
     {
-      "id": 502,
-      "title": "No",
-      "price": 0.38,
-      "status": "active",
-      "position_labels": "yesno",
-      "long_label": "Yes",
-      "short_label": "No"
+      "id": 5002,
+      "title": "Candidate B",
+      "price": 0.48
     }
-  ],
-  "volume_play_money": "125000.00",
-  "volume_real_money": "42000.00"
+  ]
 }
 ```

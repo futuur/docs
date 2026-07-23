@@ -21,7 +21,11 @@ All API requests go to:
 https://api.futuur.com
 ```
 
-The current version is **v2.0**.
+The current version is **v2.0**. All endpoints are prefixed with `/v2.0/`.
+
+<Note>
+  For reference, the deprecated v1.0 documentation is available at: [https://api.futuur.com/v1.0/docs](https://api.futuur.com/v1.0/docs)
+</Note>
 
 ## Key resources
 
@@ -45,32 +49,12 @@ The API supports two currency modes:
 
 ## Authentication
 
-Every request requires HMAC-SHA512 authentication using a public/private key pair. See the [Authentication](/authentication) page for the full signing process.
+Every authenticated request requires HMAC-SHA512 authentication using a public/private key pair. See the [Authentication](/authentication) page for the full signing process.
+
+<Note>
+  Some endpoints (like listing events) do not require authentication. Check each endpoint's documentation for requirements.
+</Note>
 
 ## For AI agents
 
-The full OpenAPI schema is available at `https://api.futuur.com/docs/schema/`. Use this to explore all available endpoints, parameters, and response shapes.
-
-## Next steps
-
-<CardGroup cols={2}>
-  <Card title="Authentication" icon="key" href="/authentication">
-    Generate HMAC signatures and authenticate your first request.
-  </Card>
-  <Card title="Events and markets" icon="chart-line" href="/concepts/events-and-markets">
-    Understand how events, outcomes, and markets are structured.
-  </Card>
-  <Card title="Placing a bet" icon="arrow-right" href="/guides/placing-a-bet">
-    Follow a step-by-step guide to placing your first order.
-  </Card>
-  <Card title="List events" icon="list" href="/api-reference/events/list">
-    Browse the full reference for the events endpoint.
-  </Card>
-  <Card title="My balances" icon="wallet" href="/api-reference/me/balances">
-    Fetch per-currency ledger balances for your account.
-  </Card>
-</CardGroup>
-
-## Support
-
-For questions or issues, contact [support@futuur.com](mailto:support@futuur.com).
+The full OpenAPI schema is available at `https://api.futuur.com/docs/schema/`. This endpoint provides the complete API specification in JSON format, perfect for code generation, API clients, and AI-powered integrations.
