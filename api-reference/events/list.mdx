@@ -1,9 +1,9 @@
 ---
-title: "List events"
-description: "Retrieve a paginated list of prediction market events, with optional filters for category, currency mode, search, and more."
+title: 'List events'
+description: 'Retrieve a paginated list of prediction market events with optional filters.'
 ---
 
-Fetch a paginated list of events available on the Futuur prediction market. Use query parameters to filter by category, currency mode, resolution status, tags, and more.
+Retrieve a list of prediction market events. You can filter by category, currency mode, tags, resolution status, and more. This endpoint does not require authentication.
 
 ## Endpoint
 
@@ -15,38 +15,26 @@ GET https://api.futuur.com/v2.0/events/
 
 No authentication is required for this endpoint.
 
-## Parameters
+## Request
 
 <ParamField query="categories" type="integer[]">
-  Filter results to one or more category IDs. Pass the parameter multiple times to specify multiple categories.
+  Filter events by one or more category IDs.
 </ParamField>
 
 <ParamField query="currency_mode" type="string" default="play_money">
-  Restrict results to a specific currency mode. Accepted values: `play_money`, `real_money`.
+  Filter by currency mode. One of `play_money` or `real_money`.
 </ParamField>
 
 <ParamField query="hide_my_bets" type="boolean" default="false">
-  When `true`, excludes events on which you have placed bets.
-</ParamField>
-
-<ParamField query="limit" type="integer">
-  Number of results to return per page.
+  When `true`, excludes events where you have placed bets.
 </ParamField>
 
 <ParamField query="live" type="boolean" default="false">
-  When `true`, returns only events that are currently live.
-</ParamField>
-
-<ParamField query="offset" type="integer">
-  Number of results to skip for pagination.
+  When `true`, returns only live events.
 </ParamField>
 
 <ParamField query="only_markets_i_follow" type="boolean" default="false">
-  When `true`, returns only events in markets you follow.
-</ParamField>
-
-<ParamField query="ordering" type="string">
-  Field name to sort results by. Prefix with `-` for descending order (e.g., `-volume_play_money`).
+  When `true`, returns only events containing markets you follow.
 </ParamField>
 
 <ParamField query="pending_resolution" type="boolean" default="false">
@@ -54,35 +42,73 @@ No authentication is required for this endpoint.
 </ParamField>
 
 <ParamField query="resolved_only" type="boolean" default="false">
-  When `true`, returns only events that have been resolved.
+  When `true`, returns only resolved events.
 </ParamField>
 
 <ParamField query="search" type="string">
-  Full-text search query to filter events. Maximum 100 characters.
+  Full-text search query. Maximum 100 characters.
 </ParamField>
 
 <ParamField query="tag" type="string">
-  Filter results to events with a specific tag. Maximum 100 characters.
+  Filter events by tag. Maximum 100 characters.
+</ParamField>
+
+<ParamField query="ordering" type="string">
+  Field to sort results by. Prefix with `-` for descending order.
+</ParamField>
+
+<ParamField query="limit" type="integer">
+  Number of results to return per page.
+</ParamField>
+
+<ParamField query="offset" type="integer">
+  Pagination offset. Number of results to skip before returning results.
 </ParamField>
 
 ## Response
 
-Returns a paginated list of `EventList` objects.
+Returns a paginated list of event objects.
 
 <ResponseField name="count" type="integer" required>
   Total number of events matching the query.
 </ResponseField>
 
 <ResponseField name="next" type="string">
-  URL to the next page of results. `null` if this is the last page.
+  URL to the next page of results, or `null` if this is the last page.
 </ResponseField>
 
 <ResponseField name="previous" type="string">
-  URL to the previous page of results. `null` if this is the first page.
+  URL to the previous page of results, or `null` if this is the first page.
 </ResponseField>
 
 <ResponseField name="results" type="object[]" required>
   Array of event objects.
+  <Expandable title="event properties">
+    <ResponseField name="id" type="integer">
+      Unique event identifier.
+    </ResponseField>
+    <ResponseField name="title" type="string">
+      The prediction question.
+    </ResponseField>
+    <ResponseField name="slug" type="string">
+      URL-friendly identifier.
+    </ResponseField>
+    <ResponseField name="status" type="string">
+      Current state: `open`, `stopped`, `resolved`, `cancelled`, `paused`, or `reversed`.
+    </ResponseField>
+    <ResponseField name="category" type="object[]">
+      Array of category objects the event belongs to.
+    </ResponseField>
+    <ResponseField name="markets" type="object[]">
+      Array of market (outcome) objects.
+    </ResponseField>
+    <ResponseField name="bet_end_date" type="string">
+      ISO 8601 datetime when betting closes.
+    </ResponseField>
+    <ResponseField name="resolve_date" type="string">
+      ISO 8601 datetime when the event was resolved.
+    </ResponseField>
+  </Expandable>
 </ResponseField>
 
 ## Example
@@ -91,7 +117,7 @@ Returns a paginated list of `EventList` objects.
 
 ```bash cURL
 curl --request GET \
-  --url "https://api.futuur.com/v2.0/events/?currency_mode=play_money&limit=10&search=election"
+  --url "https://api.futuur.com/v2.0/events/?currency_mode=play_money&limit=10"
 ```
 
 ```python Python
@@ -101,11 +127,9 @@ response = requests.get(
     "https://api.futuur.com/v2.0/events/",
     params={
         "currency_mode": "play_money",
-        "limit": 10,
-        "search": "election",
-    },
+        "limit": 10
+    }
 )
-
 print(response.json())
 ```
 
@@ -113,16 +137,18 @@ print(response.json())
 
 ```json Sample response
 {
-  "count": 42,
+  "count": 150,
   "next": "https://api.futuur.com/v2.0/events/?limit=10&offset=10",
   "previous": null,
   "results": [
     {
-      "id": 1023,
+      "id": 1234,
       "title": "Who will win the 2024 US Presidential Election?",
       "slug": "2024-us-presidential-election",
       "status": "open",
-      "markets": [...]
+      "category": [{"id": 1, "name": "Politics"}],
+      "markets": [...],
+      "bet_end_date": "2024-11-05T00:00:00Z"
     }
   ]
 }
