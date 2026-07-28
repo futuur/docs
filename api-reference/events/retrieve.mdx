@@ -1,9 +1,9 @@
 ---
 title: 'Retrieve event'
-description: 'Retrieve detailed information about a single event by its ID.'
+description: 'Get detailed information about a specific event by its ID.'
 ---
 
-Retrieve full details for a specific prediction market event, including all associated markets (outcomes), resolution criteria, and metadata.
+Retrieve full details for a specific prediction market event, including all associated markets (outcomes).
 
 ## Endpoint
 
@@ -14,18 +14,18 @@ GET https://api.futuur.com/v2.0/events/{id}/
 ## Authentication
 
 <Note>
-  This endpoint requires HMAC authentication. Include the `Key`, `Timestamp`, and `HMAC` headers on every request. See the [authentication guide](/authentication) for signing instructions.
+  This endpoint supports optional HMAC authentication. Authenticated requests may return additional user-specific data.
 </Note>
 
 ## Request
 
 <ParamField path="id" type="integer" required>
-  The unique identifier of the event to retrieve.
+  A unique integer value identifying this event.
 </ParamField>
 
 ## Response
 
-Returns an `EventDetail` object with comprehensive event information.
+Returns the full event detail object.
 
 <ResponseField name="id" type="integer" required>
   Unique event identifier.
@@ -43,16 +43,12 @@ Returns an `EventDetail` object with comprehensive event information.
   Current state: `open`, `stopped`, `resolved`, `cancelled`, `paused`, or `reversed`.
 </ResponseField>
 
+<ResponseField name="markets" type="array" required>
+  Array of market (outcome) objects for this event.
+</ResponseField>
+
 <ResponseField name="description" type="string">
   Full question details and resolution criteria.
-</ResponseField>
-
-<ResponseField name="category" type="object[]">
-  Array of category objects the event belongs to.
-</ResponseField>
-
-<ResponseField name="markets" type="object[]" required>
-  Array of market (outcome) objects for this event.
 </ResponseField>
 
 <ResponseField name="bet_end_date" type="string">
@@ -63,17 +59,13 @@ Returns an `EventDetail` object with comprehensive event information.
   ISO 8601 datetime when the event was resolved.
 </ResponseField>
 
-<ResponseField name="resolution_mode" type="string">
-  How markets resolve within the event (linked prices or independent).
-</ResponseField>
-
 ## Example
 
 <CodeGroup>
 
 ```bash cURL
 curl --request GET \
-  --url "https://api.futuur.com/v2.0/events/1234/" \
+  --url "https://api.futuur.com/v2.0/events/42/" \
   --header "Key: YOUR_PUBLIC_KEY" \
   --header "Timestamp: 1712534400" \
   --header "HMAC: YOUR_HMAC_SIGNATURE"
@@ -83,13 +75,14 @@ curl --request GET \
 import requests
 
 response = requests.get(
-    "https://api.futuur.com/v2.0/events/1234/",
+    "https://api.futuur.com/v2.0/events/42/",
     headers={
         "Key": "YOUR_PUBLIC_KEY",
         "Timestamp": "1712534400",
         "HMAC": "YOUR_HMAC_SIGNATURE"
     }
 )
+
 print(response.json())
 ```
 
@@ -97,19 +90,24 @@ print(response.json())
 
 ```json Sample response
 {
-  "id": 1234,
+  "id": 42,
   "title": "Who will win the 2024 US Presidential Election?",
-  "slug": "2024-us-presidential-election",
+  "slug": "who-will-win-2024-us-presidential-election",
   "status": "open",
   "description": "This market resolves to the candidate who wins the 2024 US Presidential Election.",
-  "category": [{"id": 1, "name": "Politics"}],
-  "markets": [
-    {"id": 5001, "title": "Candidate A", "price": 0.52},
-    {"id": 5002, "title": "Candidate B", "price": 0.45},
-    {"id": 5003, "title": "Other", "price": 0.03}
-  ],
   "bet_end_date": "2024-11-05T00:00:00Z",
   "resolve_date": null,
-  "resolution_mode": "linked_prices"
+  "markets": [
+    {
+      "id": 101,
+      "title": "Candidate A",
+      "price": 0.52
+    },
+    {
+      "id": 102,
+      "title": "Candidate B",
+      "price": 0.48
+    }
+  ]
 }
 ```

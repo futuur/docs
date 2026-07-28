@@ -3,7 +3,7 @@ title: 'List events'
 description: 'Retrieve a paginated list of prediction market events with optional filters.'
 ---
 
-Retrieve a list of prediction market events. You can filter by category, currency mode, tags, resolution status, and more. This endpoint does not require authentication.
+Retrieve a list of prediction market events. Use query parameters to filter by category, currency mode, search term, tags, and more.
 
 ## Endpoint
 
@@ -13,7 +13,9 @@ GET https://api.futuur.com/v2.0/events/
 
 ## Authentication
 
-No authentication is required for this endpoint.
+<Note>
+  This endpoint does not require authentication. You can call it without any headers.
+</Note>
 
 ## Request
 
@@ -29,16 +31,28 @@ No authentication is required for this endpoint.
   When `true`, excludes events where you have placed bets.
 </ParamField>
 
+<ParamField query="limit" type="integer">
+  Number of results to return per page.
+</ParamField>
+
 <ParamField query="live" type="boolean" default="false">
   When `true`, returns only live events.
+</ParamField>
+
+<ParamField query="offset" type="integer">
+  The initial index from which to return the results.
 </ParamField>
 
 <ParamField query="only_markets_i_follow" type="boolean" default="false">
   When `true`, returns only events containing markets you follow.
 </ParamField>
 
+<ParamField query="ordering" type="string">
+  Field to sort results by. Prefix with `-` for descending order.
+</ParamField>
+
 <ParamField query="pending_resolution" type="boolean" default="false">
-  When `true`, returns only events that are pending resolution.
+  When `true`, returns only events pending resolution.
 </ParamField>
 
 <ParamField query="resolved_only" type="boolean" default="false">
@@ -53,21 +67,9 @@ No authentication is required for this endpoint.
   Filter events by tag. Maximum 100 characters.
 </ParamField>
 
-<ParamField query="ordering" type="string">
-  Field to sort results by. Prefix with `-` for descending order.
-</ParamField>
-
-<ParamField query="limit" type="integer">
-  Number of results to return per page.
-</ParamField>
-
-<ParamField query="offset" type="integer">
-  Pagination offset. Number of results to skip before returning results.
-</ParamField>
-
 ## Response
 
-Returns a paginated list of event objects.
+Returns a paginated list of events.
 
 <ResponseField name="count" type="integer" required>
   Total number of events matching the query.
@@ -81,34 +83,8 @@ Returns a paginated list of event objects.
   URL to the previous page of results, or `null` if this is the first page.
 </ResponseField>
 
-<ResponseField name="results" type="object[]" required>
+<ResponseField name="results" type="array" required>
   Array of event objects.
-  <Expandable title="event properties">
-    <ResponseField name="id" type="integer">
-      Unique event identifier.
-    </ResponseField>
-    <ResponseField name="title" type="string">
-      The prediction question.
-    </ResponseField>
-    <ResponseField name="slug" type="string">
-      URL-friendly identifier.
-    </ResponseField>
-    <ResponseField name="status" type="string">
-      Current state: `open`, `stopped`, `resolved`, `cancelled`, `paused`, or `reversed`.
-    </ResponseField>
-    <ResponseField name="category" type="object[]">
-      Array of category objects the event belongs to.
-    </ResponseField>
-    <ResponseField name="markets" type="object[]">
-      Array of market (outcome) objects.
-    </ResponseField>
-    <ResponseField name="bet_end_date" type="string">
-      ISO 8601 datetime when betting closes.
-    </ResponseField>
-    <ResponseField name="resolve_date" type="string">
-      ISO 8601 datetime when the event was resolved.
-    </ResponseField>
-  </Expandable>
 </ResponseField>
 
 ## Example
@@ -130,25 +106,33 @@ response = requests.get(
         "limit": 10
     }
 )
+
 print(response.json())
+```
+
+```javascript JavaScript
+const response = await fetch(
+  "https://api.futuur.com/v2.0/events/?currency_mode=play_money&limit=10"
+);
+
+const data = await response.json();
+console.log(data);
 ```
 
 </CodeGroup>
 
 ```json Sample response
 {
-  "count": 150,
+  "count": 1234,
   "next": "https://api.futuur.com/v2.0/events/?limit=10&offset=10",
   "previous": null,
   "results": [
     {
-      "id": 1234,
+      "id": 42,
       "title": "Who will win the 2024 US Presidential Election?",
-      "slug": "2024-us-presidential-election",
+      "slug": "who-will-win-2024-us-presidential-election",
       "status": "open",
-      "category": [{"id": 1, "name": "Politics"}],
-      "markets": [...],
-      "bet_end_date": "2024-11-05T00:00:00Z"
+      "markets": [...]
     }
   ]
 }

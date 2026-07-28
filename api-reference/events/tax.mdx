@@ -1,0 +1,39 @@
+---
+title: 'Event tax'
+description: 'Retrieve tax information for a specific event.'
+---
+
+Get tax-related information for a specific event.
+
+## Endpoint
+
+```
+GET https://api.futuur.com/v2.0/events/{id}/get_tax/
+```
+
+## Authentication
+
+<Note>
+  This endpoint does not require authentication.
+</Note>
+
+## Request
+
+<ParamField path="id" type="integer" required>
+  A unique integer value identifying this event.
+</ParamField>
+
+## Response
+
+Returns the event tax information.
+
+## Example
+
+<CodeGroup>
+
+```bash cURL
+curl --request GET \
+  --url "https://api.futuur.com/v2.0/events/42/get_tax/"
+```
+
+</CodeGroup>

@@ -3,7 +3,7 @@ title: 'Event actions'
 description: 'List all actions (trades) for a specific event.'
 ---
 
-Retrieve a list of all actions (trades) that have occurred on an event. Real money actions have user information anonymized for privacy.
+Retrieve a list of all trading actions that have occurred on a specific event. Real money actions have user information anonymized.
 
 ## Endpoint
 
@@ -14,21 +14,21 @@ GET https://api.futuur.com/v2.0/events/{id}/actions/
 ## Authentication
 
 <Note>
-  This endpoint requires HMAC authentication. Include the `Key`, `Timestamp`, and `HMAC` headers on every request. See the [authentication guide](/authentication) for signing instructions.
+  This endpoint supports optional HMAC authentication. Include the `Key`, `Timestamp`, and `HMAC` headers to access user-specific filters.
 </Note>
 
 ## Request
 
 <ParamField path="id" type="integer" required>
-  The unique identifier of the event.
+  A unique integer value identifying this event.
 </ParamField>
 
 <ParamField query="aggregate_by_orders" type="boolean" default="true">
-  When `true`, aggregates actions by their parent orders.
+  When `true`, aggregates actions by order.
 </ParamField>
 
 <ParamField query="currency_mode" type="string">
-  Filter by currency mode. One of `play_money`, `real_money`, or empty string for all.
+  Filter by currency mode. One of `play_money` or `real_money`.
 </ParamField>
 
 <ParamField query="following" type="boolean" default="false">
@@ -36,7 +36,7 @@ GET https://api.futuur.com/v2.0/events/{id}/actions/
 </ParamField>
 
 <ParamField query="my_bets" type="boolean" default="false">
-  When `true`, returns only your own actions on this event.
+  When `true`, returns only your own actions.
 </ParamField>
 
 <ParamField query="search" type="string">
@@ -45,7 +45,7 @@ GET https://api.futuur.com/v2.0/events/{id}/actions/
 
 ## Response
 
-Returns a `WagerAction` object containing the list of actions.
+Returns a list of wager action objects.
 
 ## Example
 
@@ -53,10 +53,24 @@ Returns a `WagerAction` object containing the list of actions.
 
 ```bash cURL
 curl --request GET \
-  --url "https://api.futuur.com/v2.0/events/1234/actions/?currency_mode=play_money" \
+  --url "https://api.futuur.com/v2.0/events/42/actions/?currency_mode=play_money" \
   --header "Key: YOUR_PUBLIC_KEY" \
   --header "Timestamp: 1712534400" \
   --header "HMAC: YOUR_HMAC_SIGNATURE"
 ```
 
 </CodeGroup>
+
+```json Sample response
+[
+  {
+    "id": 1001,
+    "user": "user_abc",
+    "market": 101,
+    "side": "bid",
+    "shares": 10.0,
+    "price": 0.52,
+    "created_at": "2024-01-15T10:30:00Z"
+  }
+]
+```

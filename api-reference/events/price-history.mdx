@@ -1,9 +1,9 @@
 ---
 title: 'Price history'
-description: 'Get historical price data for an event over a specified time interval.'
+description: 'Retrieve historical price data for an event.'
 ---
 
-Retrieve price history for all markets within an event. Use this to display price charts or analyze market movements over time.
+Get price history for all markets within an event over a specified time interval.
 
 ## Endpoint
 
@@ -13,25 +13,27 @@ GET https://api.futuur.com/v2.0/events/{id}/price_history/
 
 ## Authentication
 
-No authentication is required for this endpoint.
+<Note>
+  This endpoint does not require authentication.
+</Note>
 
 ## Request
 
 <ParamField path="id" type="integer" required>
-  The unique identifier of the event.
+  A unique integer value identifying this event.
 </ParamField>
 
 <ParamField query="currency_mode" type="string" required>
-  The currency mode to query. One of `play_money` or `real_money`.
+  Currency mode for price data. One of `play_money` or `real_money`.
 </ParamField>
 
 <ParamField query="time_interval" type="string">
-  Time range for the price history. One of `day`, `week`, `month`, `year`, or `all_time`.
+  Time interval for the price history. One of `day`, `week`, `month`, `year`, or `all_time`.
 </ParamField>
 
 ## Response
 
-Returns price history data points for each market in the event.
+Returns historical price data points for each market in the event.
 
 ## Example
 
@@ -39,20 +41,38 @@ Returns price history data points for each market in the event.
 
 ```bash cURL
 curl --request GET \
-  --url "https://api.futuur.com/v2.0/events/1234/price_history/?currency_mode=play_money&time_interval=week"
+  --url "https://api.futuur.com/v2.0/events/42/price_history/?currency_mode=play_money&time_interval=week"
 ```
 
 ```python Python
 import requests
 
 response = requests.get(
-    "https://api.futuur.com/v2.0/events/1234/price_history/",
+    "https://api.futuur.com/v2.0/events/42/price_history/",
     params={
         "currency_mode": "play_money",
         "time_interval": "week"
     }
 )
+
 print(response.json())
 ```
 
 </CodeGroup>
+
+```json Sample response
+{
+  "markets": {
+    "101": [
+      {"timestamp": "2024-01-08T00:00:00Z", "price": 0.48},
+      {"timestamp": "2024-01-09T00:00:00Z", "price": 0.50},
+      {"timestamp": "2024-01-10T00:00:00Z", "price": 0.52}
+    ],
+    "102": [
+      {"timestamp": "2024-01-08T00:00:00Z", "price": 0.52},
+      {"timestamp": "2024-01-09T00:00:00Z", "price": 0.50},
+      {"timestamp": "2024-01-10T00:00:00Z", "price": 0.48}
+    ]
+  }
+}
+```
