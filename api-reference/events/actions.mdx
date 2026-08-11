@@ -3,7 +3,7 @@ title: 'Event actions'
 description: 'List all actions (trades) for a specific event.'
 ---
 
-Retrieve a list of all trading actions that have occurred on a specific event. Real money actions have user information anonymized.
+Retrieve a list of all actions (trades) that have occurred on a specific event. Real money actions have user information anonymized.
 
 ## Endpoint
 
@@ -14,13 +14,13 @@ GET https://api.futuur.com/v2.0/events/{id}/actions/
 ## Authentication
 
 <Note>
-  This endpoint supports optional HMAC authentication. Include the `Key`, `Timestamp`, and `HMAC` headers to access user-specific filters.
+  This endpoint supports optional HMAC authentication. Authenticated requests can use filters like `my_bets` and `following`.
 </Note>
 
 ## Request
 
 <ParamField path="id" type="integer" required>
-  A unique integer value identifying this event.
+  The unique identifier of the event.
 </ParamField>
 
 <ParamField query="aggregate_by_orders" type="boolean" default="true">
@@ -28,7 +28,7 @@ GET https://api.futuur.com/v2.0/events/{id}/actions/
 </ParamField>
 
 <ParamField query="currency_mode" type="string">
-  Filter by currency mode. One of `play_money` or `real_money`.
+  Filter by currency mode. One of `play_money`, `real_money`, or empty string for all.
 </ParamField>
 
 <ParamField query="following" type="boolean" default="false">
@@ -36,7 +36,7 @@ GET https://api.futuur.com/v2.0/events/{id}/actions/
 </ParamField>
 
 <ParamField query="my_bets" type="boolean" default="false">
-  When `true`, returns only your own actions.
+  When `true`, returns only your own actions on this event.
 </ParamField>
 
 <ParamField query="search" type="string">
@@ -45,7 +45,7 @@ GET https://api.futuur.com/v2.0/events/{id}/actions/
 
 ## Response
 
-Returns a list of wager action objects.
+Returns a `WagerAction` object containing the list of actions.
 
 ## Example
 
@@ -53,24 +53,19 @@ Returns a list of wager action objects.
 
 ```bash cURL
 curl --request GET \
-  --url "https://api.futuur.com/v2.0/events/42/actions/?currency_mode=play_money" \
-  --header "Key: YOUR_PUBLIC_KEY" \
-  --header "Timestamp: 1712534400" \
-  --header "HMAC: YOUR_HMAC_SIGNATURE"
+  --url "https://api.futuur.com/v2.0/events/1234/actions/?currency_mode=play_money"
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://api.futuur.com/v2.0/events/1234/actions/",
+    params={"currency_mode": "play_money"}
+)
+
+actions = response.json()
+print(actions)
 ```
 
 </CodeGroup>
-
-```json Sample response
-[
-  {
-    "id": 1001,
-    "user": "user_abc",
-    "market": 101,
-    "side": "bid",
-    "shares": 10.0,
-    "price": 0.52,
-    "created_at": "2024-01-15T10:30:00Z"
-  }
-]
-```
