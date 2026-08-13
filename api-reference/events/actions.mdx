@@ -1,9 +1,9 @@
 ---
 title: 'Event actions'
-description: 'List all actions (trades) for a specific event.'
+description: 'List all actions (bets) for a specific event.'
 ---
 
-Retrieve a list of all actions (trades) that have occurred on a specific event. Real money actions have user information anonymized.
+Retrieve a list of all wager actions for a specific event. Real money actions have user information anonymized.
 
 ## Endpoint
 
@@ -14,7 +14,7 @@ GET https://api.futuur.com/v2.0/events/{id}/actions/
 ## Authentication
 
 <Note>
-  This endpoint supports optional HMAC authentication. Authenticated requests can use filters like `my_bets` and `following`.
+  This endpoint supports optional HMAC authentication. Include the `Key`, `Timestamp`, and `HMAC` headers to access user-specific filters. See the [authentication guide](/authentication) for signing instructions.
 </Note>
 
 ## Request
@@ -24,11 +24,11 @@ GET https://api.futuur.com/v2.0/events/{id}/actions/
 </ParamField>
 
 <ParamField query="aggregate_by_orders" type="boolean" default="true">
-  When `true`, aggregates actions by order.
+  When `true`, aggregates actions by orders.
 </ParamField>
 
 <ParamField query="currency_mode" type="string">
-  Filter by currency mode. One of `play_money`, `real_money`, or empty string for all.
+  Filter by currency mode. One of `play_money` or `real_money`.
 </ParamField>
 
 <ParamField query="following" type="boolean" default="false">
@@ -36,7 +36,7 @@ GET https://api.futuur.com/v2.0/events/{id}/actions/
 </ParamField>
 
 <ParamField query="my_bets" type="boolean" default="false">
-  When `true`, returns only your own actions on this event.
+  When `true`, returns only your own bets.
 </ParamField>
 
 <ParamField query="search" type="string">
@@ -53,19 +53,25 @@ Returns a `WagerAction` object containing the list of actions.
 
 ```bash cURL
 curl --request GET \
-  --url "https://api.futuur.com/v2.0/events/1234/actions/?currency_mode=play_money"
-```
-
-```python Python
-import requests
-
-response = requests.get(
-    "https://api.futuur.com/v2.0/events/1234/actions/",
-    params={"currency_mode": "play_money"}
-)
-
-actions = response.json()
-print(actions)
+  --url "https://api.futuur.com/v2.0/events/1234/actions/?currency_mode=play_money" \
+  --header "Key: pk_live_abc123def456" \
+  --header "Timestamp: 1712534400" \
+  --header "HMAC: 3a9f2c1b...sha512signature"
 ```
 
 </CodeGroup>
+
+```json Sample response
+{
+  "actions": [
+    {
+      "user": "trader123",
+      "market": 5678,
+      "side": "bid",
+      "shares": 100,
+      "price": 0.55,
+      "created_at": "2024-04-01T12:00:00Z"
+    }
+  ]
+}
+```
