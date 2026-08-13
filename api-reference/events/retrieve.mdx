@@ -1,9 +1,9 @@
 ---
 title: 'Retrieve event'
-description: 'Retrieve detailed information about a single event by its ID.'
+description: 'Get detailed information about a specific prediction market event.'
 ---
 
-Retrieve full details for a specific prediction market event, including all markets (outcomes), resolution criteria, and current status.
+Retrieve a single event by its ID, including all associated markets and their current prices.
 
 ## Endpoint
 
@@ -14,21 +14,21 @@ GET https://api.futuur.com/v2.0/events/{id}/
 ## Authentication
 
 <Note>
-  This endpoint supports optional HMAC authentication. Include the `Key`, `Timestamp`, and `HMAC` headers to access additional user-specific data. See the [authentication guide](/authentication) for signing instructions.
+  This endpoint requires HMAC authentication. Include the `Key`, `Timestamp`, and `HMAC` headers on every request. See the [authentication guide](/authentication) for signing instructions.
 </Note>
 
 ## Request
 
 <ParamField path="id" type="integer" required>
-  The unique identifier of the event to retrieve.
+  The unique identifier of the event.
 </ParamField>
 
 ## Response
 
-Returns an `EventDetail` object with full event information.
+Returns the event object with full details.
 
 <ResponseField name="id" type="integer" required>
-  Unique event ID.
+  Unique identifier for the event.
 </ResponseField>
 
 <ResponseField name="title" type="string" required>
@@ -43,16 +43,16 @@ Returns an `EventDetail` object with full event information.
   Current state: `open`, `stopped`, `resolved`, `cancelled`, `paused`, or `reversed`.
 </ResponseField>
 
+<ResponseField name="markets" type="array" required>
+  Array of market objects representing possible outcomes.
+</ResponseField>
+
 <ResponseField name="description" type="string">
   Full question details and resolution criteria.
 </ResponseField>
 
-<ResponseField name="category" type="object[]">
+<ResponseField name="category" type="array">
   Array of category objects the event belongs to.
-</ResponseField>
-
-<ResponseField name="markets" type="object[]" required>
-  Array of market (outcome) objects.
 </ResponseField>
 
 <ResponseField name="bet_end_date" type="string">
@@ -63,56 +63,52 @@ Returns an `EventDetail` object with full event information.
   ISO 8601 datetime when the event was resolved.
 </ResponseField>
 
-<ResponseField name="resolution_mode" type="string">
-  How markets resolve within the event.
-</ResponseField>
-
 ## Example
 
 <CodeGroup>
 
 ```bash cURL
-curl --request GET \
-  --url "https://api.futuur.com/v2.0/events/1234/" \
-  --header "Key: pk_live_abc123def456" \
-  --header "Timestamp: 1712534400" \
-  --header "HMAC: 3a9f2c1b...sha512signature"
+curl "https://api.futuur.com/v2.0/events/12345/" \
+  -H "Key: YOUR_PUBLIC_KEY" \
+  -H "Timestamp: 1712500000" \
+  -H "HMAC: YOUR_HMAC_SIGNATURE"
 ```
 
 ```python Python
 import requests
 
 response = requests.get(
-    "https://api.futuur.com/v2.0/events/1234/",
+    "https://api.futuur.com/v2.0/events/12345/",
     headers={
-        "Key": "pk_live_abc123def456",
-        "Timestamp": "1712534400",
-        "HMAC": "3a9f2c1b...sha512signature"
-    }
+        "Key": "YOUR_PUBLIC_KEY",
+        "Timestamp": "1712500000",
+        "HMAC": "YOUR_HMAC_SIGNATURE",
+    },
 )
 
-print(response.json())
+event = response.json()
+print(event)
 ```
 
 </CodeGroup>
 
-```json Sample response
+```json Sample response (200 OK)
 {
-  "id": 1234,
+  "id": 12345,
   "title": "Who will win the 2024 US Presidential Election?",
   "slug": "who-will-win-2024-us-presidential-election",
   "status": "open",
-  "description": "This market resolves to the winner of the 2024 US Presidential Election.",
+  "description": "This market resolves to the candidate who wins...",
   "markets": [
     {
-      "id": 5678,
+      "id": 67890,
       "title": "Candidate A",
-      "price": 0.52
+      "price": 0.55
     },
     {
-      "id": 5679,
+      "id": 67891,
       "title": "Candidate B",
-      "price": 0.48
+      "price": 0.42
     }
   ],
   "bet_end_date": "2024-11-05T00:00:00Z"

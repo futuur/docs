@@ -1,9 +1,9 @@
 ---
 title: 'Event actions'
-description: 'List all actions (bets) for a specific event.'
+description: 'List all trading actions for a specific event.'
 ---
 
-Retrieve a list of all wager actions for a specific event. Real money actions have user information anonymized.
+Retrieve a list of all trading actions (wagers) for an event. Real money actions have user information anonymized.
 
 ## Endpoint
 
@@ -14,7 +14,7 @@ GET https://api.futuur.com/v2.0/events/{id}/actions/
 ## Authentication
 
 <Note>
-  This endpoint supports optional HMAC authentication. Include the `Key`, `Timestamp`, and `HMAC` headers to access user-specific filters. See the [authentication guide](/authentication) for signing instructions.
+  This endpoint requires HMAC authentication. Include the `Key`, `Timestamp`, and `HMAC` headers on every request. See the [authentication guide](/authentication) for signing instructions.
 </Note>
 
 ## Request
@@ -23,20 +23,20 @@ GET https://api.futuur.com/v2.0/events/{id}/actions/
   The unique identifier of the event.
 </ParamField>
 
-<ParamField query="aggregate_by_orders" type="boolean" default="true">
-  When `true`, aggregates actions by orders.
-</ParamField>
-
 <ParamField query="currency_mode" type="string">
   Filter by currency mode. One of `play_money` or `real_money`.
 </ParamField>
 
-<ParamField query="following" type="boolean" default="false">
-  When `true`, returns only actions from users you follow.
+<ParamField query="aggregate_by_orders" type="boolean" default="true">
+  When `true`, aggregate actions by orders.
 </ParamField>
 
 <ParamField query="my_bets" type="boolean" default="false">
-  When `true`, returns only your own bets.
+  When `true`, return only your own bets.
+</ParamField>
+
+<ParamField query="following" type="boolean" default="false">
+  When `true`, return only bets from users you follow.
 </ParamField>
 
 <ParamField query="search" type="string">
@@ -45,33 +45,35 @@ GET https://api.futuur.com/v2.0/events/{id}/actions/
 
 ## Response
 
-Returns a `WagerAction` object containing the list of actions.
+Returns a list of wager action objects.
 
 ## Example
 
 <CodeGroup>
 
 ```bash cURL
-curl --request GET \
-  --url "https://api.futuur.com/v2.0/events/1234/actions/?currency_mode=play_money" \
-  --header "Key: pk_live_abc123def456" \
-  --header "Timestamp: 1712534400" \
-  --header "HMAC: 3a9f2c1b...sha512signature"
+curl -G "https://api.futuur.com/v2.0/events/12345/actions/" \
+  --data-urlencode "currency_mode=play_money" \
+  -H "Key: YOUR_PUBLIC_KEY" \
+  -H "Timestamp: 1712500000" \
+  -H "HMAC: YOUR_HMAC_SIGNATURE"
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://api.futuur.com/v2.0/events/12345/actions/",
+    params={"currency_mode": "play_money"},
+    headers={
+        "Key": "YOUR_PUBLIC_KEY",
+        "Timestamp": "1712500000",
+        "HMAC": "YOUR_HMAC_SIGNATURE",
+    },
+)
+
+actions = response.json()
+print(actions)
 ```
 
 </CodeGroup>
-
-```json Sample response
-{
-  "actions": [
-    {
-      "user": "trader123",
-      "market": 5678,
-      "side": "bid",
-      "shares": 100,
-      "price": 0.55,
-      "created_at": "2024-04-01T12:00:00Z"
-    }
-  ]
-}
-```

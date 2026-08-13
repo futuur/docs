@@ -1,9 +1,9 @@
 ---
 title: 'Price history'
-description: 'Retrieve historical price data for an event.'
+description: 'Get historical price data for an event.'
 ---
 
-Retrieve price history for all markets within a specific event. Use this to build charts or analyze price movements over time.
+Retrieve price history for all markets within an event over a specified time interval.
 
 ## Endpoint
 
@@ -13,9 +13,7 @@ GET https://api.futuur.com/v2.0/events/{id}/price_history/
 
 ## Authentication
 
-<Note>
-  This endpoint does not require authentication.
-</Note>
+No authentication required. This is a public endpoint.
 
 ## Request
 
@@ -24,51 +22,53 @@ GET https://api.futuur.com/v2.0/events/{id}/price_history/
 </ParamField>
 
 <ParamField query="currency_mode" type="string" required>
-  Currency mode for the price data. One of `play_money` or `real_money`.
+  The currency mode. One of `play_money` or `real_money`.
 </ParamField>
 
 <ParamField query="time_interval" type="string">
-  Time interval for data aggregation. One of `day`, `week`, `month`, `year`, or `all_time`.
+  Time range for the price history. One of `day`, `week`, `month`, `year`, or `all_time`.
 </ParamField>
 
 ## Response
 
-Returns price history data for all markets in the event.
+Returns an array of price history data points for each market in the event.
 
 ## Example
 
 <CodeGroup>
 
 ```bash cURL
-curl --request GET \
-  --url "https://api.futuur.com/v2.0/events/1234/price_history/?currency_mode=play_money&time_interval=week"
+curl -G "https://api.futuur.com/v2.0/events/12345/price_history/" \
+  --data-urlencode "currency_mode=play_money" \
+  --data-urlencode "time_interval=week"
 ```
 
 ```python Python
 import requests
 
 response = requests.get(
-    "https://api.futuur.com/v2.0/events/1234/price_history/",
+    "https://api.futuur.com/v2.0/events/12345/price_history/",
     params={
         "currency_mode": "play_money",
-        "time_interval": "week"
-    }
+        "time_interval": "week",
+    },
 )
 
-print(response.json())
+price_history = response.json()
+print(price_history)
 ```
 
 </CodeGroup>
 
-```json Sample response
+```json Sample response (200 OK)
 {
   "markets": [
     {
-      "market_id": 5678,
+      "market_id": 67890,
       "title": "Candidate A",
       "history": [
-        {"timestamp": "2024-04-01T00:00:00Z", "price": 0.50},
-        {"timestamp": "2024-04-02T00:00:00Z", "price": 0.52},
+        {"timestamp": "2024-04-01T00:00:00Z", "price": 0.52},
+        {"timestamp": "2024-04-02T00:00:00Z", "price": 0.54},
         {"timestamp": "2024-04-03T00:00:00Z", "price": 0.55}
       ]
     }
