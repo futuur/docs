@@ -1,9 +1,9 @@
 ---
 title: 'Price history'
-description: 'Get historical price data for an event.'
+description: 'Retrieve historical price data for an event.'
 ---
 
-Retrieve price history for all markets in an event. Use this to build charts showing how market prices have changed over time.
+Retrieve price history for all markets within an event over a specified time interval.
 
 ## Endpoint
 
@@ -22,16 +22,16 @@ This endpoint does not require authentication.
 </ParamField>
 
 <ParamField query="currency_mode" type="string" required>
-  Currency mode for price data. One of `play_money` or `real_money`.
+  Currency mode for the price history. One of `play_money` or `real_money`.
 </ParamField>
 
 <ParamField query="time_interval" type="string">
-  Time interval for data points. One of `day`, `week`, `month`, `year`, or `all_time`.
+  Time interval for the price history. One of `day`, `week`, `month`, `year`, or `all_time`.
 </ParamField>
 
 ## Response
 
-Returns historical price data for the event's markets.
+Returns price history data for the event's markets.
 
 ## Example
 

@@ -1,9 +1,9 @@
 ---
 title: 'Retrieve event'
-description: 'Get detailed information about a specific prediction market event.'
+description: 'Retrieve details for a single prediction market event by ID.'
 ---
 
-Retrieve full details for a single event by its ID, including all markets (outcomes) and their current prices.
+Retrieve detailed information about a specific event, including its markets (outcomes), resolution criteria, and current status.
 
 ## Endpoint
 
@@ -43,8 +43,12 @@ Returns the full event object with all associated markets.
   Current state: `open`, `stopped`, `resolved`, `cancelled`, `paused`, or `reversed`.
 </ResponseField>
 
-<ResponseField name="markets" type="array" required>
-  Array of market objects representing possible outcomes.
+<ResponseField name="markets" type="object[]" required>
+  Array of market (outcome) objects for this event.
+</ResponseField>
+
+<ResponseField name="category" type="object[]">
+  Array of category objects the event belongs to.
 </ResponseField>
 
 <ResponseField name="description" type="string">
@@ -85,7 +89,7 @@ response = requests.get(
 event = response.json()
 print(f"Event: {event['title']}")
 for market in event["markets"]:
-    print(f"  Market {market['id']}: {market['title']}")
+    print(f"  Market {market['id']}: {market['name']}")
 ```
 
 </CodeGroup>
@@ -96,18 +100,22 @@ for market in event["markets"]:
   "title": "Who will win the 2024 US Presidential Election?",
   "slug": "who-will-win-2024-us-presidential-election",
   "status": "open",
-  "description": "This market resolves based on...",
+  "description": "This market resolves to the candidate who wins...",
   "bet_end_date": "2024-11-05T00:00:00Z",
+  "resolve_date": null,
+  "category": [
+    {"id": 1, "name": "Politics"}
+  ],
   "markets": [
     {
       "id": 67890,
-      "title": "Candidate A",
-      "price": 0.55
+      "name": "Candidate A",
+      "price": 0.52
     },
     {
       "id": 67891,
-      "title": "Candidate B",
-      "price": 0.42
+      "name": "Candidate B",
+      "price": 0.48
     }
   ]
 }

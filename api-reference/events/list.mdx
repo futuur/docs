@@ -22,11 +22,11 @@ This endpoint does not require authentication.
 </ParamField>
 
 <ParamField query="currency_mode" type="string" default="play_money">
-  Currency mode to filter events. One of `play_money` or `real_money`.
+  Filter by currency mode. One of `play_money` or `real_money`.
 </ParamField>
 
 <ParamField query="hide_my_bets" type="boolean" default="false">
-  When `true`, excludes events where you have active wagers.
+  When `true`, excludes events where you have placed bets.
 </ParamField>
 
 <ParamField query="live" type="boolean" default="false">
@@ -38,7 +38,7 @@ This endpoint does not require authentication.
 </ParamField>
 
 <ParamField query="pending_resolution" type="boolean" default="false">
-  When `true`, returns only events that are closed but not yet resolved.
+  When `true`, returns only events pending resolution.
 </ParamField>
 
 <ParamField query="resolved_only" type="boolean" default="false">
@@ -50,11 +50,11 @@ This endpoint does not require authentication.
 </ParamField>
 
 <ParamField query="tag" type="string">
-  Filter by tag. Maximum 100 characters.
+  Filter events by tag. Maximum 100 characters.
 </ParamField>
 
 <ParamField query="ordering" type="string">
-  Field to sort results by. Prefix with `-` for descending order.
+  Field to sort results by.
 </ParamField>
 
 <ParamField query="limit" type="integer">
@@ -62,7 +62,7 @@ This endpoint does not require authentication.
 </ParamField>
 
 <ParamField query="offset" type="integer">
-  The initial index from which to return the results.
+  The initial index from which to return results.
 </ParamField>
 
 ## Response
@@ -81,7 +81,7 @@ Returns a paginated list of events.
   URL for the previous page of results, or `null` if this is the first page.
 </ResponseField>
 
-<ResponseField name="results" type="array" required>
+<ResponseField name="results" type="object[]" required>
   Array of event objects.
 </ResponseField>
 
