@@ -1,9 +1,9 @@
 ---
 title: 'Event actions'
-description: 'List all trading actions for a specific event.'
+description: 'List all trading actions (bets) for a specific event.'
 ---
 
-Retrieve a list of all trading actions (wagers) for an event. Real money actions have user information anonymized.
+Retrieve a list of all trading actions (wager actions) that have occurred on an event. Real money actions have user information anonymized.
 
 ## Endpoint
 
@@ -23,20 +23,20 @@ GET https://api.futuur.com/v2.0/events/{id}/actions/
   The unique identifier of the event.
 </ParamField>
 
+<ParamField query="aggregate_by_orders" type="boolean" default="true">
+  When `true`, aggregates actions by order.
+</ParamField>
+
 <ParamField query="currency_mode" type="string">
   Filter by currency mode. One of `play_money` or `real_money`.
 </ParamField>
 
-<ParamField query="aggregate_by_orders" type="boolean" default="true">
-  When `true`, aggregate actions by orders.
+<ParamField query="following" type="boolean" default="false">
+  When `true`, returns only actions from users you follow.
 </ParamField>
 
 <ParamField query="my_bets" type="boolean" default="false">
-  When `true`, return only your own bets.
-</ParamField>
-
-<ParamField query="following" type="boolean" default="false">
-  When `true`, return only bets from users you follow.
+  When `true`, returns only your own actions.
 </ParamField>
 
 <ParamField query="search" type="string">
@@ -54,6 +54,7 @@ Returns a list of wager action objects.
 ```bash cURL
 curl -G "https://api.futuur.com/v2.0/events/12345/actions/" \
   --data-urlencode "currency_mode=play_money" \
+  --data-urlencode "my_bets=true" \
   -H "Key: YOUR_PUBLIC_KEY" \
   -H "Timestamp: 1712500000" \
   -H "HMAC: YOUR_HMAC_SIGNATURE"
@@ -64,7 +65,10 @@ import requests
 
 response = requests.get(
     "https://api.futuur.com/v2.0/events/12345/actions/",
-    params={"currency_mode": "play_money"},
+    params={
+        "currency_mode": "play_money",
+        "my_bets": True,
+    },
     headers={
         "Key": "YOUR_PUBLIC_KEY",
         "Timestamp": "1712500000",

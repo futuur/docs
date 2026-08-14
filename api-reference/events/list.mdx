@@ -13,16 +13,36 @@ GET https://api.futuur.com/v2.0/events/
 
 ## Authentication
 
-No authentication required. This is a public endpoint.
+This endpoint does not require authentication.
 
 ## Request
 
-<ParamField query="currency_mode" type="string" default="play_money">
-  Filter by currency mode. One of `play_money` or `real_money`.
+<ParamField query="categories" type="integer[]">
+  Filter events by one or more category IDs.
 </ParamField>
 
-<ParamField query="categories" type="integer[]">
-  Filter by one or more category IDs.
+<ParamField query="currency_mode" type="string" default="play_money">
+  Currency mode to filter events. One of `play_money` or `real_money`.
+</ParamField>
+
+<ParamField query="hide_my_bets" type="boolean" default="false">
+  When `true`, excludes events where you have active wagers.
+</ParamField>
+
+<ParamField query="live" type="boolean" default="false">
+  When `true`, returns only live events.
+</ParamField>
+
+<ParamField query="only_markets_i_follow" type="boolean" default="false">
+  When `true`, returns only events containing markets you follow.
+</ParamField>
+
+<ParamField query="pending_resolution" type="boolean" default="false">
+  When `true`, returns only events that are closed but not yet resolved.
+</ParamField>
+
+<ParamField query="resolved_only" type="boolean" default="false">
+  When `true`, returns only resolved events.
 </ParamField>
 
 <ParamField query="search" type="string">
@@ -33,28 +53,8 @@ No authentication required. This is a public endpoint.
   Filter by tag. Maximum 100 characters.
 </ParamField>
 
-<ParamField query="live" type="boolean" default="false">
-  When `true`, return only live events.
-</ParamField>
-
-<ParamField query="resolved_only" type="boolean" default="false">
-  When `true`, return only resolved events.
-</ParamField>
-
-<ParamField query="pending_resolution" type="boolean" default="false">
-  When `true`, return only events pending resolution.
-</ParamField>
-
-<ParamField query="hide_my_bets" type="boolean" default="false">
-  When `true`, exclude events where you have placed bets.
-</ParamField>
-
-<ParamField query="only_markets_i_follow" type="boolean" default="false">
-  When `true`, return only events with markets you follow.
-</ParamField>
-
 <ParamField query="ordering" type="string">
-  Field to sort results by.
+  Field to sort results by. Prefix with `-` for descending order.
 </ParamField>
 
 <ParamField query="limit" type="integer">
@@ -62,7 +62,7 @@ No authentication required. This is a public endpoint.
 </ParamField>
 
 <ParamField query="offset" type="integer">
-  The initial index from which to return results.
+  The initial index from which to return the results.
 </ParamField>
 
 ## Response
@@ -74,11 +74,11 @@ Returns a paginated list of events.
 </ResponseField>
 
 <ResponseField name="next" type="string">
-  URL to the next page of results, or `null` if this is the last page.
+  URL for the next page of results, or `null` if this is the last page.
 </ResponseField>
 
 <ResponseField name="previous" type="string">
-  URL to the previous page of results, or `null` if this is the first page.
+  URL for the previous page of results, or `null` if this is the first page.
 </ResponseField>
 
 <ResponseField name="results" type="array" required>
@@ -91,9 +91,9 @@ Returns a paginated list of events.
 
 ```bash cURL
 curl -G "https://api.futuur.com/v2.0/events/" \
-  --data-urlencode "search=election" \
+  --data-urlencode "search=US election" \
   --data-urlencode "currency_mode=play_money" \
-  --data-urlencode "limit=10"
+  --data-urlencode "limit=5"
 ```
 
 ```python Python
@@ -102,14 +102,15 @@ import requests
 response = requests.get(
     "https://api.futuur.com/v2.0/events/",
     params={
-        "search": "election",
+        "search": "US election",
         "currency_mode": "play_money",
-        "limit": 10,
+        "limit": 5,
     },
 )
 
-events = response.json()
-print(events)
+events = response.json()["results"]
+for event in events:
+    print(event["id"], event["title"])
 ```
 
 </CodeGroup>
@@ -117,7 +118,7 @@ print(events)
 ```json Sample response (200 OK)
 {
   "count": 42,
-  "next": "https://api.futuur.com/v2.0/events/?limit=10&offset=10",
+  "next": "https://api.futuur.com/v2.0/events/?limit=5&offset=5",
   "previous": null,
   "results": [
     {

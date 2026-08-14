@@ -3,7 +3,7 @@ title: 'Retrieve event'
 description: 'Get detailed information about a specific prediction market event.'
 ---
 
-Retrieve a single event by its ID, including all associated markets and their current prices.
+Retrieve full details for a single event by its ID, including all markets (outcomes) and their current prices.
 
 ## Endpoint
 
@@ -25,7 +25,7 @@ GET https://api.futuur.com/v2.0/events/{id}/
 
 ## Response
 
-Returns the event object with full details.
+Returns the full event object with all associated markets.
 
 <ResponseField name="id" type="integer" required>
   Unique identifier for the event.
@@ -49,10 +49,6 @@ Returns the event object with full details.
 
 <ResponseField name="description" type="string">
   Full question details and resolution criteria.
-</ResponseField>
-
-<ResponseField name="category" type="array">
-  Array of category objects the event belongs to.
 </ResponseField>
 
 <ResponseField name="bet_end_date" type="string">
@@ -87,7 +83,9 @@ response = requests.get(
 )
 
 event = response.json()
-print(event)
+print(f"Event: {event['title']}")
+for market in event["markets"]:
+    print(f"  Market {market['id']}: {market['title']}")
 ```
 
 </CodeGroup>
@@ -98,7 +96,8 @@ print(event)
   "title": "Who will win the 2024 US Presidential Election?",
   "slug": "who-will-win-2024-us-presidential-election",
   "status": "open",
-  "description": "This market resolves to the candidate who wins...",
+  "description": "This market resolves based on...",
+  "bet_end_date": "2024-11-05T00:00:00Z",
   "markets": [
     {
       "id": 67890,
@@ -110,7 +109,6 @@ print(event)
       "title": "Candidate B",
       "price": 0.42
     }
-  ],
-  "bet_end_date": "2024-11-05T00:00:00Z"
+  ]
 }
 ```
