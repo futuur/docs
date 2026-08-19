@@ -1,9 +1,9 @@
 ---
 title: 'Price history'
-description: 'Retrieve historical price data for an event.'
+description: 'Get historical price data for all markets in an event.'
 ---
 
-Retrieve price history for all markets within an event over a specified time interval.
+Retrieve price history for an event's markets over a specified time interval. Use this data to chart price movements and analyze market trends.
 
 ## Endpoint
 
@@ -13,7 +13,7 @@ GET https://api.futuur.com/v2.0/events/{id}/price_history/
 
 ## Authentication
 
-This endpoint does not require authentication.
+No authentication required.
 
 ## Request
 
@@ -22,16 +22,16 @@ This endpoint does not require authentication.
 </ParamField>
 
 <ParamField query="currency_mode" type="string" required>
-  Currency mode for the price history. One of `play_money` or `real_money`.
+  The currency mode for price data. One of `play_money` or `real_money`.
 </ParamField>
 
 <ParamField query="time_interval" type="string">
-  Time interval for the price history. One of `day`, `week`, `month`, `year`, or `all_time`.
+  Time range for the price history. One of `day`, `week`, `month`, `year`, or `all_time`.
 </ParamField>
 
 ## Response
 
-Returns price history data for the event's markets.
+Returns an array of price history data points for each market in the event.
 
 ## Example
 
@@ -59,3 +59,16 @@ print(price_history)
 ```
 
 </CodeGroup>
+
+```json Sample response (200 OK)
+[
+  {
+    "market_id": 67890,
+    "prices": [
+      {"timestamp": "2024-04-01T00:00:00Z", "price": 0.52},
+      {"timestamp": "2024-04-02T00:00:00Z", "price": 0.54},
+      {"timestamp": "2024-04-03T00:00:00Z", "price": 0.55}
+    ]
+  }
+]
+```

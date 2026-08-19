@@ -1,9 +1,9 @@
 ---
 title: 'Event actions'
-description: 'List all actions (bets) for a specific event.'
+description: 'List all trading actions (bets) that have occurred on an event.'
 ---
 
-Retrieve a list of all actions (bets) that have occurred on a specific event. Real money actions have user information anonymized.
+Retrieve a list of all trading actions on a specific event. Real money actions have user information anonymized for privacy.
 
 ## Endpoint
 
@@ -45,7 +45,7 @@ GET https://api.futuur.com/v2.0/events/{id}/actions/
 
 ## Response
 
-Returns an array of wager action objects.
+Returns a list of wager actions for the event.
 
 ## Example
 
@@ -77,8 +77,7 @@ response = requests.get(
 )
 
 actions = response.json()
-for action in actions:
-    print(action)
+print(actions)
 ```
 
 </CodeGroup>

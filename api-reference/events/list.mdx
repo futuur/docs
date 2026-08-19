@@ -13,7 +13,7 @@ GET https://api.futuur.com/v2.0/events/
 
 ## Authentication
 
-This endpoint does not require authentication.
+No authentication required.
 
 ## Request
 
@@ -26,7 +26,7 @@ This endpoint does not require authentication.
 </ParamField>
 
 <ParamField query="hide_my_bets" type="boolean" default="false">
-  When `true`, excludes events where you have placed bets.
+  When `true`, excludes events where you have active wagers.
 </ParamField>
 
 <ParamField query="live" type="boolean" default="false">
@@ -38,7 +38,7 @@ This endpoint does not require authentication.
 </ParamField>
 
 <ParamField query="pending_resolution" type="boolean" default="false">
-  When `true`, returns only events pending resolution.
+  When `true`, returns only events that are closed but not yet resolved.
 </ParamField>
 
 <ParamField query="resolved_only" type="boolean" default="false">
@@ -54,7 +54,7 @@ This endpoint does not require authentication.
 </ParamField>
 
 <ParamField query="ordering" type="string">
-  Field to sort results by.
+  Field to sort results by. Prefix with `-` for descending order.
 </ParamField>
 
 <ParamField query="limit" type="integer">
@@ -62,7 +62,7 @@ This endpoint does not require authentication.
 </ParamField>
 
 <ParamField query="offset" type="integer">
-  The initial index from which to return results.
+  The initial index from which to return the results.
 </ParamField>
 
 ## Response
@@ -124,7 +124,7 @@ for event in events:
     {
       "id": 12345,
       "title": "Who will win the 2024 US Presidential Election?",
-      "slug": "who-will-win-2024-us-presidential-election",
+      "slug": "2024-us-presidential-election",
       "status": "open",
       "markets": [...]
     }
