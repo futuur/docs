@@ -3,7 +3,7 @@ title: 'Retrieve event'
 description: 'Get detailed information about a specific prediction market event.'
 ---
 
-Retrieve full details for a single event, including all its markets (outcomes), resolution criteria, and current prices.
+Retrieve detailed information about a single event, including all of its markets (outcomes).
 
 ## Endpoint
 
@@ -14,18 +14,18 @@ GET https://api.futuur.com/v2.0/events/{id}/
 ## Authentication
 
 <Note>
-  This endpoint requires HMAC authentication. Include the `Key`, `Timestamp`, and `HMAC` headers on every request. See the [authentication guide](/authentication) for signing instructions.
+  This endpoint supports optional HMAC authentication. When authenticated, additional user-specific data may be included in the response.
 </Note>
 
 ## Request
 
 <ParamField path="id" type="integer" required>
-  The unique identifier of the event to retrieve.
+  A unique integer value identifying the event.
 </ParamField>
 
 ## Response
 
-Returns the full event object with all associated markets.
+Returns detailed event information including all markets.
 
 <ResponseField name="id" type="integer" required>
   Unique identifier for the event.
@@ -85,7 +85,7 @@ response = requests.get(
 event = response.json()
 print(f"Event: {event['title']}")
 for market in event["markets"]:
-    print(f"  Market {market['id']}: {market['name']}")
+    print(f"  Market {market['id']}: {market['title']}")
 ```
 
 </CodeGroup>
@@ -94,19 +94,19 @@ for market in event["markets"]:
 {
   "id": 12345,
   "title": "Who will win the 2024 US Presidential Election?",
-  "slug": "2024-us-presidential-election",
+  "slug": "who-will-win-the-2024-us-presidential-election",
   "status": "open",
-  "description": "This market resolves based on...",
+  "description": "This market will resolve based on...",
   "bet_end_date": "2024-11-05T00:00:00Z",
   "markets": [
     {
       "id": 67890,
-      "name": "Candidate A",
+      "title": "Candidate A",
       "price": 0.55
     },
     {
       "id": 67891,
-      "name": "Candidate B",
+      "title": "Candidate B",
       "price": 0.42
     }
   ]

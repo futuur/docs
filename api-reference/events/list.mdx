@@ -3,7 +3,7 @@ title: 'List events'
 description: 'Retrieve a paginated list of prediction market events with optional filters.'
 ---
 
-Retrieve a list of prediction market events. Use query parameters to filter by category, currency mode, tags, or search terms. This endpoint does not require authentication.
+Retrieve a list of prediction market events. Use query parameters to filter by category, currency mode, search terms, tags, and more.
 
 ## Endpoint
 
@@ -13,7 +13,9 @@ GET https://api.futuur.com/v2.0/events/
 
 ## Authentication
 
-No authentication required.
+<Note>
+  This endpoint does not require authentication. You can call it without HMAC headers.
+</Note>
 
 ## Request
 
@@ -22,19 +24,31 @@ No authentication required.
 </ParamField>
 
 <ParamField query="currency_mode" type="string" default="play_money">
-  Filter by currency mode. One of `play_money` or `real_money`.
+  Currency mode to filter events. One of `play_money` or `real_money`.
 </ParamField>
 
 <ParamField query="hide_my_bets" type="boolean" default="false">
-  When `true`, excludes events where you have active wagers.
+  When `true`, excludes events where the authenticated user has placed bets.
+</ParamField>
+
+<ParamField query="limit" type="integer">
+  Number of results to return per page.
 </ParamField>
 
 <ParamField query="live" type="boolean" default="false">
   When `true`, returns only live events.
 </ParamField>
 
+<ParamField query="offset" type="integer">
+  The initial index from which to return the results.
+</ParamField>
+
 <ParamField query="only_markets_i_follow" type="boolean" default="false">
-  When `true`, returns only events containing markets you follow.
+  When `true`, returns only events containing markets the user follows.
+</ParamField>
+
+<ParamField query="ordering" type="string">
+  Field to use when ordering the results. Prefix with `-` for descending order.
 </ParamField>
 
 <ParamField query="pending_resolution" type="boolean" default="false">
@@ -53,18 +67,6 @@ No authentication required.
   Filter events by tag. Maximum 100 characters.
 </ParamField>
 
-<ParamField query="ordering" type="string">
-  Field to sort results by. Prefix with `-` for descending order.
-</ParamField>
-
-<ParamField query="limit" type="integer">
-  Number of results to return per page.
-</ParamField>
-
-<ParamField query="offset" type="integer">
-  The initial index from which to return the results.
-</ParamField>
-
 ## Response
 
 Returns a paginated list of events.
@@ -74,11 +76,11 @@ Returns a paginated list of events.
 </ResponseField>
 
 <ResponseField name="next" type="string">
-  URL for the next page of results, or `null` if this is the last page.
+  URL for the next page of results, or `null` if there are no more pages.
 </ResponseField>
 
 <ResponseField name="previous" type="string">
-  URL for the previous page of results, or `null` if this is the first page.
+  URL for the previous page of results, or `null` if on the first page.
 </ResponseField>
 
 <ResponseField name="results" type="object[]" required>
@@ -124,7 +126,7 @@ for event in events:
     {
       "id": 12345,
       "title": "Who will win the 2024 US Presidential Election?",
-      "slug": "2024-us-presidential-election",
+      "slug": "who-will-win-the-2024-us-presidential-election",
       "status": "open",
       "markets": [...]
     }

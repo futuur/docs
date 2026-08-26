@@ -1,9 +1,9 @@
 ---
 title: 'Event tax'
-description: 'Get tax information for a specific event.'
+description: 'Get tax information for an event.'
 ---
 
-Retrieve tax details applicable to a specific event. This endpoint provides information about any taxes or fees that apply to trades on this event.
+Retrieve tax information applicable to a specific event.
 
 ## Endpoint
 
@@ -13,12 +13,14 @@ GET https://api.futuur.com/v2.0/events/{id}/get_tax/
 
 ## Authentication
 
-No authentication required.
+<Note>
+  This endpoint does not require authentication.
+</Note>
 
 ## Request
 
 <ParamField path="id" type="integer" required>
-  The unique identifier of the event.
+  A unique integer value identifying the event.
 </ParamField>
 
 ## Response
