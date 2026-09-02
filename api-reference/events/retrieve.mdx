@@ -3,7 +3,7 @@ title: 'Retrieve event'
 description: 'Get detailed information about a specific prediction market event.'
 ---
 
-Retrieve detailed information about a single event by its ID, including all associated markets.
+Retrieve full details for a single event, including all its markets (outcomes), current prices, and metadata.
 
 ## Endpoint
 
@@ -20,7 +20,7 @@ GET https://api.futuur.com/v2.0/events/{id}/
 ## Request
 
 <ParamField path="id" type="integer" required>
-  The unique identifier of the event.
+  A unique integer value identifying the event.
 </ParamField>
 
 ## Response
@@ -44,11 +44,7 @@ Returns the full event object with all associated markets.
 </ResponseField>
 
 <ResponseField name="markets" type="object[]" required>
-  Array of market objects representing possible outcomes.
-</ResponseField>
-
-<ResponseField name="category" type="object[]">
-  Array of category objects the event belongs to.
+  Array of market (outcome) objects for this event.
 </ResponseField>
 
 <ResponseField name="description" type="string">
@@ -96,10 +92,11 @@ print(event)
 {
   "id": 12345,
   "title": "Who will win the 2024 US Presidential Election?",
-  "slug": "who-will-win-2024-us-presidential-election",
+  "slug": "2024-us-presidential-election",
   "status": "open",
-  "description": "This market resolves to the candidate who wins...",
+  "description": "This market resolves to the candidate who wins the 2024 US Presidential Election.",
   "bet_end_date": "2024-11-05T00:00:00Z",
+  "resolve_date": null,
   "markets": [
     {
       "id": 67890,

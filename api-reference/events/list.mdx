@@ -3,7 +3,7 @@ title: 'List events'
 description: 'Retrieve a paginated list of prediction market events with optional filters.'
 ---
 
-Retrieve a list of prediction market events. Use query parameters to filter by category, currency mode, tags, or search terms. This endpoint does not require authentication.
+Retrieve a list of prediction market events. Use query parameters to filter by category, tag, currency mode, search term, and more.
 
 ## Endpoint
 
@@ -13,7 +13,9 @@ GET https://api.futuur.com/v2.0/events/
 
 ## Authentication
 
-No authentication required.
+<Note>
+  This endpoint does not require authentication. You can call it without HMAC headers.
+</Note>
 
 ## Request
 
@@ -26,7 +28,7 @@ No authentication required.
 </ParamField>
 
 <ParamField query="hide_my_bets" type="boolean" default="false">
-  When `true`, excludes events where you have active wagers.
+  When `true`, excludes events where you have placed bets.
 </ParamField>
 
 <ParamField query="live" type="boolean" default="false">
@@ -34,11 +36,11 @@ No authentication required.
 </ParamField>
 
 <ParamField query="only_markets_i_follow" type="boolean" default="false">
-  When `true`, returns only events containing markets you follow.
+  When `true`, returns only events with markets you follow.
 </ParamField>
 
 <ParamField query="pending_resolution" type="boolean" default="false">
-  When `true`, returns only events that are pending resolution.
+  When `true`, returns only events pending resolution.
 </ParamField>
 
 <ParamField query="resolved_only" type="boolean" default="false">
@@ -123,7 +125,7 @@ print(events)
     {
       "id": 12345,
       "title": "Who will win the 2024 US Presidential Election?",
-      "slug": "who-will-win-2024-us-presidential-election",
+      "slug": "2024-us-presidential-election",
       "status": "open",
       "markets": [...]
     }

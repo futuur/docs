@@ -1,6 +1,6 @@
 ---
 title: 'Event actions'
-description: 'List all trading actions (wager activity) for a specific event.'
+description: 'List all trading actions (wagers) for a specific event.'
 ---
 
 Retrieve a list of all trading actions for an event. Real money actions have user information anonymized.
@@ -20,7 +20,7 @@ GET https://api.futuur.com/v2.0/events/{id}/actions/
 ## Request
 
 <ParamField path="id" type="integer" required>
-  The unique identifier of the event.
+  A unique integer value identifying the event.
 </ParamField>
 
 <ParamField query="aggregate_by_orders" type="boolean" default="true">
@@ -45,7 +45,7 @@ GET https://api.futuur.com/v2.0/events/{id}/actions/
 
 ## Response
 
-Returns an array of wager action objects.
+Returns a list of wager action objects.
 
 ## Example
 
@@ -54,7 +54,6 @@ Returns an array of wager action objects.
 ```bash cURL
 curl -G "https://api.futuur.com/v2.0/events/12345/actions/" \
   --data-urlencode "currency_mode=play_money" \
-  --data-urlencode "my_bets=true" \
   -H "Key: YOUR_PUBLIC_KEY" \
   -H "Timestamp: 1712500000" \
   -H "HMAC: YOUR_HMAC_SIGNATURE"
@@ -65,10 +64,7 @@ import requests
 
 response = requests.get(
     "https://api.futuur.com/v2.0/events/12345/actions/",
-    params={
-        "currency_mode": "play_money",
-        "my_bets": True,
-    },
+    params={"currency_mode": "play_money"},
     headers={
         "Key": "YOUR_PUBLIC_KEY",
         "Timestamp": "1712500000",
