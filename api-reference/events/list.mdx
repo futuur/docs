@@ -3,7 +3,7 @@ title: 'List events'
 description: 'Retrieve a paginated list of prediction market events with optional filters.'
 ---
 
-Retrieve a list of prediction market events. Use query parameters to filter by category, currency mode, search terms, tags, and more.
+Retrieve a list of prediction market events. Use query parameters to filter by category, currency mode, tags, or search terms. This endpoint does not require authentication.
 
 ## Endpoint
 
@@ -13,9 +13,7 @@ GET https://api.futuur.com/v2.0/events/
 
 ## Authentication
 
-<Note>
-  This endpoint does not require authentication. You can call it without HMAC headers.
-</Note>
+No authentication required.
 
 ## Request
 
@@ -24,35 +22,23 @@ GET https://api.futuur.com/v2.0/events/
 </ParamField>
 
 <ParamField query="currency_mode" type="string" default="play_money">
-  Currency mode to filter events. One of `play_money` or `real_money`.
+  Filter by currency mode. One of `play_money` or `real_money`.
 </ParamField>
 
 <ParamField query="hide_my_bets" type="boolean" default="false">
-  When `true`, excludes events where the authenticated user has placed bets.
-</ParamField>
-
-<ParamField query="limit" type="integer">
-  Number of results to return per page.
+  When `true`, excludes events where you have active wagers.
 </ParamField>
 
 <ParamField query="live" type="boolean" default="false">
   When `true`, returns only live events.
 </ParamField>
 
-<ParamField query="offset" type="integer">
-  The initial index from which to return the results.
-</ParamField>
-
 <ParamField query="only_markets_i_follow" type="boolean" default="false">
-  When `true`, returns only events containing markets the user follows.
-</ParamField>
-
-<ParamField query="ordering" type="string">
-  Field to use when ordering the results. Prefix with `-` for descending order.
+  When `true`, returns only events containing markets you follow.
 </ParamField>
 
 <ParamField query="pending_resolution" type="boolean" default="false">
-  When `true`, returns only events that are closed but not yet resolved.
+  When `true`, returns only events that are pending resolution.
 </ParamField>
 
 <ParamField query="resolved_only" type="boolean" default="false">
@@ -60,11 +46,23 @@ GET https://api.futuur.com/v2.0/events/
 </ParamField>
 
 <ParamField query="search" type="string">
-  Full-text search query. Maximum 100 characters.
+  Full-text search query. Between 1 and 100 characters.
 </ParamField>
 
 <ParamField query="tag" type="string">
-  Filter events by tag. Maximum 100 characters.
+  Filter events by tag. Between 1 and 100 characters.
+</ParamField>
+
+<ParamField query="ordering" type="string">
+  Field to sort results by. Prefix with `-` for descending order.
+</ParamField>
+
+<ParamField query="limit" type="integer">
+  Number of results to return per page.
+</ParamField>
+
+<ParamField query="offset" type="integer">
+  The initial index from which to return the results.
 </ParamField>
 
 ## Response
@@ -76,11 +74,11 @@ Returns a paginated list of events.
 </ResponseField>
 
 <ResponseField name="next" type="string">
-  URL for the next page of results, or `null` if there are no more pages.
+  URL for the next page of results, or `null` if this is the last page.
 </ResponseField>
 
 <ResponseField name="previous" type="string">
-  URL for the previous page of results, or `null` if on the first page.
+  URL for the previous page of results, or `null` if this is the first page.
 </ResponseField>
 
 <ResponseField name="results" type="object[]" required>
@@ -93,9 +91,9 @@ Returns a paginated list of events.
 
 ```bash cURL
 curl -G "https://api.futuur.com/v2.0/events/" \
-  --data-urlencode "search=US election" \
+  --data-urlencode "search=election" \
   --data-urlencode "currency_mode=play_money" \
-  --data-urlencode "limit=5"
+  --data-urlencode "limit=10"
 ```
 
 ```python Python
@@ -104,15 +102,14 @@ import requests
 response = requests.get(
     "https://api.futuur.com/v2.0/events/",
     params={
-        "search": "US election",
+        "search": "election",
         "currency_mode": "play_money",
-        "limit": 5,
+        "limit": 10,
     },
 )
 
-events = response.json()["results"]
-for event in events:
-    print(event["id"], event["title"])
+events = response.json()
+print(events)
 ```
 
 </CodeGroup>
@@ -120,13 +117,13 @@ for event in events:
 ```json Sample response (200 OK)
 {
   "count": 42,
-  "next": "https://api.futuur.com/v2.0/events/?limit=5&offset=5",
+  "next": "https://api.futuur.com/v2.0/events/?limit=10&offset=10",
   "previous": null,
   "results": [
     {
       "id": 12345,
       "title": "Who will win the 2024 US Presidential Election?",
-      "slug": "who-will-win-the-2024-us-presidential-election",
+      "slug": "who-will-win-2024-us-presidential-election",
       "status": "open",
       "markets": [...]
     }

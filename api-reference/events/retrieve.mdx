@@ -3,7 +3,7 @@ title: 'Retrieve event'
 description: 'Get detailed information about a specific prediction market event.'
 ---
 
-Retrieve detailed information about a single event, including all of its markets (outcomes).
+Retrieve detailed information about a single event by its ID, including all associated markets.
 
 ## Endpoint
 
@@ -14,18 +14,18 @@ GET https://api.futuur.com/v2.0/events/{id}/
 ## Authentication
 
 <Note>
-  This endpoint supports optional HMAC authentication. When authenticated, additional user-specific data may be included in the response.
+  This endpoint requires HMAC authentication. Include the `Key`, `Timestamp`, and `HMAC` headers on every request. See the [authentication guide](/authentication) for signing instructions.
 </Note>
 
 ## Request
 
 <ParamField path="id" type="integer" required>
-  A unique integer value identifying the event.
+  The unique identifier of the event.
 </ParamField>
 
 ## Response
 
-Returns detailed event information including all markets.
+Returns the full event object with all associated markets.
 
 <ResponseField name="id" type="integer" required>
   Unique identifier for the event.
@@ -44,7 +44,11 @@ Returns detailed event information including all markets.
 </ResponseField>
 
 <ResponseField name="markets" type="object[]" required>
-  Array of market (outcome) objects for this event.
+  Array of market objects representing possible outcomes.
+</ResponseField>
+
+<ResponseField name="category" type="object[]">
+  Array of category objects the event belongs to.
 </ResponseField>
 
 <ResponseField name="description" type="string">
@@ -83,9 +87,7 @@ response = requests.get(
 )
 
 event = response.json()
-print(f"Event: {event['title']}")
-for market in event["markets"]:
-    print(f"  Market {market['id']}: {market['title']}")
+print(event)
 ```
 
 </CodeGroup>
@@ -94,20 +96,20 @@ for market in event["markets"]:
 {
   "id": 12345,
   "title": "Who will win the 2024 US Presidential Election?",
-  "slug": "who-will-win-the-2024-us-presidential-election",
+  "slug": "who-will-win-2024-us-presidential-election",
   "status": "open",
-  "description": "This market will resolve based on...",
+  "description": "This market resolves to the candidate who wins...",
   "bet_end_date": "2024-11-05T00:00:00Z",
   "markets": [
     {
       "id": 67890,
       "title": "Candidate A",
-      "price": 0.55
+      "price": 0.52
     },
     {
       "id": 67891,
       "title": "Candidate B",
-      "price": 0.42
+      "price": 0.48
     }
   ]
 }

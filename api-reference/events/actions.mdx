@@ -1,9 +1,9 @@
 ---
 title: 'Event actions'
-description: 'List all trading actions (wager activity) for an event.'
+description: 'List all trading actions (wager activity) for a specific event.'
 ---
 
-Retrieve a list of all trading actions (wagers) that have occurred on an event. Real money actions have user information anonymized.
+Retrieve a list of all trading actions for an event. Real money actions have user information anonymized.
 
 ## Endpoint
 
@@ -14,13 +14,13 @@ GET https://api.futuur.com/v2.0/events/{id}/actions/
 ## Authentication
 
 <Note>
-  This endpoint supports optional HMAC authentication. When authenticated, you can filter to show only your own bets.
+  This endpoint requires HMAC authentication. Include the `Key`, `Timestamp`, and `HMAC` headers on every request. See the [authentication guide](/authentication) for signing instructions.
 </Note>
 
 ## Request
 
 <ParamField path="id" type="integer" required>
-  A unique integer value identifying the event.
+  The unique identifier of the event.
 </ParamField>
 
 <ParamField query="aggregate_by_orders" type="boolean" default="true">
@@ -28,7 +28,7 @@ GET https://api.futuur.com/v2.0/events/{id}/actions/
 </ParamField>
 
 <ParamField query="currency_mode" type="string">
-  Currency mode to filter actions. One of `play_money` or `real_money`.
+  Filter by currency mode. One of `play_money` or `real_money`.
 </ParamField>
 
 <ParamField query="following" type="boolean" default="false">
@@ -36,11 +36,11 @@ GET https://api.futuur.com/v2.0/events/{id}/actions/
 </ParamField>
 
 <ParamField query="my_bets" type="boolean" default="false">
-  When `true`, returns only your own actions. Requires authentication.
+  When `true`, returns only your own actions.
 </ParamField>
 
 <ParamField query="search" type="string">
-  Full-text search query. Maximum 100 characters.
+  Full-text search query. Between 1 and 100 characters.
 </ParamField>
 
 ## Response
@@ -54,6 +54,7 @@ Returns an array of wager action objects.
 ```bash cURL
 curl -G "https://api.futuur.com/v2.0/events/12345/actions/" \
   --data-urlencode "currency_mode=play_money" \
+  --data-urlencode "my_bets=true" \
   -H "Key: YOUR_PUBLIC_KEY" \
   -H "Timestamp: 1712500000" \
   -H "HMAC: YOUR_HMAC_SIGNATURE"
@@ -76,8 +77,7 @@ response = requests.get(
 )
 
 actions = response.json()
-for action in actions:
-    print(action)
+print(actions)
 ```
 
 </CodeGroup>
