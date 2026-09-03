@@ -1,9 +1,9 @@
 ---
 title: 'Event actions'
-description: 'List all trading actions (wagers) for a specific event.'
+description: 'List all actions (trades) for a specific event.'
 ---
 
-Retrieve a list of all trading actions for a specific event. Real money actions have user information anonymized.
+Retrieve a list of all trading actions that have occurred on a specific event. Real money actions have user information anonymized.
 
 ## Endpoint
 
@@ -14,13 +14,13 @@ GET https://api.futuur.com/v2.0/events/{id}/actions/
 ## Authentication
 
 <Note>
-  This endpoint supports HMAC authentication. Include the `Key`, `Timestamp`, and `HMAC` headers to access user-specific data. See the [authentication guide](/authentication) for signing instructions.
+  This endpoint supports HMAC authentication. Include the `Key`, `Timestamp`, and `HMAC` headers for user-specific filters. See the [authentication guide](/authentication) for signing instructions.
 </Note>
 
 ## Request
 
 <ParamField path="id" type="integer" required>
-  A unique integer value identifying the event.
+  A unique integer value identifying this event.
 </ParamField>
 
 <ParamField query="aggregate_by_orders" type="boolean" default="true">
@@ -40,12 +40,12 @@ GET https://api.futuur.com/v2.0/events/{id}/actions/
 </ParamField>
 
 <ParamField query="search" type="string">
-  Full-text search query. Maximum 100 characters.
+  Full-text search query. Between 1 and 100 characters.
 </ParamField>
 
 ## Response
 
-Returns a list of wager action objects.
+Returns an array of wager action objects.
 
 ## Example
 
@@ -54,7 +54,6 @@ Returns a list of wager action objects.
 ```bash cURL
 curl -G "https://api.futuur.com/v2.0/events/12345/actions/" \
   --data-urlencode "currency_mode=play_money" \
-  --data-urlencode "my_bets=true" \
   -H "Key: YOUR_PUBLIC_KEY" \
   -H "Timestamp: 1712500000" \
   -H "HMAC: YOUR_HMAC_SIGNATURE"
@@ -65,10 +64,7 @@ import requests
 
 response = requests.get(
     "https://api.futuur.com/v2.0/events/12345/actions/",
-    params={
-        "currency_mode": "play_money",
-        "my_bets": True,
-    },
+    params={"currency_mode": "play_money"},
     headers={
         "Key": "YOUR_PUBLIC_KEY",
         "Timestamp": "1712500000",
@@ -77,7 +73,8 @@ response = requests.get(
 )
 
 actions = response.json()
-print(actions)
+for action in actions:
+    print(action)
 ```
 
 </CodeGroup>

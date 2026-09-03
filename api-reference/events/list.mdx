@@ -3,7 +3,7 @@ title: 'List events'
 description: 'Retrieve a paginated list of prediction market events with optional filters.'
 ---
 
-Retrieve a list of prediction market events. No authentication is required for this endpoint.
+Retrieve a list of prediction market events. Use query parameters to filter by category, search term, currency mode, and other criteria.
 
 ## Endpoint
 
@@ -13,7 +13,9 @@ GET https://api.futuur.com/v2.0/events/
 
 ## Authentication
 
-No authentication required.
+<Note>
+  This endpoint does not require authentication. You can call it without HMAC headers.
+</Note>
 
 ## Request
 
@@ -26,7 +28,7 @@ No authentication required.
 </ParamField>
 
 <ParamField query="hide_my_bets" type="boolean" default="false">
-  When `true`, excludes events where you have active wagers.
+  When `true`, excludes events where you have active bets.
 </ParamField>
 
 <ParamField query="live" type="boolean" default="false">
@@ -38,7 +40,7 @@ No authentication required.
 </ParamField>
 
 <ParamField query="pending_resolution" type="boolean" default="false">
-  When `true`, returns only events awaiting resolution.
+  When `true`, returns only events pending resolution.
 </ParamField>
 
 <ParamField query="resolved_only" type="boolean" default="false">
@@ -46,11 +48,11 @@ No authentication required.
 </ParamField>
 
 <ParamField query="search" type="string">
-  Full-text search query. Maximum 100 characters.
+  Full-text search query. Between 1 and 100 characters.
 </ParamField>
 
 <ParamField query="tag" type="string">
-  Filter events by tag. Maximum 100 characters.
+  Filter by tag. Between 1 and 100 characters.
 </ParamField>
 
 <ParamField query="ordering" type="string">
@@ -74,14 +76,14 @@ Returns a paginated list of events.
 </ResponseField>
 
 <ResponseField name="next" type="string">
-  URL of the next page of results, or `null` if there are no more pages.
+  URL to the next page of results, or `null` if this is the last page.
 </ResponseField>
 
 <ResponseField name="previous" type="string">
-  URL of the previous page of results, or `null` if on the first page.
+  URL to the previous page of results, or `null` if this is the first page.
 </ResponseField>
 
-<ResponseField name="results" type="array" required>
+<ResponseField name="results" type="object[]" required>
   Array of event objects.
 </ResponseField>
 

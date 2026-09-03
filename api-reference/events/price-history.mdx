@@ -3,7 +3,7 @@ title: 'Price history'
 description: 'Get historical price data for an event.'
 ---
 
-Retrieve historical price data for all markets within an event.
+Retrieve historical price data for all markets within a specific event.
 
 ## Endpoint
 
@@ -13,12 +13,14 @@ GET https://api.futuur.com/v2.0/events/{id}/price_history/
 
 ## Authentication
 
-No authentication required.
+<Note>
+  This endpoint does not require authentication.
+</Note>
 
 ## Request
 
 <ParamField path="id" type="integer" required>
-  A unique integer value identifying the event.
+  A unique integer value identifying this event.
 </ParamField>
 
 <ParamField query="currency_mode" type="string" required>
@@ -27,7 +29,7 @@ No authentication required.
 
 ## Response
 
-Returns historical price data points for the event's markets.
+Returns historical price data points for each market in the event.
 
 ## Example
 
@@ -43,13 +45,11 @@ import requests
 
 response = requests.get(
     "https://api.futuur.com/v2.0/events/12345/price_history/",
-    params={
-        "currency_mode": "play_money",
-    },
+    params={"currency_mode": "play_money"},
 )
 
-price_history = response.json()
-print(price_history)
+history = response.json()
+print(history)
 ```
 
 </CodeGroup>
