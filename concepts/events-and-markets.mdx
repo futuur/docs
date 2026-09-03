@@ -23,7 +23,7 @@ An event defines the question, the resolution criteria, and the timeframe. Key f
 | `markets` | Array of outcome markets |
 | `bet_end_date` | When betting closes |
 | `resolve_date` | When the event was resolved |
-| `resolution_mode` | How markets resolve within the event (see below) |
+| `markets_correlation` | How markets relate to each other (see below) |
 | `description` | Full question details and resolution criteria |
 
 ### Event statuses
@@ -45,114 +45,46 @@ An event defines the question, the resolution criteria, and the timeframe. Key f
     Trading is temporarily paused on this event.
   </Accordion>
   <Accordion title="reversed">
-    A previous resolution was reversed. Check the event for updated resolution details.
+    A previous resolution was reversed.
   </Accordion>
 </AccordionGroup>
 
+### Markets correlation
+
+The relationship between markets within an event is defined by **markets correlation**:
+
+<CardGroup cols={2}>
+  <Card title="Linked prices" icon="link">
+    Markets are correlated. The sum of all market prices equals 1, and placing a bet on one market automatically affects the prices of other markets in the same event. This is the default correlation type.
+  </Card>
+  <Card title="Independent" icon="unlink">
+    Markets operate independently. Each market's price is calculated separately, and betting on one market does not affect others.
+  </Card>
+</CardGroup>
+
+The correlation type determines how prices are calculated and how bets impact market dynamics within an event.
+
 ## Markets
 
-Each market is a single outcome within an event. For example, the event "Who will win the 2024 US Presidential Election?" might have markets for "Candidate A", "Candidate B", and "Other."
+A **market** represents a single tradeable outcome within an event. For example, in an election event, each candidate would be a separate market.
 
-Every market is **binary**: it resolves to exactly one of two sides — **long** or **short**. You never get a third outcome on a single market.
-
-| Position | Meaning |
-|---|---|
-| `long` | One side of the binary market — the side `price` refers to |
-| `short` | The opposite side |
-
-When the market resolves to **long**, long holders are paid and short holders lose. When it resolves to **short**, short holders are paid and long holders lose.
-
-### Position labels
-
-Display labels for each side come from `long_label` and `short_label`. The `position_labels` field indicates the label style:
-
-| `position_labels` | Long side | Short side |
-|---|---|---|
-| `yesno` | Yes | No |
-| `updown` | Up | Down |
-| `custom` | Value of `long_label` | Value of `short_label` |
-
-Always read `long_label` and `short_label` when rendering UI — they hold the strings to show for each side, including for `yesno` and `updown`.
-
-With `yesno` or `updown`, long/short map to a positive vs negative claim (Yes/No, Up/Down). With `custom`, the two sides are named outcomes — not necessarily yes/no.
-
-For example, an NBA game with no ties is one event ("Bulls vs. Lakers") with a single market. Long stands for Bulls and short for Lakers:
-
-```json
-{
-  "id": 501,
-  "title": "Bulls vs. Lakers",
-  "price": 0.58,
-  "status": "active",
-  "position_labels": "custom",
-  "long_label": "Bulls",
-  "short_label": "Lakers"
-}
-```
-
-Here betting `position: "long"` is betting on the Bulls; `position: "short"` is betting on the Lakers.
-
-### Price is always the long side
-
-The market `price` is the current implied probability of the **long** position (0–1). In the Bulls vs. Lakers example, `0.58` means a 58% chance long (Bulls) wins.
-
-The implied short price is `1 - price` (here, `0.42` for the Lakers).
-
-When you place orders, `position: "long"` or `position: "short"` selects which side you trade. See [Orders](/concepts/orders) for how `side` (bid/ask) combines with `position`.
-
-### Market fields
+Key fields on a market object include:
 
 | Field | Description |
 |---|---|
 | `id` | Unique identifier |
-| `title` | The outcome this market represents |
-| `price` | Current implied probability of **long** (0–1) |
-| `status` | Market status: `active`, `resolved`, `paused`, `stopped`, `cancelled`, or `reversed` |
-| `position_labels` | Label style: `yesno`, `updown`, or `custom` |
-| `long_label` | Display label for the long side |
-| `short_label` | Display label for the short side |
+| `title` | The outcome name |
+| `price` | Current probability (0 to 1) |
+| `status` | Market status |
+| `volume` | Total trading volume |
 
-## Resolution modes
+## Long vs short positions
 
-Events use a `resolution_mode` field that determines how many markets can resolve to long (win):
+When placing an order, you specify a **position**:
 
-<Tabs>
-  <Tab title="exclusive">
-    Only one market within the event can resolve to long. This is the default for mutually exclusive outcomes where exactly one result wins.
-
-    **Example:** A presidential election event where only one candidate can win. Each candidate is its own binary market (long = that candidate wins, short = they do not).
-  </Tab>
-  <Tab title="non_exclusive">
-    Multiple markets can resolve to long. Each market has independent resolution rules.
-
-    **Example:** An event asking "Which of these features will ship in Q1?" where several outcomes can be true at the same time.
-  </Tab>
-</Tabs>
-
-## Browsing and filtering events
-
-Use `GET /events/` to list events. The endpoint supports the following filters:
-
-| Parameter | Description |
+| Position | Description |
 |---|---|
-| `categories` | Filter by one or more category IDs |
-| `tag` | Filter by tag name |
-| `search` | Full-text search on event titles (max 100 chars) |
-| `currency_mode` | `play_money` or `real_money` — filters events by the trading mode |
-| `resolved_only` | Set to `true` to return only resolved events |
-| `pending_resolution` | Set to `true` to return events awaiting resolution |
-| `live` | Set to `true` to return only currently live events |
+| `long` | You believe this outcome **will** happen. You profit if the market resolves to Yes. |
+| `short` | You believe this outcome **will not** happen. You profit if the market resolves to No. |
 
-For live or in-play markets, use the `live=true` filter on [`GET /events/`](/api-reference/events/list) to discover active events, then poll [`GET /events/{id}/`](/api-reference/events/retrieve) for updated details.
-
-```bash
-# List events in a category using play money
-GET /events/?categories=5&currency_mode=play_money
-
-# List resolved events
-GET /events/?resolved_only=true&currency_mode=play_money
-```
-
-<Tip>
-  Use `currency_mode=play_money` while developing and testing your integration to avoid real financial exposure.
-</Tip>
+For a binary market (Yes/No), going long on "Yes" is equivalent to going short on "No".

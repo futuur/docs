@@ -3,7 +3,7 @@ title: 'List events'
 description: 'Retrieve a paginated list of prediction market events with optional filters.'
 ---
 
-Retrieve a paginated list of prediction market events. Use query parameters to filter by category, tag, currency mode, or search term. This endpoint does not require authentication.
+Retrieve a list of prediction market events. No authentication is required for this endpoint.
 
 ## Endpoint
 
@@ -13,7 +13,7 @@ GET https://api.futuur.com/v2.0/events/
 
 ## Authentication
 
-No authentication required. This is a public endpoint.
+No authentication required.
 
 ## Request
 
@@ -74,32 +74,15 @@ Returns a paginated list of events.
 </ResponseField>
 
 <ResponseField name="next" type="string">
-  URL to the next page of results, or `null` if no more pages.
+  URL of the next page of results, or `null` if there are no more pages.
 </ResponseField>
 
 <ResponseField name="previous" type="string">
-  URL to the previous page of results, or `null` if on the first page.
+  URL of the previous page of results, or `null` if on the first page.
 </ResponseField>
 
-<ResponseField name="results" type="object[]" required>
+<ResponseField name="results" type="array" required>
   Array of event objects.
-  <Expandable title="event properties">
-    <ResponseField name="id" type="integer" required>
-      Unique identifier for the event.
-    </ResponseField>
-    <ResponseField name="title" type="string" required>
-      The prediction question.
-    </ResponseField>
-    <ResponseField name="slug" type="string" required>
-      URL-friendly identifier.
-    </ResponseField>
-    <ResponseField name="status" type="string" required>
-      Current state: `open`, `stopped`, `resolved`, `cancelled`, `paused`, or `reversed`.
-    </ResponseField>
-    <ResponseField name="markets" type="object[]" required>
-      Array of market outcomes for this event.
-    </ResponseField>
-  </Expandable>
 </ResponseField>
 
 ## Example
@@ -141,20 +124,9 @@ for event in events:
     {
       "id": 12345,
       "title": "Who will win the 2024 US Presidential Election?",
-      "slug": "2024-us-presidential-election",
+      "slug": "who-will-win-2024-us-presidential-election",
       "status": "open",
-      "markets": [
-        {
-          "id": 67890,
-          "title": "Candidate A",
-          "price": 0.52
-        },
-        {
-          "id": 67891,
-          "title": "Candidate B",
-          "price": 0.48
-        }
-      ]
+      "markets": [...]
     }
   ]
 }

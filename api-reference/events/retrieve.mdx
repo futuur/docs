@@ -3,7 +3,7 @@ title: 'Retrieve event'
 description: 'Get detailed information about a specific prediction market event.'
 ---
 
-Retrieve detailed information about a specific event, including all of its markets (outcomes), resolution criteria, and metadata.
+Retrieve detailed information about a single event, including its markets (outcomes).
 
 ## Endpoint
 
@@ -14,21 +14,21 @@ GET https://api.futuur.com/v2.0/events/{id}/
 ## Authentication
 
 <Note>
-  This endpoint requires HMAC authentication. Include the `Key`, `Timestamp`, and `HMAC` headers on every request. See the [authentication guide](/authentication) for signing instructions.
+  This endpoint supports HMAC authentication. Include the `Key`, `Timestamp`, and `HMAC` headers to access user-specific data. See the [authentication guide](/authentication) for signing instructions.
 </Note>
 
 ## Request
 
 <ParamField path="id" type="integer" required>
-  A unique integer value identifying this event.
+  A unique integer value identifying the event.
 </ParamField>
 
 ## Response
 
-Returns the full event object with all markets.
+Returns the full event object with all its markets.
 
 <ResponseField name="id" type="integer" required>
-  Unique identifier for the event.
+  Unique event identifier.
 </ResponseField>
 
 <ResponseField name="title" type="string" required>
@@ -40,19 +40,15 @@ Returns the full event object with all markets.
 </ResponseField>
 
 <ResponseField name="status" type="string" required>
-  Current state: `open`, `stopped`, `resolved`, `cancelled`, `paused`, or `reversed`.
+  Event status: `open`, `stopped`, `resolved`, `cancelled`, `paused`, or `reversed`.
+</ResponseField>
+
+<ResponseField name="markets" type="array" required>
+  Array of market (outcome) objects for this event.
 </ResponseField>
 
 <ResponseField name="description" type="string">
   Full question details and resolution criteria.
-</ResponseField>
-
-<ResponseField name="category" type="object[]">
-  Array of category objects the event belongs to.
-</ResponseField>
-
-<ResponseField name="markets" type="object[]" required>
-  Array of market outcomes for this event.
 </ResponseField>
 
 <ResponseField name="bet_end_date" type="string">
@@ -61,10 +57,6 @@ Returns the full event object with all markets.
 
 <ResponseField name="resolve_date" type="string">
   ISO 8601 datetime when the event was resolved.
-</ResponseField>
-
-<ResponseField name="resolution_mode" type="string">
-  How markets resolve within the event.
 </ResponseField>
 
 ## Example
@@ -93,7 +85,7 @@ response = requests.get(
 event = response.json()
 print(f"Event: {event['title']}")
 for market in event["markets"]:
-    print(f"  Market {market['id']}: {market['title']}")
+    print(f"  Market: {market['title']} - Price: {market['price']}")
 ```
 
 </CodeGroup>
@@ -102,11 +94,10 @@ for market in event["markets"]:
 {
   "id": 12345,
   "title": "Who will win the 2024 US Presidential Election?",
-  "slug": "2024-us-presidential-election",
+  "slug": "who-will-win-2024-us-presidential-election",
   "status": "open",
   "description": "This market resolves to the winner of the 2024 US Presidential Election.",
   "bet_end_date": "2024-11-05T00:00:00Z",
-  "resolve_date": null,
   "markets": [
     {
       "id": 67890,

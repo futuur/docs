@@ -1,9 +1,9 @@
 ---
 title: 'Event actions'
-description: 'List all actions (trades) for a specific event.'
+description: 'List all trading actions (wagers) for a specific event.'
 ---
 
-Retrieve a list of all actions (trades) that have occurred on a specific event. Real money actions have user information anonymized.
+Retrieve a list of all trading actions for a specific event. Real money actions have user information anonymized.
 
 ## Endpoint
 
@@ -14,13 +14,13 @@ GET https://api.futuur.com/v2.0/events/{id}/actions/
 ## Authentication
 
 <Note>
-  This endpoint requires HMAC authentication. Include the `Key`, `Timestamp`, and `HMAC` headers on every request. See the [authentication guide](/authentication) for signing instructions.
+  This endpoint supports HMAC authentication. Include the `Key`, `Timestamp`, and `HMAC` headers to access user-specific data. See the [authentication guide](/authentication) for signing instructions.
 </Note>
 
 ## Request
 
 <ParamField path="id" type="integer" required>
-  A unique integer value identifying this event.
+  A unique integer value identifying the event.
 </ParamField>
 
 <ParamField query="aggregate_by_orders" type="boolean" default="true">
@@ -45,7 +45,7 @@ GET https://api.futuur.com/v2.0/events/{id}/actions/
 
 ## Response
 
-Returns a list of wager actions for the event.
+Returns a list of wager action objects.
 
 ## Example
 
