@@ -9,11 +9,17 @@ Welcome to the Futuur API. Use this API to integrate prediction markets into you
   <Card title="Quick Start" icon="rocket" href="/introduction">
     Get up and running with your first API call in minutes.
   </Card>
-  <Card title="Authentication" icon="key" href="/authentication">
+  <Card title="Get your API keys" icon="key" href="/guides/get-api-keys">
+    Create HMAC keys in Settings, or derive them from your wallet.
+  </Card>
+  <Card title="Authentication" icon="lock" href="/authentication">
     Learn how to generate HMAC signatures and authenticate requests.
   </Card>
   <Card title="Core Concepts" icon="book" href="/concepts/events-and-markets">
     Understand events, markets, orders, and wagers.
+  </Card>
+  <Card title="On-chain trading" icon="blocks" href="/concepts/on-chain-trading">
+    Coming soon: CLOB matching with on-chain settlement.
   </Card>
   <Card title="API Reference" icon="code" href="/api-reference/events/list">
     Explore every endpoint with request and response details.
@@ -24,7 +30,7 @@ Welcome to the Futuur API. Use this API to integrate prediction markets into you
 
 <Steps>
   <Step title="Get your API keys">
-    Sign up at [futuur.com](https://futuur.com) and generate your public and private API keys from your account settings.
+    Sign up at [futuur.com](https://futuur.com) and generate your public and private API keys from **Settings** → **API keys**. See [Get your API keys](/guides/get-api-keys).
   </Step>
   <Step title="Authenticate requests">
     Sign each request using HMAC-SHA512 with your private key. Pass your public key, a timestamp, and the signature as headers.
@@ -39,4 +45,8 @@ Welcome to the Futuur API. Use this API to integrate prediction markets into you
 
 <Note>
   The Futuur API supports both **play money** (OOM) and **real money** (USDC, USDT, USD) modes. Use `currency_mode=play_money` to test your integration without financial risk.
+</Note>
+
+<Note>
+  On-chain CLOB trading is coming soon. Today's production API still uses HMAC-only ledger settlement. See [On-chain trading](/concepts/on-chain-trading) to prepare.
 </Note>

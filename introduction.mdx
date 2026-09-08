@@ -45,7 +45,11 @@ The API supports two currency modes:
 
 ## Authentication
 
-Every request requires HMAC-SHA512 authentication using a public/private key pair. See the [Authentication](/authentication) page for the full signing process.
+Every request requires HMAC-SHA512 authentication using a public/private key pair. [Get your API keys](/guides/get-api-keys) from **Settings** → **API keys**, then see [Authentication](/authentication) for the signing process.
+
+<Note>
+  On-chain CLOB trading is coming soon. HMAC still authenticates every request. When settlement moves on-chain, each create will also need an EIP-712 wallet signature. See [On-chain trading](/concepts/on-chain-trading).
+</Note>
 
 ## For AI agents
 
@@ -54,7 +58,10 @@ The full OpenAPI schema is available at `https://api.futuur.com/docs/schema/`. U
 ## Next steps
 
 <CardGroup cols={2}>
-  <Card title="Authentication" icon="key" href="/authentication">
+  <Card title="Get your API keys" icon="key" href="/guides/get-api-keys">
+    Create HMAC keys in Settings, or derive them from your wallet.
+  </Card>
+  <Card title="Authentication" icon="lock" href="/authentication">
     Generate HMAC signatures and authenticate your first request.
   </Card>
   <Card title="Events and markets" icon="chart-line" href="/concepts/events-and-markets">
@@ -62,6 +69,9 @@ The full OpenAPI schema is available at `https://api.futuur.com/docs/schema/`. U
   </Card>
   <Card title="Placing a bet" icon="arrow-right" href="/guides/placing-a-bet">
     Follow a step-by-step guide to placing your first order.
+  </Card>
+  <Card title="On-chain trading" icon="blocks" href="/concepts/on-chain-trading">
+    Coming soon: CLOB matching with on-chain settlement.
   </Card>
   <Card title="List events" icon="list" href="/api-reference/events/list">
     Browse the full reference for the events endpoint.

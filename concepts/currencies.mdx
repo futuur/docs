@@ -69,6 +69,10 @@ Use `USDC` or `USDT` for real money orders:
 
 The `currency` value you supply must match the `currency_mode` of the event you are trading on. Mixing OOM with a real money event (or vice versa) will return an error.
 
+<Note>
+  On-chain CLOB trading is coming soon. Today's balances are ledger balances from [`GET /me/balances/`](/api-reference/me/balances). When settlement moves on-chain, OOM and USDC will sit in your Safe and move with ERC-20 `transferFrom` at match. See [On-chain trading](/concepts/on-chain-trading).
+</Note>
+
 ## Country restrictions
 
 <Warning>

@@ -1,0 +1,275 @@
+---
+title: "Get your API keys"
+description: "Get HMAC credentials from Settings or derive them from your wallet. Learn which private key signs HTTP requests and which signs on-chain orders."
+---
+
+API builders use two different secrets. The HMAC pair authenticates every REST request. The wallet owner key authorizes on-chain actions. Do not treat them as interchangeable.
+
+| Credential | What it is | Used for | How you get it |
+|---|---|---|---|
+| HMAC public + private key | HTTP API pair | Every authenticated REST call (`Key`, `Timestamp`, `HMAC`) | [Settings](#from-the-website) or [wallet derive](#from-your-wallet) |
+| Owner wallet private key | Safe owner EOA | EIP-712 `DeriveApiKey` and `LimitOrderIntent` | Your wallet (MetaMask or an exported embedded wallet). Futuur never returns this. |
+
+<Note>
+  HMAC keys work on today's production API. Wallet-signed derive and per-order EIP-712 signing are part of [on-chain CLOB trading](/concepts/on-chain-trading), which is coming soon. You can prepare your bot now; production still settles on the ledger.
+</Note>
+
+<Tabs>
+  <Tab title="From the website">
+    ## From the website
+
+    Use this path if you trade from a script today. The private HMAC key is shown **once**.
+
+    <Steps>
+      <Step title="Open API keys">
+        Log in at [futuur.com](https://futuur.com). Open **Settings** → **API keys**.
+      </Step>
+      <Step title="Create a key">
+        Click **Create API key** or **Generate keys**. If you already have a pair, creating a new one **replaces** it — requests signed with the old keys stop working immediately.
+      </Step>
+      <Step title="Choose what the key can trade">
+        Play money (OOM) is always included. Turn on **Real money trading** if you also need USDC, USDT, or USD. Real money requires identity verification.
+      </Step>
+      <Step title="Copy both keys immediately">
+        The modal shows **Public** and **Private**. Copy the private key now. You cannot view it again. If you lose it, generate another pair.
+      </Step>
+    </Steps>
+
+    <Warning>
+      For security reasons, you can only see your private HMAC key once. Do not share it. Do not commit it to version control. If you lose it, generate a new public/private key pair.
+    </Warning>
+
+    Then sign requests with HMAC-SHA512. See [Authentication](/authentication).
+  </Tab>
+  <Tab title="From your wallet">
+    ## From your wallet
+
+    <Note>
+      Coming soon. `POST /v2.0/api-keys/derive/` is not live on `https://api.futuur.com` yet. This is the Polymarket-shaped bot path: prove you control the owner wallet, then receive HMAC credentials.
+    </Note>
+
+    Derive does **not** replace the owner wallet key. You still need that key to sign [on-chain orders](/guides/on-chain-first-order).
+
+    <Steps>
+      <Step title="Link a wallet to a Futuur account">
+        Log in once (email or wallet) so `wallet_address` is stored on your account. Derive rejects signers that have no Futuur user.
+      </Step>
+      <Step title="Sign EIP-712 DeriveApiKey">
+        Sign with the **owner EOA** — the same key that owns your Safe — not the Safe contract address.
+      </Step>
+      <Step title="POST the signature">
+        Send `address`, `timestamp`, `nonce`, `signature`, and optional `chain_id` to `POST /v2.0/api-keys/derive/`. The request is unauthenticated; the signature is the auth.
+      </Step>
+      <Step title="Store the HMAC pair">
+        The response returns the existing active HMAC pair, or creates one. Derive does **not** rotate keys. Replay of the same `timestamp` + `nonce` is rejected.
+      </Step>
+    </Steps>
+
+    ### EIP-712 typed data
+
+    Domain: `FutuurApiAuth` v1. `verifyingContract` is the zero address. Timestamp must be within ±120 seconds of the server clock.
+
+    ```json
+    {
+      "domain": {
+        "name": "FutuurApiAuth",
+        "version": "1",
+        "chainId": 8453,
+        "verifyingContract": "0x0000000000000000000000000000000000000000"
+      },
+      "types": {
+        "DeriveApiKey": [
+          { "name": "address", "type": "address" },
+          { "name": "timestamp", "type": "string" },
+          { "name": "nonce", "type": "uint256" },
+          { "name": "message", "type": "string" }
+        ]
+      },
+      "primaryType": "DeriveApiKey",
+      "message": {
+        "address": "0xYourOwnerAddress",
+        "timestamp": "1712500000",
+        "nonce": 0,
+        "message": "Derive Futuur API credentials"
+      }
+    }
+    ```
+
+    ### Request and response
+
+    ```http
+    POST /v2.0/api-keys/derive/
+    ```
+
+    | Field | Notes |
+    |---|---|
+    | `address` | Owner EOA (checksum or lowercase) |
+    | `timestamp` | Unix seconds, valid ±120s |
+    | `nonce` | Integer; change it if you retry in the same second |
+    | `signature` | Hex EIP-712 signature |
+    | `chain_id` | Optional; defaults to the active chain |
+
+    ```json
+    {
+      "id": 12,
+      "public_key": "your_public_key",
+      "private_key": "your_private_key",
+      "user_id": 42
+    }
+    ```
+
+    ### Code examples
+
+    <CodeGroup>
+
+    ```python python
+    import time
+    import requests
+    from eth_account import Account
+    from eth_account.messages import encode_typed_data
+
+    OWNER_KEY = "0xYOUR_OWNER_PRIVATE_KEY"
+    CHAIN_ID = 8453
+
+    account = Account.from_key(OWNER_KEY)
+    timestamp = int(time.time())
+    nonce = 0
+
+    typed = {
+        "domain": {
+            "name": "FutuurApiAuth",
+            "version": "1",
+            "chainId": CHAIN_ID,
+            "verifyingContract": "0x0000000000000000000000000000000000000000",
+        },
+        "types": {
+            "EIP712Domain": [
+                {"name": "name", "type": "string"},
+                {"name": "version", "type": "string"},
+                {"name": "chainId", "type": "uint256"},
+                {"name": "verifyingContract", "type": "address"},
+            ],
+            "DeriveApiKey": [
+                {"name": "address", "type": "address"},
+                {"name": "timestamp", "type": "string"},
+                {"name": "nonce", "type": "uint256"},
+                {"name": "message", "type": "string"},
+            ],
+        },
+        "primaryType": "DeriveApiKey",
+        "message": {
+            "address": account.address,
+            "timestamp": str(timestamp),
+            "nonce": nonce,
+            "message": "Derive Futuur API credentials",
+        },
+    }
+
+    signable = encode_typed_data(full_message=typed)
+    signature = account.sign_message(signable).signature.hex()
+    if not signature.startswith("0x"):
+        signature = f"0x{signature}"
+
+    response = requests.post(
+        "https://api.futuur.com/v2.0/api-keys/derive/",
+        json={
+            "address": account.address,
+            "timestamp": timestamp,
+            "nonce": nonce,
+            "signature": signature,
+            "chain_id": CHAIN_ID,
+        },
+    )
+    print(response.json())
+    ```
+
+    ```javascript javascript
+    import { privateKeyToAccount } from "viem/accounts";
+
+    const OWNER_KEY = "0xYOUR_OWNER_PRIVATE_KEY";
+    const CHAIN_ID = 8453;
+
+    const account = privateKeyToAccount(OWNER_KEY);
+    const timestamp = Math.floor(Date.now() / 1000);
+    const nonce = 0;
+
+    const signature = await account.signTypedData({
+      domain: {
+        name: "FutuurApiAuth",
+        version: "1",
+        chainId: CHAIN_ID,
+        verifyingContract: "0x0000000000000000000000000000000000000000",
+      },
+      types: {
+        DeriveApiKey: [
+          { name: "address", type: "address" },
+          { name: "timestamp", type: "string" },
+          { name: "nonce", type: "uint256" },
+          { name: "message", type: "string" },
+        ],
+      },
+      primaryType: "DeriveApiKey",
+      message: {
+        address: account.address,
+        timestamp: String(timestamp),
+        nonce: BigInt(nonce),
+        message: "Derive Futuur API credentials",
+      },
+    });
+
+    const response = await fetch("https://api.futuur.com/v2.0/api-keys/derive/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        address: account.address,
+        timestamp,
+        nonce,
+        signature,
+        chain_id: CHAIN_ID,
+      }),
+    });
+
+    console.log(await response.json());
+    ```
+
+    ```bash curl
+    # Sign DeriveApiKey with your owner key first, then:
+
+    curl -X POST "https://api.futuur.com/v2.0/api-keys/derive/" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "address": "0xYourOwnerAddress",
+        "timestamp": 1712500000,
+        "nonce": 0,
+        "signature": "0x...",
+        "chain_id": 8453
+      }'
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+## Two-layer auth (coming soon)
+
+On-chain trading uses the same shape as Polymarket CLOB bots, with Futuur-specific details:
+
+| Layer | How it works | Purpose |
+|---|---|---|
+| L1 (wallet) | The owner EOA signs EIP-712 (`DeriveApiKey`, then `LimitOrderIntent`) | Prove wallet control and authorize each order |
+| L2 (HTTP) | Each request is signed with HMAC-SHA512 | Authenticate as a Futuur API user |
+
+HMAC **never** replaces the wallet signature. When on-chain settlement is on, unsigned creates return `order_intent_signature is required`.
+
+If you already know Polymarket's CLOB client, do not copy their headers or hash:
+
+- Futuur HMAC is **SHA-512**, not SHA-256
+- Headers are `Key`, `Timestamp`, and `HMAC` — not `POLY_*`
+- There is no passphrase
+- Parameter sort is **case-sensitive** (Python `sorted()`)
+
+See [Authentication](/authentication) for the live HMAC signing process, and [Place an on-chain order](/guides/on-chain-first-order) for the coming-soon create flow.
+
+<Warning>
+  Never log or commit the HMAC private key or the owner wallet key. Store them in environment variables or a secret manager.
+</Warning>

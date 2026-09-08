@@ -7,6 +7,10 @@ An **order** is an instruction to buy or sell shares in a market outcome. When y
 
 Orders are created via [`POST /orders/`](/api-reference/orders/create), listed via [`GET /orders/`](/api-reference/orders/list), and canceled via [`PATCH /orders/{id}/cancel/`](/api-reference/orders/cancel). For higher-throughput flows, you can also [submit](/api-reference/orders/batch-create), [update](/api-reference/orders/batch-update), or [cancel](/api-reference/orders/batch-cancel) up to 20 orders at once, or [cancel everything](/api-reference/orders/cancel-all) on your account in a single call.
 
+<Note>
+  On-chain CLOB trading is coming soon. Matching will stay off-chain (user orders first, including complementary both-buy). Collateral will move on-chain at match, and each create will require an EIP-712 wallet signature in addition to HMAC. See [On-chain trading](/concepts/on-chain-trading).
+</Note>
+
 ## Order types
 
 <Tabs>

@@ -1,0 +1,223 @@
+---
+title: "Place an on-chain order"
+description: "Coming soon: enable trading, fetch a signing context, sign LimitOrderIntent, and POST a limit order."
+tag: "Coming soon"
+---
+
+<Note>
+  On-chain CLOB trading is coming soon. Today's production API still uses HMAC-only ledger settlement. This page describes the builder flow so you can prepare. The endpoints below are **not live** on `https://api.futuur.com` yet.
+</Note>
+
+Every on-chain create is pre-signed. HMAC authenticates the HTTP request. The Safe **owner EOA** signs EIP-712 `LimitOrderIntent`. HMAC keys alone cannot create OOM or USDC orders once on-chain settlement is on.
+
+If you do not have credentials yet, start with [Get your API keys](/guides/get-api-keys). For the matching and settlement model, see [On-chain trading](/concepts/on-chain-trading).
+
+## Prerequisites
+
+1. A Futuur account with `wallet_address` linked and a registered Safe (`POST /me/safe/`).
+2. HMAC public and private keys for L2 request signing.
+3. The owner EOA private key — the same key that owns the Safe.
+4. The Safe funded with OOM and/or USDC on the active chain.
+5. Trading enabled once per collateral token.
+
+## Step 1 — Enable trading
+
+Grant the pool a standing allowance so bids do not need a per-order approve.
+
+```
+token.approve(poolAddress, type(uint256).max)
+```
+
+```http
+GET  /v2.0/me/safe/trading-status/?currency=OOM
+POST /v2.0/me/safe/enable-trading/
+```
+
+| Endpoint | Role |
+|---|---|
+| `GET /me/safe/trading-status/` | Returns whether that currency already has a standing approve |
+| `POST /me/safe/enable-trading/` | Submits the signed approve UserOperation |
+
+After this succeeds, signing-context returns `needsApproval: false` and creates are intent-only.
+
+<Tip>
+  Do this once per token (OOM and USDC). You do not repeat it on every order.
+</Tip>
+
+## Step 2 — Signing context
+
+Call this **once at submit time**, not on every UI keystroke.
+
+```http
+POST /v2.0/orders/signing-context/
+```
+
+HMAC-authenticated. Body:
+
+```json
+{
+  "market": 3801,
+  "price": 0.42,
+  "shares": 3,
+  "currency": "USDC",
+  "position": "long",
+  "side": "bid",
+  "chain_id": 8453
+}
+```
+
+| Response field | Meaning |
+|---|---|
+| `eip712` | Typed data to sign (`domain`, `types`, `message`, `primaryType`) |
+| `ownerAddress` | EOA that must sign — must match the recovered signer |
+| `safeAddress` | Your Safe (collateral holder) |
+| `poolAddress` | Approve spender and clearing wallet |
+| `maxUsdcRaw` | Bid cap: notional + taker fee, in raw token units |
+| `expiry` | Pass back as `order_intent_expiry` |
+| `nonce` | Per-Safe replay counter |
+| `needsApproval` | If `true`, enable trading first |
+
+## Step 3 — Sign LimitOrderIntent
+
+Sign `eip712` with the **owner EOA**, not the Safe contract address. Domain: `FutuurLimitOrder` v1, `verifyingContract` is the zero address.
+
+```json
+{
+  "domain": {
+    "name": "FutuurLimitOrder",
+    "version": "1",
+    "chainId": 8453,
+    "verifyingContract": "0x0000000000000000000000000000000000000000"
+  },
+  "types": {
+    "LimitOrderIntent": [
+      { "name": "orderId", "type": "uint256" },
+      { "name": "chainId", "type": "uint256" },
+      { "name": "safeAddress", "type": "address" },
+      { "name": "marketId", "type": "uint256" },
+      { "name": "side", "type": "string" },
+      { "name": "position", "type": "string" },
+      { "name": "priceRaw", "type": "uint256" },
+      { "name": "sharesRaw", "type": "uint256" },
+      { "name": "maxUsdcRaw", "type": "uint256" },
+      { "name": "nonce", "type": "uint256" },
+      { "name": "expiry", "type": "uint256" }
+    ]
+  },
+  "primaryType": "LimitOrderIntent",
+  "message": {
+    "orderId": 0,
+    "chainId": 8453,
+    "safeAddress": "0xYourSafe",
+    "marketId": 3801,
+    "side": "bid",
+    "position": "long",
+    "priceRaw": 42,
+    "sharesRaw": 300,
+    "maxUsdcRaw": "1296540",
+    "nonce": 1,
+    "expiry": 1712503600
+  }
+}
+```
+
+Use the `eip712` object from signing-context as-is. `maxUsdcRaw` must match exactly.
+
+<CodeGroup>
+
+```python python
+from eth_account import Account
+from eth_account.messages import encode_typed_data
+
+OWNER_KEY = "0xYOUR_OWNER_PRIVATE_KEY"
+eip712 = signing_context["eip712"]  # from POST /orders/signing-context/
+
+structured = {
+    "types": {
+        "EIP712Domain": [
+            {"name": "name", "type": "string"},
+            {"name": "version", "type": "string"},
+            {"name": "chainId", "type": "uint256"},
+            {"name": "verifyingContract", "type": "address"},
+        ],
+        **eip712["types"],
+    },
+    "primaryType": eip712["primaryType"],
+    "domain": eip712["domain"],
+    "message": eip712["message"],
+}
+
+signable = encode_typed_data(full_message=structured)
+signature = Account.from_key(OWNER_KEY).sign_message(signable).signature.hex()
+if not signature.startswith("0x"):
+    signature = f"0x{signature}"
+```
+
+```javascript javascript
+import { privateKeyToAccount } from "viem/accounts";
+
+const account = privateKeyToAccount("0xYOUR_OWNER_PRIVATE_KEY");
+const eip712 = signingContext.eip712; // from POST /orders/signing-context/
+
+const signature = await account.signTypedData({
+  domain: eip712.domain,
+  types: eip712.types,
+  primaryType: eip712.primaryType,
+  message: eip712.message,
+});
+```
+
+</CodeGroup>
+
+## Step 4 — Create the order
+
+```http
+POST /v2.0/orders/
+```
+
+Send the usual order fields plus:
+
+| Field | Required | Notes |
+|---|---|---|
+| `chain_id` | Yes | Must match signing-context |
+| `order_intent_signature` | Yes | Hex signature from step 3 |
+| `order_intent_expiry` | Yes | `expiry` from signing-context |
+
+```json
+{
+  "market": 3801,
+  "side": "bid",
+  "position": "long",
+  "price": 0.42,
+  "shares": 3,
+  "currency": "USDC",
+  "chain_id": 8453,
+  "order_intent_signature": "0x...",
+  "order_intent_expiry": 1712503600
+}
+```
+
+Sign the HTTP request with HMAC as usual. See [Authentication](/authentication).
+
+Bids match only after `settlement_status` is `ready` (standing allowance confirmed). Asks become `ready` as soon as the intent verifies.
+
+## Selling
+
+Do **not** sell on-chain OOM or USDC with `PATCH /wagers/{id}/`. That path only moves the internal ledger. Use a signed `side=ask` create instead.
+
+When on-chain settlement is on, `PATCH /wagers/` returns `onchain_sell_requires_limit_order`.
+
+## Common errors
+
+| Symptom | Cause |
+|---|---|
+| `order_intent_signature is required` | On-chain settlement is on and the create was unsigned |
+| `trading_not_enabled` / `needsApproval: true` | Enable trading first |
+| Intent recover mismatch | You signed with a key that is not `wallet_address` / the Safe owner |
+| `onchain_sell_requires_limit_order` | Used `PATCH /wagers/` instead of a signed ask |
+| Insufficient balance | The Safe lacks OOM or USDC on-chain |
+| `401 authentication_failed` | Bad HMAC sort, clock skew, or revoked key |
+
+<Warning>
+  Never store the owner wallet key in git or client-side code. HMAC keys cannot create on-chain orders by themselves.
+</Warning>

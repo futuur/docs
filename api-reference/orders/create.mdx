@@ -17,6 +17,10 @@ POST https://api.futuur.com/orders/
   This endpoint requires HMAC authentication. Include the `Key`, `Timestamp`, and `HMAC` headers on every request. See the [authentication guide](/authentication) for signing instructions.
 </Note>
 
+<Note>
+  On-chain CLOB trading is coming soon. The live request body is HMAC-only. When settlement moves on-chain, creates will also require `chain_id`, `order_intent_signature`, and `order_intent_expiry`. Those fields are **not** accepted on production today. See [Place an on-chain order](/guides/on-chain-first-order).
+</Note>
+
 ## Headers
 
 <ParamField header="Idempotency-Key" type="string">

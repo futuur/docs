@@ -7,10 +7,14 @@ Every request to the Futuur API must be authenticated. Authentication uses HMAC-
 
 ## Get your API keys
 
-Sign up at [futuur.com](https://futuur.com) and generate your keys from your account settings. You receive two keys:
+Get a public/private HMAC pair from **Settings** → **API keys**, or (coming soon) derive the same pair by signing with your wallet. Full steps and the wallet-derive payload are in [Get your API keys](/guides/get-api-keys).
 
 - **Public key** — included in every request as the `Key` header. Safe to log.
 - **Private key** — used to sign requests. Never share or log this value.
+
+<Note>
+  On-chain CLOB trading is coming soon. HMAC still authenticates every HTTP request. When settlement moves on-chain, each create will also need an EIP-712 `LimitOrderIntent` signed by your Safe owner key. HMAC never replaces that wallet signature. See [On-chain trading](/concepts/on-chain-trading).
+</Note>
 
 ## Required headers
 
@@ -28,8 +32,8 @@ Every authenticated request must include these three headers:
   <Step title="Collect parameters to sign">
     Gather all request parameters — query string parameters for GET requests, body parameters for POST requests — plus `Key` (your public key) and `Timestamp` (current Unix timestamp as an integer).
   </Step>
-  <Step title="Sort alphabetically by key name">
-    Sort all parameters (including `Key` and `Timestamp`) alphabetically by their key name. For example: `Key`, `Timestamp`, `category` sorts to `Key`, `Timestamp`, `category` — but if you have `amount`, it would come before `Key`.
+  <Step title="Sort by key name (case-sensitive)">
+    Sort all parameters (including `Key` and `Timestamp`) by key using a **case-sensitive code-point** sort — the same order Python's `sorted()` produces. Uppercase letters (`A`–`Z`) come **before** lowercase letters (`a`–`z`), so `Key` and `Timestamp` sort before `category`. Do not use a case-insensitive or locale-aware comparator (for example JavaScript `localeCompare`) — the server rejects those signatures with `401 authentication_failed`.
   </Step>
   <Step title="URL-encode the sorted parameters">
     Join the sorted key-value pairs as a URL-encoded query string, for example:
@@ -160,7 +164,7 @@ curl https://api.futuur.com/events/?category=5 \
 | Error | Cause |
 |-------|-------|
 | `InvalidHMACKey` | The public key in the `Key` header is not recognized. Check for typos or use the wrong key. |
-| `InvalidHMACSignature` | The computed signature does not match. Common causes: wrong sort order, missing parameters in the signed set, encoding mismatch, or using the wrong private key. |
+| `InvalidHMACSignature` | The computed signature does not match. Common causes: wrong sort order (including a case-insensitive sort), missing parameters in the signed set, encoding mismatch, or using the wrong private key. |
 | `MissingTimestamp` | The `Timestamp` header is absent or malformed. |
 | `ExpiredTimestamp` | The timestamp is too far from the server's current time. Ensure your system clock is synchronized (NTP). |
 

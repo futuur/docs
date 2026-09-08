@@ -36,6 +36,7 @@
             "group": "Get Started",
             "pages": [
               "introduction",
+              "guides/get-api-keys",
               "authentication",
               "rate-limits",
               "guides/mcp"
@@ -51,9 +52,17 @@
             ]
           },
           {
+            "group": "On-chain trading",
+            "pages": [
+              "concepts/on-chain-trading",
+              "guides/on-chain-first-order"
+            ]
+          },
+          {
             "group": "Guides",
             "pages": [
               "guides/mcp",
+              "guides/get-api-keys",
               "guides/placing-a-bet",
               "guides/selling-a-position",
               "guides/reading-the-order-book"

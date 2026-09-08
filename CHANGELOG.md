@@ -1,5 +1,31 @@
 # Changelog
 
+## 2026-09-08 — On-chain trading (coming soon)
+
+Documented the coming-soon CLOB / on-chain builder flow. Production remains HMAC-only ledger settlement. No unpublished endpoints were added to API Reference.
+
+### Added
+
+- `guides/get-api-keys.mdx` — two credentials (HMAC pair vs owner EOA); Settings UI path (live) and wallet-signed `POST /v2.0/api-keys/derive/` (coming soon)
+- `concepts/on-chain-trading.mdx` — CLOB matching, complementary both-buy, on-chain settlement
+- `guides/on-chain-first-order.mdx` — enable trading → signing-context → `LimitOrderIntent` → create
+
+### Changed — navigation
+
+`docs.json` updates:
+
+- **Get Started**: added `guides/get-api-keys` after Introduction
+- **On-chain trading**: new Documentation group (`concepts/on-chain-trading`, `guides/on-chain-first-order`)
+- **Guides**: added `guides/get-api-keys`
+
+### Changed — cross-links
+
+- `index.mdx`, `introduction.mdx`, `authentication.mdx`: keys guide + Coming soon on-chain notes
+- `authentication.mdx`: case-sensitive HMAC sort warning
+- `concepts/orders.mdx`, `concepts/currencies.mdx`, `guides/placing-a-bet.mdx`, `api-reference/orders/create.mdx`, `api-reference/me/safe.mdx`: Coming soon notes (no new live request fields)
+- `AGENTS.md`: Coming soon convention and Web3 terminology
+- `guides/mcp.mdx`: Settings path now **API keys**, with a link to the keys guide
+
 ## 2026-06-25 — Sync with live API schema
 
 Refreshed `Futuur API Documentation (v2.0).json` from [https://api.futuur.com/docs/schema/](https://api.futuur.com/docs/schema/).
