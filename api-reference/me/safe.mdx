@@ -12,7 +12,7 @@ Register a [Safe](https://safe.global) smart account address with your Futuur ac
 ## Endpoint
 
 ```
-POST https://api.futuur.com/me/safe/
+POST https://api.futuur.com/v2.0/me/safe/
 ```
 
 ## Authentication
@@ -71,7 +71,7 @@ Returns `200 OK` with the updated `UserPrivate` object — the same shape as `GE
 
 ```bash cURL
 curl --request POST \
-  --url "https://api.futuur.com/me/safe/" \
+  --url "https://api.futuur.com/v2.0/me/safe/" \
   --header "Key: YOUR_PUBLIC_KEY" \
   --header "Timestamp: 1712500000" \
   --header "HMAC: YOUR_HMAC_SIGNATURE" \

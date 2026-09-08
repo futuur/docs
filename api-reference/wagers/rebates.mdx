@@ -8,7 +8,7 @@ Return the total rebated maker fees for your account, optionally filtered by dat
 ## Endpoint
 
 ```
-GET https://api.futuur.com/wagers/rebates/
+GET https://api.futuur.com/v2.0/wagers/rebates/
 ```
 
 ## Authentication
@@ -37,7 +37,7 @@ GET https://api.futuur.com/wagers/rebates/
 
 ```bash cURL
 curl --request GET \
-  --url "https://api.futuur.com/wagers/rebates/?date=2026-06-25&event=1023" \
+  --url "https://api.futuur.com/v2.0/wagers/rebates/?date=2026-06-25&event=1023" \
   --header "Key: YOUR_PUBLIC_KEY" \
   --header "Timestamp: 1712500000" \
   --header "HMAC: YOUR_HMAC_SIGNATURE"

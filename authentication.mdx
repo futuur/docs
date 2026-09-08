@@ -93,7 +93,7 @@ headers = {
 # Make the request
 import requests
 response = requests.get(
-    "https://api.futuur.com/events/",
+    "https://api.futuur.com/v2.0/events/",
     params={"category": 5},
     headers=headers,
 )
@@ -133,7 +133,7 @@ function signRequest(requestParams = {}) {
 // Example: GET /events/?category=5
 const headers = signRequest({ category: 5 });
 
-fetch("https://api.futuur.com/events/?category=5", { headers })
+fetch("https://api.futuur.com/v2.0/events/?category=5", { headers })
   .then((res) => res.json())
   .then(console.log);
 ```
@@ -142,7 +142,7 @@ fetch("https://api.futuur.com/events/?category=5", { headers })
 # Pre-compute the HMAC signature using Python or another tool,
 # then pass the headers directly.
 
-curl https://api.futuur.com/events/?category=5 \
+curl https://api.futuur.com/v2.0/events/?category=5 \
   -H "Key: YOUR_PUBLIC_KEY" \
   -H "Timestamp: 1234567890" \
   -H "HMAC: YOUR_COMPUTED_SIGNATURE"

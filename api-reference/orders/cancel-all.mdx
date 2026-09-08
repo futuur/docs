@@ -8,7 +8,7 @@ Cancel all active limit orders for the authenticated user in one call. You can s
 ## Endpoint
 
 ```
-POST https://api.futuur.com/orders/cancel-all/
+POST https://api.futuur.com/v2.0/orders/cancel-all/
 ```
 
 ## Authentication
@@ -47,7 +47,7 @@ Returns `200 OK` with two arrays of order IDs.
 
 ```bash cURL — cancel everything
 curl --request POST \
-  --url "https://api.futuur.com/orders/cancel-all/" \
+  --url "https://api.futuur.com/v2.0/orders/cancel-all/" \
   --header "Key: YOUR_PUBLIC_KEY" \
   --header "Timestamp: 1712500000" \
   --header "HMAC: YOUR_HMAC_SIGNATURE" \
@@ -57,7 +57,7 @@ curl --request POST \
 
 ```bash cURL — scope to a market
 curl --request POST \
-  --url "https://api.futuur.com/orders/cancel-all/" \
+  --url "https://api.futuur.com/v2.0/orders/cancel-all/" \
   --header "Key: YOUR_PUBLIC_KEY" \
   --header "Timestamp: 1712500000" \
   --header "HMAC: YOUR_HMAC_SIGNATURE" \

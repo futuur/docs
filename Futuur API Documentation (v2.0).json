@@ -3,10 +3,10 @@
     "info": {
         "title": "Futuur API Documentation",
         "version": "v2.0",
-        "description": "> **✨ LATEST VERSION**\n> \n> This is the **latest API version (v2.0)**. \n> \n> For reference, the deprecated v1.0 documentation is available at: [https://api.futuur.com/v1.0/docs](https://api.futuur.com/v1.0/docs)\n\n> **🤖 AI Agents Integration**\n> \n> For AI agents and automated integrations, access the OpenAPI schema directly at:\n> \n> **[https://api.futuur.com/docs/schema/](https://api.futuur.com/docs/schema/)**\n> \n> This endpoint provides the complete API specification in JSON format, perfect for code generation, API clients, and AI-powered integrations.\n\n\n# Introduction\n\n## API Structure\n\n### Events and Markets\n\nThe Futuur API is built around **Events** (previously referred to as Questions in older API versions) and **Markets** (previously referred to as Outcomes in older API versions).\n\n- **Events** represent a question or prediction that can be bet on (e.g., \"Who will win the 2024 US Presidential Election?\")\n- **Markets** are the possible outcomes for an event (e.g., \"Candidate A\", \"Candidate B\", \"Other\")\n\nEach event contains multiple markets, and the relationship between markets is defined by **markets correlation**:\n\n- **Linked prices**: Markets are correlated. The sum of all market prices equals 1, and placing a bet on one market automatically affects the prices of other markets in the same event. This is the default correlation type.\n\n- **Independent**: Markets operate independently. Each market's price is calculated separately, and betting on one market does not affect others.\n\nThe correlation type determines how prices are calculated and how bets impact market dynamics within an event.\n\n### Limit Orders\n\nBets are placed through **Limit Orders**, which allow you to specify how you want to participate in a market. Orders can be created in two ways:\n\n- **By Market** (Market Order): Place an order without specifying a price (`price=None`). The order will be executed immediately at the best available price in the order book. You're willing to accept whatever price is currently available for matching your bid (buy) or ask (sell) order.\n\n- **By Price** (Limit Order): Place an order with a specific price you're willing to pay (for buy orders) or receive (for sell orders). The order will be executed when the market price reaches your specified price, or remain in the order book until a matching order is found.\n\nLimit orders provide flexibility in how you enter and exit positions, allowing you to set precise price targets or execute immediately at current market prices.\n\n## Rate Limiting\nTo ensure the quality and accessibility of our API, we enforce certain rate limits per user.\nThe limit rates are the following per user:\n\n* **2000 requests / minute**\n* **30000 requests / day**\n\nPlease be aware that exceeding these limits may result in your access to the API being temporarily suspended.\n\nFor more detailed information about the various available endpoints, the expected input parameters, the response\nformat, error codes to anticipate, and more, please refer to our detailed API documentation or contact our\nsupport team at support@futuur.com.\n\nP.S.: Any attempt to submit the same post request within less than 1 second will result in an 'wager_action_duplicated' error code."
+        "description": "> **✨ LATEST VERSION**\n> \n> This is the **latest API version (v2.0)**. \n> \n> For reference, the deprecated v1.0 documentation is available at: [http://localhost:8000/v1.0/docs](http://localhost:8000/v1.0/docs)\n\n> **🤖 AI Agents Integration**\n> \n> For AI agents and automated integrations, access the OpenAPI schema directly at:\n> \n> **[http://localhost:8000/docs/schema/](http://localhost:8000/docs/schema/)**\n> \n> This endpoint provides the complete API specification in JSON format, perfect for code generation, API clients, and AI-powered integrations.\n\n\n# Introduction\n\n## API Structure\n\n### Events and Markets\n\nThe Futuur API is built around **Events** (previously referred to as Questions in older API versions) and **Markets** (previously referred to as Outcomes in older API versions).\n\n- **Events** represent a question or prediction that can be bet on (e.g., \"Who will win the 2024 US Presidential Election?\")\n- **Markets** are the possible outcomes for an event (e.g., \"Candidate A\", \"Candidate B\", \"Other\")\n\nEach event contains multiple markets, and the relationship between markets is defined by **markets correlation**:\n\n- **Linked prices**: Markets are correlated. The sum of all market prices equals 1, and placing a bet on one market automatically affects the prices of other markets in the same event. This is the default correlation type.\n\n- **Independent**: Markets operate independently. Each market's price is calculated separately, and betting on one market does not affect others.\n\nThe correlation type determines how prices are calculated and how bets impact market dynamics within an event.\n\n### Limit Orders\n\nBets are placed through **Limit Orders**, which allow you to specify how you want to participate in a market. Orders can be created in two ways:\n\n- **By Market** (Market Order): Place an order without specifying a price (`price=None`). The order will be executed immediately at the best available price in the order book. You're willing to accept whatever price is currently available for matching your bid (buy) or ask (sell) order.\n\n- **By Price** (Limit Order): Place an order with a specific price you're willing to pay (for buy orders) or receive (for sell orders). The order will be executed when the market price reaches your specified price, or remain in the order book until a matching order is found.\n\nLimit orders provide flexibility in how you enter and exit positions, allowing you to set precise price targets or execute immediately at current market prices.\n\n## Rate Limiting\nTo ensure the quality and accessibility of our API, we enforce certain rate limits per user.\nThe limit rates are the following per user:\n\n* **2000 requests / minute**\n* **30000 requests / day**\n\nPlease be aware that exceeding these limits may result in your access to the API being temporarily suspended.\n\nFor more detailed information about the various available endpoints, the expected input parameters, the response\nformat, error codes to anticipate, and more, please refer to our detailed API documentation or contact our\nsupport team at support@futuur.com.\n\nP.S.: Any attempt to submit the same post request within less than 1 second will result in an 'wager_action_duplicated' error code."
     },
     "paths": {
-        "/events/": {
+        "/v2.0/events/": {
             "get": {
                 "operationId": "List Events",
                 "description": "**Authorization:** No need.\n\n",
@@ -139,7 +139,7 @@
                 }
             }
         },
-        "/events/{id}/": {
+        "/v2.0/events/{id}/": {
             "get": {
                 "operationId": "Retrieve Event",
                 "parameters": [
@@ -175,7 +175,7 @@
                 }
             }
         },
-        "/events/{id}/actions/": {
+        "/v2.0/events/{id}/actions/": {
             "get": {
                 "operationId": "Actions",
                 "description": "List all event's Actions.\n\nReal money actions have users information anonymized.",
@@ -259,7 +259,7 @@
                 }
             }
         },
-        "/events/{id}/get_tax/": {
+        "/v2.0/events/{id}/get_tax/": {
             "get": {
                 "operationId": "Event Tax",
                 "parameters": [
@@ -290,7 +290,7 @@
                 }
             }
         },
-        "/events/{id}/price_history/": {
+        "/v2.0/events/{id}/price_history/": {
             "get": {
                 "operationId": "Price History",
                 "description": "Get price history for an event",
@@ -354,7 +354,7 @@
                 }
             }
         },
-        "/events/{id}/related_events/": {
+        "/v2.0/events/{id}/related_events/": {
             "get": {
                 "operationId": "Related Events",
                 "description": "Return related events of an event",
@@ -386,7 +386,7 @@
                 }
             }
         },
-        "/events/{id}/wagers/": {
+        "/v2.0/events/{id}/wagers/": {
             "get": {
                 "operationId": "Wagers",
                 "description": "List all event's wagers",
@@ -452,7 +452,7 @@
                 }
             }
         },
-        "/markets/{id}/book/": {
+        "/v2.0/markets/{id}/book/": {
             "get": {
                 "operationId": "Get Market Order Book",
                 "description": "Retrieve the aggregated order book for a market, grouped by price level. The response includes both `ask` and `bid` sides with cumulative totals.",
@@ -514,7 +514,7 @@
                 }
             }
         },
-        "/me/": {
+        "/v2.0/me/": {
             "get": {
                 "operationId": "My information",
                 "description": "Return information about the authenticated user.",
@@ -543,7 +543,7 @@
                 }
             }
         },
-        "/me/balances/": {
+        "/v2.0/me/balances/": {
             "get": {
                 "operationId": "My balances",
                 "description": "Return ledger account balances for the authenticated user, one object per currency. Use the optional `currency` query parameter to return only that currency.",
@@ -582,7 +582,7 @@
                 }
             }
         },
-        "/me/ranking/": {
+        "/v2.0/me/ranking/": {
             "get": {
                 "operationId": "My ranking",
                 "description": "Return the ranking of the authenticated user.",
@@ -608,7 +608,7 @@
                 }
             }
         },
-        "/me/safe/": {
+        "/v2.0/me/safe/": {
             "post": {
                 "operationId": "Register safe address",
                 "description": "Registers Safe smart account address for authenticated user",
@@ -654,7 +654,7 @@
                 }
             }
         },
-        "/orders/": {
+        "/v2.0/orders/": {
             "get": {
                 "operationId": "List Limit Orders",
                 "description": "This mixing let you define throttles_classes per actions by passing a dict to throttle_action_classes attribute.\nThe throttle_classes on throttle_action_classes will be added to the default's ViewSet throttle_classes.\neg.:\nclass MyViewSet(ModelViewSet):\n    throttle_action_classes = {\n        'create': [CustomThrottleClass],\n        'retrieve': [AnonThrottleClass]\n    }",
@@ -862,7 +862,7 @@
                 }
             }
         },
-        "/orders/{id}/cancel/": {
+        "/v2.0/orders/{id}/cancel/": {
             "patch": {
                 "operationId": "Cancel Limit Order",
                 "description": "Cancel an open limit order",
@@ -911,7 +911,7 @@
                 }
             }
         },
-        "/orders/batch/": {
+        "/v2.0/orders/batch/": {
             "post": {
                 "operationId": "Batch Create Limit Orders",
                 "description": "Create multiple limit orders in a single request.\n\nRequest body:\n  - orders: list[1..20] of:\n      - event (int, optional consistency check)\n      - market (outcome id, required)\n      - side: \"bid\" | \"ask\"\n      - position: \"long\" | \"short\"\n      - price: decimal string | null\n      - shares: decimal string\n      - amount: decimal string (optional)\n      - currency: e.g. \"OOM\", \"USDC\"\n      - expired_at: ISO datetime (optional)\n      - cancel_conflicting_orders: bool (optional)\n\nReturns:\n  - 200 OK\n  - {\n      \"results\": [\n        {\"index\": 0, \"success\": true, \"order\": {...}},\n        {\"index\": 1, \"success\": false, \"errors\": \"...\"}\n      ],\n      \"cancelled_existing_order_ids\": [1, 2, 3]\n    }",
@@ -994,7 +994,7 @@
                 }
             }
         },
-        "/orders/batch-cancel/": {
+        "/v2.0/orders/batch-cancel/": {
             "post": {
                 "operationId": "Batch Cancel Limit Orders",
                 "description": "Batch Cancel Orders.\n\nRequest body:\n  - order_ids: list[int] (required)\n\nReturns:\n  - 200 OK with one result item per requested id:\n    [\n      {\"index\": 0, \"order_id\": 100, \"success\": true},\n      {\"index\": 1, \"order_id\": 101, \"success\": false, \"error\": \"Order is being processed.\"}\n    ]",
@@ -1054,7 +1054,7 @@
                 }
             }
         },
-        "/orders/batch-update/": {
+        "/v2.0/orders/batch-update/": {
             "post": {
                 "operationId": "Batch Update Limit Orders...",
                 "description": "Batch update open limit orders.\n\nEach update cancels the existing open order and creates a replacement\nwith the updated fields, so all order-book validations run normally.",
@@ -1140,7 +1140,7 @@
                 }
             }
         },
-        "/orders/cancel-all/": {
+        "/v2.0/orders/cancel-all/": {
             "post": {
                 "operationId": "Cancel All Limit Orders",
                 "description": "Cancel all active limit orders for the authenticated user.\n\nRequest body (optional filters):\n  - event: int (question id)\n  - market: int (outcome id)\n\nReturns:\n  - 200 OK\n  - {\n      \"canceled_order_ids\": [100, 101],\n      \"processing_order_ids\": [102]\n    }",
@@ -1185,7 +1185,7 @@
                 }
             }
         },
-        "/wagers/": {
+        "/v2.0/wagers/": {
             "get": {
                 "operationId": "List my wagers",
                 "parameters": [
@@ -1283,7 +1283,7 @@
                 }
             }
         },
-        "/wagers/{id}/": {
+        "/v2.0/wagers/{id}/": {
             "get": {
                 "operationId": "Retrieve wager",
                 "parameters": [
@@ -1320,7 +1320,7 @@
                 }
             }
         },
-        "/wagers/rebates/": {
+        "/v2.0/wagers/rebates/": {
             "get": {
                 "operationId": "Current rebated fees for maker",
                 "parameters": [
@@ -2091,6 +2091,14 @@
                         "type": "string",
                         "readOnly": true
                     },
+                    "liquidity_play_money": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "liquidity_real_money": {
+                        "type": "string",
+                        "readOnly": true
+                    },
                     "is_following": {
                         "type": "string",
                         "readOnly": true
@@ -2194,6 +2202,8 @@
                     "is_new",
                     "is_real_money_bets_forbidden",
                     "is_wagerable",
+                    "liquidity_play_money",
+                    "liquidity_real_money",
                     "markets",
                     "relevance",
                     "slug",
@@ -2407,6 +2417,14 @@
                         "type": "string",
                         "readOnly": true
                     },
+                    "liquidity_play_money": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "liquidity_real_money": {
+                        "type": "string",
+                        "readOnly": true
+                    },
                     "is_following": {
                         "type": "string",
                         "readOnly": true
@@ -2452,6 +2470,8 @@
                     "is_live",
                     "is_new",
                     "is_wagerable",
+                    "liquidity_play_money",
+                    "liquidity_real_money",
                     "markets",
                     "relevance",
                     "slug",
@@ -2674,6 +2694,30 @@
                         "x-spec-enum-id": "eb9d873f7111305c",
                         "description": "Long/Short\n\n* `yesno` - Yes/No\n* `updown` - Up/Down\n* `custom` - Custom"
                     },
+                    "volume_play_money": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "volume_real_money": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "liquidity_play_money": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "liquidity_real_money": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "depth_play_money": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "depth_real_money": {
+                        "type": "string",
+                        "readOnly": true
+                    },
                     "thumbnail": {
                         "type": "string",
                         "readOnly": true
@@ -2685,12 +2729,18 @@
                     }
                 },
                 "required": [
+                    "depth_play_money",
+                    "depth_real_money",
                     "id",
+                    "liquidity_play_money",
+                    "liquidity_real_money",
                     "price",
                     "resolution",
                     "resolution_display",
                     "thumbnail",
-                    "title"
+                    "title",
+                    "volume_play_money",
+                    "volume_real_money"
                 ]
             },
             "OrderBook": {
@@ -2927,6 +2977,14 @@
                         "type": "string",
                         "readOnly": true
                     },
+                    "liquidity_play_money": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "liquidity_real_money": {
+                        "type": "string",
+                        "readOnly": true
+                    },
                     "bet_end_date": {
                         "type": "string",
                         "format": "date-time",
@@ -2951,6 +3009,8 @@
                     "highest_market",
                     "highest_market_real_money",
                     "id",
+                    "liquidity_play_money",
+                    "liquidity_real_money",
                     "title",
                     "volume_play_money",
                     "volume_real_money",
@@ -3542,11 +3602,12 @@
                             "lose",
                             "cancel",
                             "reverse",
-                            "disable"
+                            "disable",
+                            "sale_reverse"
                         ],
                         "type": "string",
-                        "description": "* `sale` - sale\n* `partial_sale` - partial sale\n* `purchase` - purchase\n* `win` - win\n* `lose` - lose\n* `cancel` - cancel\n* `reverse` - reverse\n* `disable` - disable",
-                        "x-spec-enum-id": "db99ede445a13a97"
+                        "description": "* `sale` - sale\n* `partial_sale` - partial sale\n* `purchase` - purchase\n* `win` - win\n* `lose` - lose\n* `cancel` - cancel\n* `reverse` - reverse\n* `disable` - disable\n* `sale_reverse` - sale reverse",
+                        "x-spec-enum-id": "52d74967a06ad4db"
                     },
                     "price": {
                         "type": "string",
@@ -3713,6 +3774,10 @@
                         "type": "string",
                         "readOnly": true
                     },
+                    "current_profit": {
+                        "type": "string",
+                        "readOnly": true
+                    },
                     "last_profit": {
                         "type": "number",
                         "format": "double",
@@ -3776,6 +3841,7 @@
                     "active_purchases_amount",
                     "amount_on_sell",
                     "amount_on_win",
+                    "current_profit",
                     "earnings",
                     "event",
                     "id",
@@ -3888,6 +3954,10 @@
                         "type": "string",
                         "readOnly": true
                     },
+                    "current_profit": {
+                        "type": "string",
+                        "readOnly": true
+                    },
                     "last_profit": {
                         "type": "number",
                         "format": "double",
@@ -3946,6 +4016,7 @@
                     "active_purchases_amount",
                     "amount_on_sell",
                     "amount_on_win",
+                    "current_profit",
                     "earnings",
                     "event",
                     "id",
@@ -4003,7 +4074,7 @@
         },
         {
             "name": "Websocket",
-            "description": "Futuur uses Pusher to deliver real-time data to clients over WebSocket connections.\n\n## Authentication and authorization\n\nTwo backend endpoints are used:\n\n1. **User authentication** (`POST /pusher/user-auth/`)  \n   Identifies the user on the Pusher connection (signin). Send `socket_id` in the body.  \n   Use the same DRF authentication as the rest of the API (e.g. `Authorization: Bearer <token>` or HMAC headers).  \n   Only authenticated users are allowed.  \n   Endpoint is versioned (for example: `POST /v2.0/pusher/user-auth/`).\n\nPython example (HMAC user auth):\n\nAPI bots can call `POST /pusher/user-auth/` using the same HMAC headers\n(`Key`, `Timestamp`, `HMAC`).\nTo generate these headers, see the **Authentication** section.\n\nSign the request using:\n\n```\nKey={{your_public_key}}&Timestamp={{current_timestamp}}&socket_id={{socket_id}}\n```\n\nPython example (user auth):\n\n```python\nimport hashlib\nimport hmac\nimport time\nfrom urllib.parse import urlencode\n\nimport requests\n\nAPI_PUBLIC_KEY = \"your_public_key\"\nAPI_PRIVATE_KEY = \"your_private_key\"\nUSER_AUTH_ENDPOINT = \"https://api.futuur.com/v2.0/pusher/user-auth/\"\n\n\ndef authenticate_user(socket_id: str) -> dict:\n    timestamp = str(int(time.time()))\n    params_to_sign = {\n        \"Key\": API_PUBLIC_KEY,\n        \"Timestamp\": timestamp,\n        \"socket_id\": socket_id,\n    }\n    raw_to_sign = urlencode(sorted(params_to_sign.items()))\n    signature = hmac.new(\n        API_PRIVATE_KEY.encode(\"utf-8\"),\n        raw_to_sign.encode(\"utf-8\"),\n        hashlib.sha512,\n    ).hexdigest()\n\n    headers = {\n        \"Key\": API_PUBLIC_KEY,\n        \"Timestamp\": timestamp,\n        \"HMAC\": signature,\n    }\n    payload = {\"socket_id\": socket_id}\n    response = requests.post(USER_AUTH_ENDPOINT, headers=headers, data=payload, timeout=20)\n    response.raise_for_status()\n    return response.json()  # {\"auth\": \"...\", \"user_data\": \"...\"}\n```\n\n2. **Channel authorization** (`POST /pusher/auth/`)  \n   Authorizes subscription to private channels (e.g. `private-user-{user_id}`).  \n   Send `channel_name` and `socket_id` in the body.  \n   You can authenticate either with `Authorization: Bearer <token>` (browser/client apps) or with\n   HMAC headers (`Key`, `Timestamp`, `HMAC`) for API bots.\n\n### Pusher channel authorization for API bots (HMAC)\n\nFor API bots (server-side clients), you can authorize private Pusher channels using\nthe same HMAC headers (`Key`, `Timestamp`, `HMAC`).\nTo generate these headers, see the **Authentication** section.\n\nPusher uses your `channelAuthorization.endpoint` (typically `/pusher/auth`) and sends\n`socket_id` and `channel_name`. Your bot must call Futuur API endpoint (for example\n`/v2.0/pusher/auth/`) and sign the request with:\n\n```\nKey={{your_public_key}}&Timestamp={{current_timestamp}}&channel_name={{channel_name}}&socket_id={{socket_id}}\n```\n\nPython example (authorize + subscribe + listen):\n\n```python\nimport hashlib\nimport hmac\nimport json\nimport ssl\nimport time\nfrom urllib.parse import urlencode\n\nimport certifi\nimport requests\nimport websocket\n\nAPI_PUBLIC_KEY = \"your_public_key\"\nAPI_PRIVATE_KEY = \"your_private_key\"\nPUSHER_APP_KEY = \"0eebda232c11d3fad853\"\nPUSHER_CLUSTER = \"us2\"\nCHANNEL_AUTH_ENDPOINT = \"https://api.futuur.com/v2.0/pusher/auth/\"\nUSER_ID = \"1\"\nCHANNEL_NAME = f\"private-user-{USER_ID}\"\nINSECURE_SSL_FOR_LOCAL_TESTS = False\n\n\ndef sign_headers(socket_id: str, channel_name: str) -> dict:\n    timestamp = str(int(time.time()))\n    params_to_sign = {\n        \"Key\": API_PUBLIC_KEY,\n        \"Timestamp\": timestamp,\n        \"socket_id\": socket_id,\n        \"channel_name\": channel_name,\n    }\n    raw_to_sign = urlencode(sorted(params_to_sign.items()))\n    signature = hmac.new(\n        API_PRIVATE_KEY.encode(\"utf-8\"),\n        raw_to_sign.encode(\"utf-8\"),\n        hashlib.sha512,\n    ).hexdigest()\n    return {\n        \"Key\": API_PUBLIC_KEY,\n        \"Timestamp\": timestamp,\n        \"HMAC\": signature,\n    }\n\n\ndef authorize_channel(socket_id: str, channel_name: str) -> dict:\n    payload = {\"socket_id\": socket_id, \"channel_name\": channel_name}\n    headers = sign_headers(socket_id, channel_name)\n    response = requests.post(\n        CHANNEL_AUTH_ENDPOINT,\n        headers=headers,\n        data=payload,\n        timeout=20,\n    )\n    response.raise_for_status()\n    return response.json()  # {\"auth\": \"...\"}\n\n\nws_url = (\n    f\"wss://ws-{PUSHER_CLUSTER}.pusher.com/app/{PUSHER_APP_KEY}\"\n    \"?protocol=7&client=python-bot&version=1.0&flash=false\"\n)\nsslopt = {\"cert_reqs\": ssl.CERT_REQUIRED, \"ca_certs\": certifi.where()}\nif INSECURE_SSL_FOR_LOCAL_TESTS:\n    # For local debugging only.\n    sslopt = {\"cert_reqs\": ssl.CERT_NONE, \"check_hostname\": False}\n\nws = websocket.create_connection(ws_url, timeout=30, sslopt=sslopt)\n\nconnection_established = json.loads(ws.recv())\nsocket_id = json.loads(connection_established[\"data\"])[\"socket_id\"]\n\nauth_data = authorize_channel(socket_id, CHANNEL_NAME)\nws.send(json.dumps({\n    \"event\": \"pusher:subscribe\",\n    \"data\": {\n        \"channel\": CHANNEL_NAME,\n        \"auth\": auth_data[\"auth\"],\n    },\n}))\n\nwhile True:\n    # Prints events received from the subscribed channel.\n    print(ws.recv())\n```\n\n### Authorizing channels other than `private-user-{id}`\n\n`/pusher/auth/` can authorize other private channels too.  \nFor security, each channel pattern should have specific authorization rules.\n\nCurrent recommendation:\n\n- `private-user-{id}`: only allow when authenticated user id matches `{id}`\n- any additional channel pattern: define explicit permission checks with Futuur dev's\n- unknown/private patterns without rules: deny by default\n\n## Client setup (minimal)\n\nInclude the Pusher JS client:\n\n```html\n<script src=\"https://js.pusher.com/8.4.0/pusher.min.js\"></script>\n```\n\nInitialize Pusher and subscribe to a channel:\n\n```html\n<script>\n    // Enable pusher logging - don't include this in production\n    Pusher.logToConsole = true;\n\n    var pusher = new Pusher(\"9011f7eac38e825792d5\", {\n        cluster: \"us2\",\n    });\n\n    var channel = pusher.subscribe(\"my-channel\");\n    channel.bind(\"my-event\", function (data) {\n        alert(JSON.stringify(data));\n    });\n</script>\n```\n\n## Channels and events\n\nEach event below lists the channel name, event name, and data shape emitted to clients.\n\n### Market channel\n\n- **Channel**: `market`\n- **Event**: `best-prices-change`\n- **Data payload**:\n    - `market_id`: int\n    - `event_id`: int\n    - `currency_mode`: string `play_money` or `real_money`\n    - `best_ask`: (number or null)\n    - `best_bid`: (number or null)\n    - `spread`: `best_ask - best_bid` (number or null)\n\nExample subscription:\n\n```html\n<script>\n    var pusher = new Pusher(\"9011f7eac38e825792d5\", { cluster: \"us2\" });\n    var channel = pusher.subscribe(\"market\");\n    channel.bind(\"best-prices-change\", function (data) {\n        console.log(\"Best prices changed:\", data);\n    });\n</script>\n```\n\n### Market channel: full-depth order book (`order-book-update`)\n\nReal-time streaming of the full order book (all price levels with depth) on the public `market` channel. Used for market making: adjust quotes from depth, detect execution risk, and size orders.\n\n- **Channel**: `market` (public, no auth)\n- **Event**: `order-book-update`\n- **When**: book changes (orders filled, canceled, or new orders); first update per (market, currency, side) after cache miss is a full snapshot.\n\n#### Payload\n\n| Field           | Type    | Description                                                                  |\n| --------------- | ------- | ---------------------------------------------------------------------------- |\n| `market_id`     | number  | Market (outcome) ID                                                          |\n| `event_id`      | number  | Event (question) ID                                                          |\n| `currency_mode` | string  | `'real_money'` or `'play_money'`                                             |\n| `side`          | string  | `'bid'` or `'ask'` (side of the book being updated)                          |\n| `updates`       | array   | Delta or full levels (see below)                                             |\n| `timestamp`     | string  | ISO 8601 with milliseconds                                                   |\n| `is_snapshot`   | boolean | If `true`, `updates` is the full book for this side; otherwise it is a delta |\n\nEach element of `updates`:\n\n| Field          | Type   | Description                                                 |\n| -------------- | ------ | ----------------------------------------------------------- |\n| `price`        | number | Price level (e.g. in USDC)                                  |\n| `total_shares` | number | Total shares at this level; `0` means the level was removed |\n| `total_amount` | number | Total value (`price * total_shares`) at this level          |\n\n- **Snapshot**: on first update after backend restart or when client (re)subscribes, request a full book via the REST order-book API; the backend may also send `is_snapshot: true` with the full list of levels.\n- **Delta**: only levels that changed are sent; `total_shares: 0` indicates a level removed.\n\nExample:\n\n```javascript\nchannel.bind(\"order-book-update\", function (data) {\n    if (data.is_snapshot) {\n        // Replace local book for this market/side/currency\n        applySnapshot(\n            data.market_id,\n            data.side,\n            data.currency_mode,\n            data.updates,\n        );\n    } else {\n        applyDelta(data.market_id, data.side, data.currency_mode, data.updates);\n    }\n});\n```\n\nOn (re)connection, request a fresh snapshot from the REST API for the markets you subscribe to, then apply subsequent `order-book-update` deltas.\n\n## Private channel: order updates (hedge / Liquid Loop)\n\nReal-time order status change events for low-latency hedge reactions (<100ms from fill/cancel to push). Covers all status transitions so the Liquid Loop can keep its internal order model and hedge map in sync (no stale open orders).\n\n- **Channel**: `private-user-{user_id}` (requires authentication via `POST /pusher/auth/`)\n- **Event**: `order-update`\n- **When**: order status changes: filled, partial_filled, canceled, or expired (any transition from open/partial_filled)\n\n### Payload (OrderUpdateWebSocketEvent)\n\n| Field                 | Type           | Description                                                                                                                                           |\n| --------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |\n| `order_id`            | number         | ID da ordem no Futuur                                                                                                                                 |\n| `market_id`           | number         | ID do mercado (outcome)                                                                                                                               |\n| `event_id`            | number         | ID do evento (question) para hedge lookup                                                                                                             |\n| `status`              | string         | `'pending'` \\| `'open'` \\| `'partial_filled'` \\| `'filled'` \\| `'canceled'` \\| `'expired'`                                                            |\n| `previous_status`     | string \\| null | Status anterior (para rastrear transição)                                                                                                             |\n| `side`                | string         | `'bid'` \\| `'ask'`                                                                                                                                    |\n| `position`            | string         | `'l'` (long) \\| `'s'` (short)                                                                                                                         |\n| `price`               | number \\| null | Preço limite da ordem                                                                                                                                 |\n| `shares_requested`    | number         | Quantidade solicitada                                                                                                                                 |\n| `shares_filled`       | number         | Quantidade total preenchida até agora                                                                                                                 |\n| `shares_filled_delta` | number         | _(Opcional)_ Preenchido nesta atualização (em eventos de fill)                                                                                        |\n| `avg_fill_price`      | number \\| null | _(Opcional)_ Preço médio dos fills (em eventos de fill)                                                                                               |\n| `currency`            | string         | Código da moeda (ex: USDC)                                                                                                                            |\n| `timestamp`           | string         | ISO 8601 com milissegundos                                                                                                                            |\n| `cancel_reason`       | string         | _(Opcional)_ `'user_requested'` \\| `'market_closed'` \\| `'expired'` \\| `'system'` \\| `'insufficient_funds'` \\| `'admin'` (apenas em canceled/expired) |\n| `expired_at`          | string         | _(Opcional)_ Timestamp de expiração (ISO 8601)                                                                                                        |\n| `is_system_initiated` | boolean        | _(Opcional)_ `true` se o cancelamento foi iniciado pelo sistema                                                                                       |\n\n### Example: subscribe to private order updates\n\n```html\n<script>\n    var pusher = new Pusher(\"9011f7eac38e825792d5\", { cluster: \"us2\" });\n    var privateChannel = pusher.subscribe(\"private-user-\" + userId);\n    privateChannel.bind(\"order-update\", function (data) {\n        console.log(\"Order update:\", data);\n        if (data.status === \"filled\" || data.status === \"partial_filled\") {\n            // Trigger hedge (e.g. Liquid Loop)\n        }\n        if (data.status === \"canceled\" || data.status === \"expired\") {\n            // Remove from local open-orders model and hedge map\n        }\n    });\n</script>\n```\n\nAuthentication: the client must call `POST /pusher/auth/` with `channel_name` and `socket_id`.\nUse either `Authorization: Bearer <token>` or HMAC headers (`Key`, `Timestamp`, `HMAC`).\nThe backend validates the user and allows only `private-user-{user_id}` for that user.\n\nOther private channel patterns can also be authorized, but each pattern must have explicit backend permission rules.",
+            "description": "Futuur uses Pusher to deliver real-time data to clients over WebSocket connections.\n\n## Channels and events\n\nThis is the complete catalog of realtime channels and the events published on each.\n\n### Channels\n\n\n| Channel                  | Type    | Auth                            | Purpose                                                                                  |\n| ------------------------ | ------- | ------------------------------- | ---------------------------------------------------------------------------------------- |\n| `event`                  | public  | none                            | Global feed of event/market activity (prices, volumes, new markets, comments, live data) |\n| `event-{event_id}`       | public  | none                            | Per-event messages (order-book updates)                                                  |\n| `private-user-{user_id}` | private | required (`POST /pusher/auth/`) | Per-user private messages (balance, deposits, order updates)                             |\n\n\n\n\n### Events at a glance\n\n\n| Event                | Channel                  | Emitted when                                               |\n| -------------------- | ------------------------ | ---------------------------------------------------------- |\n| `best-prices-change` | `event`                  | A wagerable market's best bid/ask changes                  |\n| `price-change`       | `event`                  | An event's price/volume state changes                      |\n| `new-market`         | `event`                  | A new market (outcome) is added to an event                |\n| `live-data-update`   | `event`                  | An event's live data (status/resolution/live feed) changes |\n| `new-comment`        | `event`                  | A user posts a comment on an event                         |\n| `order-book-update`  | `event-{event_id}`       | The event's order book changes (refetch ping)              |\n| `balance-change`     | `private-user-{user_id}` | The user's balance changes                                 |\n| `deposit-success`    | `private-user-{user_id}` | A deposit completes                                        |\n| `order-update`       | `private-user-{user_id}` | An order status changes (fill/cancel/expire)               |\n\n\n\n\n## Client setup (minimal)\n\nInclude the Pusher JS client (for other languages see [https://pusher.com/docs/channels/using_channels/client-api-overview/](https://pusher.com/docs/channels/using_channels/client-api-overview/)):\n\n```html\n<script src=\"https://js.pusher.com/8.4.0/pusher.min.js\"></script>\n```\n\nInitialize Pusher and subscribe to a channel:\n\n```html\n<script>\n    // Enable pusher logging - don't include this in production\n    Pusher.logToConsole = true;\n\n    var pusher = new Pusher(\"9011f7eac38e825792d5\", {\n        cluster: \"us2\",\n    });\n\n    var channel = pusher.subscribe(\"my-channel\");\n    channel.bind(\"my-event\", function (data) {\n        alert(JSON.stringify(data));\n    });\n</script>\n```\n\n\n\n## Channel authorization (for private channels)\n\nPusher only allows a connection to subscribe to a private channel when the client provides an\nauthorization token signed by your server. When subscribing, the Pusher client library sends a\n`POST` request to your authorization endpoint with `socket_id` and `channel_name`.\n\nAPI bots use Futuur's endpoint (`POST /v2.0/pusher/auth/`) and authenticate with HMAC headers\n(`Key`, `Timestamp`, `HMAC`). See the **Authentication** section for key setup.\n\nSign the request using:\n\n```\nKey={{your_public_key}}&Timestamp={{current_timestamp}}&channel_name={{channel_name}}&socket_id={{socket_id}}\n```\n\nNode.js example (based on [Pusher's authorization endpoint](https://pusher.com/docs/channels/server_api/authorizing-users/)):\n\n```javascript\nconst crypto = require(\"crypto\");\n\nconst API_PUBLIC_KEY = \"your_public_key\";\nconst API_PRIVATE_KEY = \"your_private_key\";\nconst CHANNEL_AUTH_ENDPOINT = \"https://api.futuur.com/v2.0/pusher/auth/\";\n\nasync function authorizeChannel(socketId, channelName) {\n  const timestamp = String(Math.floor(Date.now() / 1000));\n  const paramsToSign = {\n    Key: API_PUBLIC_KEY,\n    Timestamp: timestamp,\n    channel_name: channelName,\n    socket_id: socketId,\n  };\n  const rawToSign = new URLSearchParams(\n    Object.entries(paramsToSign).sort(([a], [b]) => a.localeCompare(b)),\n  ).toString();\n  const signature = crypto\n    .createHmac(\"sha512\", API_PRIVATE_KEY)\n    .update(rawToSign)\n    .digest(\"hex\");\n\n  const response = await fetch(CHANNEL_AUTH_ENDPOINT, {\n    method: \"POST\",\n    headers: {\n      Key: API_PUBLIC_KEY,\n      Timestamp: timestamp,\n      HMAC: signature,\n      \"Content-Type\": \"application/x-www-form-urlencoded\",\n    },\n    body: new URLSearchParams({\n      socket_id: socketId,\n      channel_name: channelName,\n    }),\n  });\n\n  if (!response.ok) {\n    throw new Error(\"Forbidden\");\n  }\n\n  return response.json(); // { auth: \"...\" }\n}\n```\n\nPoint the Pusher client at Futuur's endpoint:\n\n```javascript\nconst Pusher = require(\"pusher-js\");\n\nconst pusher = new Pusher(\"9011f7eac38e825792d5\", {\n  cluster: \"us2\",\n  channelAuthorization: {\n    customHandler: ({ socketId, channelName }, callback) => {\n      authorizeChannel(socketId, channelName)\n        .then((authResponse) => callback(null, authResponse))\n        .catch((err) => callback(err, null));\n    },\n  },\n});\n\nconst channel = pusher.subscribe(\"private-user-1\");\n```\n\n\n\n## Event channel (public)\n\nGlobal public feed on channel `event`. Subscribe with `pusher.subscribe(\"event\")`; no authentication required.\n\n### best-prices-change\n\nEmitted when the best bid/ask of a **wagerable** market changes (non-wagerable markets are skipped to stay within Pusher limits).\n\n- **Data payload**:\n  - `market_id`: int\n  - `event_id`: int\n  - `currency_mode`: string `play_money` or `real_money`\n  - `best_ask`: (number or null)\n  - `best_bid`: (number or null)\n  - `spread`: `best_ask - best_bid` (number or null)\n\nExample subscription:\n\n```html\n<script>\n    var pusher = new Pusher(\"9011f7eac38e825792d5\", { cluster: \"us2\" });\n    var channel = pusher.subscribe(\"event\");\n    channel.bind(\"best-prices-change\", function (data) {\n        console.log(\"Best prices changed:\", data);\n    });\n</script>\n```\n\n\n\n### price-change\n\nEmitted when an event's price/volume state changes (a wager placed, orders matched, a resolution, etc.). `currency_mode` controls the ordering of `markets` in the payload.\n\n- **Data payload**:\n\n\n| Field                     | Type    | Description                                             |\n| ------------------------- | ------- | ------------------------------------------------------- |\n| `id`                      | number  | Event (question) ID                                     |\n| `title`                   | string  | Event title                                             |\n| `status`                  | string  | Event status code                                       |\n| `currency_mode`           | string  | `'play_money'` or `'real_money'`                        |\n| `is_wagerable`            | boolean | Whether the event currently accepts wagers              |\n| `wagers_count_play_money` | number  | Wagers count (play money)                               |\n| `wagers_count_real_money` | number  | Wagers count (real money)                               |\n| `wagers_count_total`      | number  | `wagers_count_play_money + wagers_count_real_money`     |\n| `volume_play_money`       | number  | null                                                    |\n| `volume_real_money`       | number  | null                                                    |\n| `markets`                 | array   | Visible markets, ordered by `currency_mode` (see below) |\n\n\nEach element of `markets`:\n\n\n| Field         | Type   | Description                                                                                                    |\n| ------------- | ------ | -------------------------------------------------------------------------------------------------------------- |\n| `id`          | number | Market (outcome) ID                                                                                            |\n| `title`       | string | Market title                                                                                                   |\n| `status`      | string | Market status                                                                                                  |\n| `price`       | object | **LONG** mid-price of the order book per currency: `{ \"OOM\": <play_money_price>, \"USDC\": <real_money_price> }` |\n| `long_label`  | string | Label for the long (yes) side (e.g. `\"Yes\"`, `\"Up\"`)                                                           |\n| `short_label` | string | Label for the short (no) side (e.g. `\"No\"`, `\"Down\"`)                                                          |\n| `resolution`  | string | `'long'`, `'short'`, or null when unresolved                                                                   |\n\n\n\n\n### new-market\n\nEmitted when a new market is added to an event.\n\n- **Data payload**:\n\n\n| Field                        | Type   | Description                                           |\n| ---------------------------- | ------ | ----------------------------------------------------- |\n| `id`                         | number | Market (outcome) ID                                   |\n| `title`                      | string | Market title                                          |\n| `title_verbose`              | string | Verbose market title                                  |\n| `event`                      | object | `{ id, title, status, category }` of the parent event |\n| `status`                     | string | Market status                                         |\n| `suggested_price_play_money` | number | null                                                  |\n| `suggested_price_real_money` | number | null                                                  |\n| `bet_start_date`             | string | null                                                  |\n| `bet_end_date`               | string | null                                                  |\n\n\n\n\n### live-data-update\n\nEmitted when an event's live data changes (e.g. live sports feed updates, status/resolution changes).\n\n- **Data payload**:\n\n\n| Field              | Type    | Description                         |\n| ------------------ | ------- | ----------------------------------- |\n| `id`               | number  | Event (question) ID                 |\n| `status`           | string  | Event status                        |\n| `resolution`       | string  | null                                |\n| `resolve_date`     | string  | null                                |\n| `event_start_date` | string  | null                                |\n| `event_end_date`   | string  | null                                |\n| `event_extra_data` | object  | null                                |\n| `is_live`          | boolean | Whether the event is currently live |\n\n\n\n\n### new-comment\n\nEmitted when a user posts a comment on an event. Sent asynchronously with a short (~5s) delay so the comment is readable from replicas by the time clients refetch.\n\n- **Data payload**:\n\n\n| Field        | Type   | Description                                                          |\n| ------------ | ------ | -------------------------------------------------------------------- |\n| `id`         | number | Comment ID                                                           |\n| `content`    | string | Comment text                                                         |\n| `created_on` | string | ISO 8601 timestamp                                                   |\n| `user`       | object | `{ id, username, picture, win_rate, wagers_count, net_earnings }`    |\n| `question`   | object | `{ id, title, slug, status, resolve_date, bet_end_date, is_binary }` |\n\n\n\n\n## Per-event channel (public)\n\nPer-event channel keyed by the event (question) id. Channel name pattern: `event-{event_id}` (e.g. `event-1234`). Subscribe with `pusher.subscribe(\"event-\" + eventId)`; no authentication required.\n\n### order-book-update\n\nA lightweight \"the book changed, refetch it\" ping (no diff payload). Emitted when the event's order book changes (order created, matched, or canceled). On receipt, refetch the book from the REST order-book API.\n\n- **Data payload**:\n\n\n| Field      | Type   | Description                                 |\n| ---------- | ------ | ------------------------------------------- |\n| `endpoint` | string | Always `\"book\"`                             |\n| `question` | number | Event (question) ID                         |\n| `currency` | string | Concrete currency code (e.g. `USDC`, `OOM`) |\n\n\nExample:\n\n```html\n<script>\n    var pusher = new Pusher(\"9011f7eac38e825792d5\", { cluster: \"us2\" });\n    var channel = pusher.subscribe(\"event-\" + eventId);\n    channel.bind(\"order-book-update\", function (data) {\n        // data = { endpoint: \"book\", question: <id>, currency: \"USDC\" }\n        refetchOrderBook(data.question, data.currency);\n    });\n</script>\n```\n\n\n\n## Private user channel (private)\n\nPer-user private channel. Channel name pattern: `private-user-{user_id}`. Requires authorization via `POST /pusher/auth/` (see above); a user may only subscribe to their own channel. Subscribe with `pusher.subscribe(\"private-user-\" + userId)`.\n\n### balance-change\n\nEmitted whenever the user's balance changes (wager, deposit, credit, withdrawal, promo code, currency exchange). Carries no amount — clients should refetch the balance.\n\n- **Data payload**:\n\n\n| Field       | Type   | Description                                            |\n| ----------- | ------ | ------------------------------------------------------ |\n| `timestamp` | number | Unix epoch seconds (float) when the change was emitted |\n\n\n\n\n### deposit-success\n\nEmitted when a deposit completes.\n\n- **Data payload**:\n\n\n| Field      | Type   | Description      |\n| ---------- | ------ | ---------------- |\n| `amount`   | number | Deposited amount |\n| `currency` | string | Currency code    |\n\n\n\n\n### order-update\n\nReal-time order status change events for low-latency hedge reactions (<100ms from fill/cancel to push). Covers all status transitions so a client can keep its internal order model and hedge map in sync (no stale open orders).\n\n- **When**: order status changes — filled, partial_filled, canceled, or expired (any transition from open/partial_filled).\n- **Data payload**:\n\n\n| Field                 | Type    | Description                                                  |\n| --------------------- | ------- | ------------------------------------------------------------ |\n| `order_id`            | number  | Order ID                                                     |\n| `market_id`           | number  | Market (outcome) ID                                          |\n| `event_id`            | number  | Event (question) ID (for hedge lookup)                       |\n| `status`              | string  | `'pending'`                                                  |\n| `previous_status`     | string  | null                                                         |\n| `side`                | string  | `'bid'`                                                      |\n| `position`            | string  | `'l'` (long)                                                 |\n| `price`               | number  | null                                                         |\n| `shares_requested`    | number  | Requested quantity                                           |\n| `shares_filled`       | number  | Total quantity filled so far                                 |\n| `shares_filled_delta` | number  | *(Optional)* Filled in this update (fill events only)        |\n| `avg_fill_price`      | number  | null                                                         |\n| `currency`            | string  | Currency code (e.g. USDC)                                    |\n| `timestamp`           | string  | ISO 8601 with milliseconds                                   |\n| `cancel_reason`       | string  | *(Optional)* `'user_requested'`                              |\n| `expired_at`          | string  | *(Optional)* Expiry timestamp (ISO 8601)                     |\n| `is_system_initiated` | boolean | *(Optional)* `true` if the cancellation was system-initiated |\n\n\n\n\n### Example: subscribe to private order updates\n\n```html\n<script>\n    var pusher = new Pusher(\"9011f7eac38e825792d5\", { cluster: \"us2\" });\n    var privateChannel = pusher.subscribe(\"private-user-\" + userId);\n    privateChannel.bind(\"order-update\", function (data) {\n        console.log(\"Order update:\", data);\n        if (data.status === \"filled\" || data.status === \"partial_filled\") {\n            // Trigger hedge (e.g. Liquid Loop)\n        }\n        if (data.status === \"canceled\" || data.status === \"expired\") {\n            // Remove from local open-orders model and hedge map\n        }\n    });\n</script>\n```\n\nAuthentication: see **Channel authorization** above.",
             "externalDocs": {
                 "description": "Pusher WebSocket Documentation",
                 "url": "https://pusher.com/docs/channels/using_channels/client-api-overview/?ref=docs-index"

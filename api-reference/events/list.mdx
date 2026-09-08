@@ -1,186 +1,134 @@
 ---
-title: "List events"
-description: "Retrieve a paginated list of prediction market events, with optional filters for category, currency mode, search, and more."
+title: 'List events'
+description: 'Retrieve a paginated list of prediction market events with optional filters.'
 ---
 
-Fetch a paginated list of events available on the Futuur prediction market. Use query parameters to filter by category, currency mode, resolution status, tags, and more.
+Retrieve a list of prediction market events. Use query parameters to filter by category, search term, currency mode, and other criteria.
 
 ## Endpoint
 
 ```
-GET https://api.futuur.com/events/
+GET https://api.futuur.com/v2.0/events/
 ```
 
 ## Authentication
 
-HMAC authentication is required. Include the following headers with every request:
+<Note>
+  This endpoint does not require authentication. You can call it without HMAC headers.
+</Note>
 
-| Header      | Description                              |
-| ----------- | ---------------------------------------- |
-| `Key`       | Your public API key                      |
-| `Timestamp` | Current Unix timestamp                   |
-| `HMAC`      | SHA-512 signature of the request payload |
-
-## Parameters
+## Request
 
 <ParamField query="categories" type="integer[]">
-  Filter results to one or more category IDs. Pass the parameter multiple times to specify multiple categories.
+  Filter events by one or more category IDs.
 </ParamField>
 
 <ParamField query="currency_mode" type="string" default="play_money">
-  Restrict results to a specific currency mode. Accepted values: `play_money`, `real_money`.
+  Filter by currency mode. One of `play_money` or `real_money`.
 </ParamField>
 
 <ParamField query="hide_my_bets" type="boolean" default="false">
-  When `true`, excludes events on which you have placed bets.
+  When `true`, excludes events where you have active bets.
+</ParamField>
+
+<ParamField query="live" type="boolean" default="false">
+  When `true`, returns only live events.
+</ParamField>
+
+<ParamField query="only_markets_i_follow" type="boolean" default="false">
+  When `true`, returns only events containing markets you follow.
+</ParamField>
+
+<ParamField query="pending_resolution" type="boolean" default="false">
+  When `true`, returns only events pending resolution.
+</ParamField>
+
+<ParamField query="resolved_only" type="boolean" default="false">
+  When `true`, returns only resolved events.
+</ParamField>
+
+<ParamField query="search" type="string">
+  Full-text search query. Between 1 and 100 characters.
+</ParamField>
+
+<ParamField query="tag" type="string">
+  Filter by tag. Between 1 and 100 characters.
+</ParamField>
+
+<ParamField query="ordering" type="string">
+  Field to sort results by. Prefix with `-` for descending order.
 </ParamField>
 
 <ParamField query="limit" type="integer">
   Number of results to return per page.
 </ParamField>
 
-<ParamField query="live" type="boolean" default="false">
-  When `true`, returns only events that are currently live.
-</ParamField>
-
 <ParamField query="offset" type="integer">
-  Number of results to skip for pagination.
-</ParamField>
-
-<ParamField query="only_markets_i_follow" type="boolean" default="false">
-  When `true`, returns only events in markets you follow.
-</ParamField>
-
-<ParamField query="ordering" type="string">
-  Field name to sort results by. Prefix with `-` for descending order (e.g., `-volume_play_money`).
-</ParamField>
-
-<ParamField query="pending_resolution" type="boolean" default="false">
-  When `true`, returns only events that are pending resolution.
-</ParamField>
-
-<ParamField query="resolved_only" type="boolean" default="false">
-  When `true`, returns only events that have been resolved.
-</ParamField>
-
-<ParamField query="search" type="string">
-  Full-text search query. Maximum 100 characters.
-</ParamField>
-
-<ParamField query="tag" type="string">
-  Filter results by tag name. Maximum 100 characters.
+  The initial index from which to return the results.
 </ParamField>
 
 ## Response
 
-<ResponseField name="pagination" type="object" required>
-  Pagination metadata for the result set.
-  <Expandable title="properties">
-    <ResponseField name="total" type="integer">
-      Total number of events matching the query.
-    </ResponseField>
-    <ResponseField name="next" type="string">
-      URL for the next page of results. `null` if you are on the last page.
-    </ResponseField>
-    <ResponseField name="previous" type="string">
-      URL for the previous page of results. `null` if you are on the first page.
-    </ResponseField>
-    <ResponseField name="page_size" type="integer">
-      Number of results returned per page.
-    </ResponseField>
-    <ResponseField name="offset" type="integer">
-      Current pagination offset.
-    </ResponseField>
-  </Expandable>
+Returns a paginated list of events.
+
+<ResponseField name="count" type="integer" required>
+  Total number of events matching the query.
+</ResponseField>
+
+<ResponseField name="next" type="string">
+  URL to the next page of results, or `null` if this is the last page.
+</ResponseField>
+
+<ResponseField name="previous" type="string">
+  URL to the previous page of results, or `null` if this is the first page.
 </ResponseField>
 
 <ResponseField name="results" type="object[]" required>
-  Array of event objects (`EventList`).
-  <Expandable title="properties">
-    <ResponseField name="id" type="integer">
-      Unique identifier for the event.
-    </ResponseField>
-    <ResponseField name="title" type="string">
-      Display title of the event.
-    </ResponseField>
-    <ResponseField name="slug" type="string">
-      URL-friendly identifier for the event.
-    </ResponseField>
-    <ResponseField name="status" type="string">
-      Current event status: `open`, `stopped`, `resolved`, `cancelled`, `paused`, or `reversed`.
-    </ResponseField>
-    <ResponseField name="resolution_mode" type="string">
-      How markets resolve within the event: `exclusive` (only one market can resolve to long) or `non_exclusive` (multiple markets can resolve to long).
-    </ResponseField>
-    <ResponseField name="bet_end_date" type="string">
-      ISO 8601 timestamp when betting closes. `null` if not set.
-    </ResponseField>
-    <ResponseField name="resolve_date" type="string">
-      ISO 8601 timestamp when the event was resolved. `null` if unresolved.
-    </ResponseField>
-    <ResponseField name="tags" type="object[]">
-      Tags associated with the event. Each tag has `name` and `slug`.
-    </ResponseField>
-    <ResponseField name="category" type="object[]">
-      Categories the event belongs to. Each category has `id`, `title`, and `slug`.
-    </ResponseField>
-    <ResponseField name="markets" type="object[]">
-      Outcome markets for this event. Each market includes `id`, `title`, `price`, and `status`.
-    </ResponseField>
-    <ResponseField name="volume_play_money" type="string">
-      Total play money volume traded on this event.
-    </ResponseField>
-    <ResponseField name="volume_real_money" type="string">
-      Total real money volume traded on this event.
-    </ResponseField>
-    <ResponseField name="order_book_enabled" type="boolean">
-      Whether this event uses the order book for trading.
-    </ResponseField>
-  </Expandable>
+  Array of event objects.
 </ResponseField>
 
 ## Example
 
+<CodeGroup>
+
 ```bash cURL
-curl --request GET \
-  --url "https://api.futuur.com/events/?currency_mode=play_money&limit=10&offset=0" \
-  --header "Key: YOUR_PUBLIC_KEY" \
-  --header "Timestamp: 1712500000" \
-  --header "HMAC: YOUR_HMAC_SIGNATURE"
+curl -G "https://api.futuur.com/v2.0/events/" \
+  --data-urlencode "search=US election" \
+  --data-urlencode "currency_mode=play_money" \
+  --data-urlencode "limit=5"
 ```
 
-```json Sample response
+```python Python
+import requests
+
+response = requests.get(
+    "https://api.futuur.com/v2.0/events/",
+    params={
+        "search": "US election",
+        "currency_mode": "play_money",
+        "limit": 5,
+    },
+)
+
+events = response.json()["results"]
+for event in events:
+    print(event["id"], event["title"])
+```
+
+</CodeGroup>
+
+```json Sample response (200 OK)
 {
-  "pagination": {
-    "total": 142,
-    "next": "https://api.futuur.com/events/?limit=10&offset=10",
-    "previous": null,
-    "page_size": 10,
-    "offset": 0
-  },
+  "count": 42,
+  "next": "https://api.futuur.com/v2.0/events/?limit=5&offset=5",
+  "previous": null,
   "results": [
     {
-      "id": 1023,
-      "title": "Will the S&P 500 close above 5000 by end of Q2 2026?",
-      "slug": "sp500-above-5000-q2-2026",
+      "id": 12345,
+      "title": "Who will win the 2024 US Presidential Election?",
+      "slug": "who-will-win-2024-us-presidential-election",
       "status": "open",
-      "resolution_mode": "exclusive",
-      "bet_end_date": "2026-06-30T23:59:59Z",
-      "resolve_date": null,
-      "tags": [
-        { "name": "finance", "slug": "finance" },
-        { "name": "stocks", "slug": "stocks" }
-      ],
-      "category": [
-        { "id": 4, "title": "Finance", "slug": "finance", "parent": null }
-      ],
-      "markets": [
-        { "id": 501, "title": "Yes", "price": 0.62, "status": "active" },
-        { "id": 502, "title": "No", "price": 0.38, "status": "active" }
-      ],
-      "volume_play_money": "125000.00",
-      "volume_real_money": "42000.00",
-      "order_book_enabled": true
+      "markets": [...]
     }
   ]
 }

@@ -8,7 +8,7 @@ Retrieve a list of limit orders associated with your account. By default, only `
 ## Endpoint
 
 ```
-GET https://api.futuur.com/orders/
+GET https://api.futuur.com/v2.0/orders/
 ```
 
 ## Authentication
@@ -137,7 +137,7 @@ Returns a paginated list of limit order objects.
 
 ```bash cURL
 curl --request GET \
-  --url "https://api.futuur.com/orders/?status=open&side=bid&limit=2" \
+  --url "https://api.futuur.com/v2.0/orders/?status=open&side=bid&limit=2" \
   --header "Key: pk_live_abc123def456" \
   --header "Timestamp: 1712534400" \
   --header "HMAC: 3a9f2c1b...sha512signature"
@@ -149,7 +149,7 @@ curl --request GET \
 {
   "pagination": {
     "total": 47,
-    "next": "https://api.futuur.com/orders/?limit=2&offset=2&status=open",
+    "next": "https://api.futuur.com/v2.0/orders/?limit=2&offset=2&status=open",
     "previous": null,
     "page_size": 2,
     "offset": 0

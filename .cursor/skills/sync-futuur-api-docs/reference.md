@@ -27,6 +27,16 @@
 | `/me/ranking/` | GET | `api-reference/me/ranking.mdx` | `api-reference/me/ranking` |
 | `/me/safe/` | POST | `api-reference/me/safe.mdx` | `api-reference/me/safe` |
 
+## Websocket (OpenAPI tag)
+
+Documented in the OpenAPI **`Websocket` tag** (not in `paths`).
+
+| Mintlify page | Content |
+|---------------|---------|
+| `api-reference/websocket/overview.mdx` | Pusher client setup |
+| `api-reference/websocket/authorization.mdx` | Private channel HMAC auth |
+| `api-reference/websocket/channels-and-events.mdx` | Channel and event catalog, payloads |
+
 Slug convention: path segments → kebab-case file names (`live_data` → `live-data`).
 
 ## Non-paginated responses
@@ -52,6 +62,7 @@ Slug convention: path segments → kebab-case file names (`live_data` → `live-
 | Position `l` / `s` | `long` / `short` |
 | Cancel order as POST | `PATCH /orders/{id}/cancel/` |
 | Safe body `{ "address": ... }` | `safe_address` + `chain_id` |
+| Hardcoded `https://api.futuur.com/events/` (missing version) | `https://api.futuur.com/v2.0/events/` (see `snippets/constants.mdx`) |
 
 ## Concept / guide pages to scan
 
@@ -64,3 +75,16 @@ Slug convention: path segments → kebab-case file names (`live_data` → `live-
 ## OpenAPI components worth diffing
 
 `EventList`, `EventDetail`, `MarketList`, `LimitOrder`, `WagerList`, `UserPrivate`, `UserPrivateAccountBalance`, `UserPrivateRanking`, `OrderBook`, `PaginatedEventListList`, `PaginatedLimitOrderList`, `PaginatedWagerListList`
+
+## Shared API URL values
+
+Canonical values live in `snippets/constants.mdx`. Paste the literals into MDX examples (Mintlify does not interpolate imported consts in page code fences):
+
+| Constant | Literal to use in examples |
+|----------|----------------------------|
+| `baseUrl` | `https://api.futuur.com` |
+| `apiVersion` | `v2.0` |
+| `apiUrl` | `https://api.futuur.com/v2.0` |
+| `schemaUrl` | `https://api.futuur.com/docs/schema/` |
+| `pusherKey`, `pusherCluster`, `pusherAuthUrl` | see `snippets/constants.mdx` |
+| Path id placeholder | `{id}` inside fenced code blocks only |

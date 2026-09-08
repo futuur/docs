@@ -1,0 +1,48 @@
+---
+title: "Overview"
+description: "Subscribe to realtime market, order, and account updates over Pusher WebSockets."
+---
+
+Futuur uses [Pusher](https://pusher.com/docs/channels/using_channels/client-api-overview/) to deliver realtime data to clients over WebSocket connections. Use the global `event` channel for market-wide feeds, `event-{event_id}` for per-event BBO and order-book updates, and private channels for account-specific order and position updates.
+
+Terminology: **event** = a question; **market** = an outcome.
+
+<Note>
+  Examples below use `https://api.futuur.com/v2.0`. Private channel authorization calls `POST https://api.futuur.com/v2.0/pusher/auth/`. See [Authentication](/authentication) for HMAC signing and [Authorization](/api-reference/websocket/authorization) for private channel setup.
+</Note>
+
+## Client setup
+
+Include the Pusher JS client:
+
+```html
+<script src="https://js.pusher.com/8.4.0/pusher.min.js"></script>
+```
+
+Initialize Pusher and subscribe to a channel:
+
+```html
+<script>
+    Pusher.logToConsole = true; // omit in production
+
+    var pusher = new Pusher("9011f7eac38e825792d5", {
+        cluster: "us2",
+    });
+
+    var channel = pusher.subscribe("event");
+    channel.bind("best-prices-change", function (data) {
+        console.log("Best prices changed:", data);
+    });
+</script>
+```
+
+## Next steps
+
+- [Authorization](/api-reference/websocket/authorization) — authorize private user channels with HMAC
+- [Channels and events](/api-reference/websocket/channels-and-events) — full channel and event catalog with payloads
+
+## Related
+
+- [Order book](/api-reference/markets/order-book) — REST endpoint for full depth beyond top-N
+- [Reading the order book](/guides/reading-the-order-book) — interpret bid/ask depth
+- [Authentication](/authentication) — HMAC signing for private channel auth

@@ -8,7 +8,7 @@ Return ledger account balances for your authenticated account. Each object in th
 ## Endpoint
 
 ```
-GET https://api.futuur.com/me/balances/
+GET https://api.futuur.com/v2.0/me/balances/
 ```
 
 ## Authentication
@@ -47,7 +47,7 @@ Returns an array of balance objects.
 
 ```bash cURL
 curl --request GET \
-  --url "https://api.futuur.com/me/balances/" \
+  --url "https://api.futuur.com/v2.0/me/balances/" \
   --header "Key: YOUR_PUBLIC_KEY" \
   --header "Timestamp: 1712345678" \
   --header "HMAC: YOUR_HMAC_SIGNATURE"
@@ -64,7 +64,7 @@ curl --request GET \
 
 ```bash Filter by currency
 curl --request GET \
-  --url "https://api.futuur.com/me/balances/?currency=USDC" \
+  --url "https://api.futuur.com/v2.0/me/balances/?currency=USDC" \
   --header "Key: YOUR_PUBLIC_KEY" \
   --header "Timestamp: 1712345678" \
   --header "HMAC: YOUR_HMAC_SIGNATURE"

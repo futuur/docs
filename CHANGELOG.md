@@ -26,6 +26,43 @@ Documented the coming-soon CLOB / on-chain builder flow. Production remains HMAC
 - `AGENTS.md`: Coming soon convention and Web3 terminology
 - `guides/mcp.mdx`: Settings path now **API keys**, with a link to the keys guide
 
+## 2026-07-10 — Inline API URLs in examples
+
+### Changed
+
+- Replaced `{apiUrl}` / snippet-variable tags in MDX with literal `https://api.futuur.com/v2.0` (and related) values. Mintlify does not interpolate imported consts inside page code fences.
+- `snippets/constants.mdx` remains the canonical list of URL/Pusher values for authors and agents.
+- Updated `AGENTS.md` and sync-skill guidance accordingly.
+
+## 2026-07-10 — Centralize API URL constants in MDX
+
+### Added
+
+- `snippets/constants.mdx` — shared `baseUrl`, `apiVersion`, `apiUrl`, `schemaUrl`, and Pusher constants (canonical values for docs authors).
+
+### Changed
+
+- All API reference pages, guides, `authentication.mdx`, and `introduction.mdx` use versioned URLs (`https://api.futuur.com/v2.0/events/`, not unversioned hosts).
+
+## 2026-07-10 — Sync with local API schema (websocket)
+
+Refreshed `Futuur API Documentation (v2.0).json` from [http://127.0.0.1:8000/docs/schema/](http://127.0.0.1:8000/docs/schema/) (local Django dev server).
+
+### Added — websocket / realtime docs
+
+- `api-reference/websocket/overview.mdx` — Pusher channel and event catalog, private channel HMAC auth, and payload reference aligned with the OpenAPI `Websocket` tag.
+
+### Changed — navigation and cross-links
+
+- `docs.json`: new **Realtime** group under API Reference with `websocket/overview`.
+- `introduction.mdx`: realtime bullet and Websocket overview card.
+- `guides/reading-the-order-book.mdx`: section on `order-book-update` refetch pings.
+- `.cursor/skills/sync-futuur-api-docs/reference.md`: websocket page mapping.
+
+### REST alignment
+
+Compare script (`--env local`) reported no endpoint, parameter, or tracked schema diffs against the refreshed baseline.
+
 ## 2026-06-25 — Sync with live API schema
 
 Refreshed `Futuur API Documentation (v2.0).json` from [https://api.futuur.com/docs/schema/](https://api.futuur.com/docs/schema/).

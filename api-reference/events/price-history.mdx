@@ -1,100 +1,55 @@
 ---
-title: "Price history"
-description: "Retrieve the historical price data for an event over a specified time interval."
+title: 'Price history'
+description: 'Get historical price data for an event.'
 ---
 
-Fetch time-series price history for an event. Use this endpoint to plot price charts or analyze how market sentiment has changed over time. This endpoint does not require authentication.
+Retrieve historical price data for all markets within a specific event.
 
 ## Endpoint
 
 ```
-GET https://api.futuur.com/events/{id}/price_history/
+GET https://api.futuur.com/v2.0/events/{id}/price_history/
 ```
 
 ## Authentication
 
-No authentication is required for this endpoint.
+<Note>
+  This endpoint does not require authentication.
+</Note>
 
-## Parameters
+## Request
 
 <ParamField path="id" type="integer" required>
-  The unique identifier of the event.
+  A unique integer value identifying this event.
 </ParamField>
 
 <ParamField query="currency_mode" type="string" required>
-  The currency mode to query. Accepted values: `play_money`, `real_money`.
-</ParamField>
-
-<ParamField query="time_interval" type="string">
-  The time range for the price history. Accepted values: `day`, `week`, `month`, `year`, `all_time`. Defaults to all available history if omitted.
+  Currency mode for price history. One of `play_money` or `real_money`.
 </ParamField>
 
 ## Response
 
-<ResponseField name="history" type="object[]" required>
-  Array of price data points ordered chronologically.
-  <Expandable title="properties">
-    <ResponseField name="timestamp" type="string">
-      ISO 8601 timestamp for this data point.
-    </ResponseField>
-    <ResponseField name="outcomes" type="object[]">
-      Price snapshot for each outcome at this timestamp.
-      <Expandable title="properties">
-        <ResponseField name="outcome_id" type="integer">
-          Unique identifier of the outcome.
-        </ResponseField>
-        <ResponseField name="name" type="string">
-          Display name of the outcome.
-        </ResponseField>
-        <ResponseField name="price" type="number">
-          Implied probability price of the outcome at this timestamp (0–1).
-        </ResponseField>
-      </Expandable>
-    </ResponseField>
-  </Expandable>
-</ResponseField>
-
-<ResponseField name="currency_mode" type="string">
-  The currency mode for the returned history: `play_money` or `real_money`.
-</ResponseField>
-
-<ResponseField name="time_interval" type="string">
-  The time interval applied to this response.
-</ResponseField>
+Returns historical price data points for each market in the event.
 
 ## Example
 
+<CodeGroup>
+
 ```bash cURL
-curl --request GET \
-  --url "https://api.futuur.com/events/1023/price_history/?currency_mode=play_money&time_interval=week"
+curl -G "https://api.futuur.com/v2.0/events/12345/price_history/" \
+  --data-urlencode "currency_mode=play_money"
 ```
 
-```json Sample response
-{
-  "currency_mode": "play_money",
-  "time_interval": "week",
-  "history": [
-    {
-      "timestamp": "2026-03-29T00:00:00Z",
-      "outcomes": [
-        { "outcome_id": 1, "name": "Yes", "price": 0.58 },
-        { "outcome_id": 2, "name": "No", "price": 0.42 }
-      ]
-    },
-    {
-      "timestamp": "2026-03-30T00:00:00Z",
-      "outcomes": [
-        { "outcome_id": 1, "name": "Yes", "price": 0.60 },
-        { "outcome_id": 2, "name": "No", "price": 0.40 }
-      ]
-    },
-    {
-      "timestamp": "2026-04-05T00:00:00Z",
-      "outcomes": [
-        { "outcome_id": 1, "name": "Yes", "price": 0.62 },
-        { "outcome_id": 2, "name": "No", "price": 0.38 }
-      ]
-    }
-  ]
-}
+```python Python
+import requests
+
+response = requests.get(
+    "https://api.futuur.com/v2.0/events/12345/price_history/",
+    params={"currency_mode": "play_money"},
+)
+
+history = response.json()
+print(history)
 ```
+
+</CodeGroup>

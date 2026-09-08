@@ -6,7 +6,7 @@ description: "How to sell shares in an existing wager to close or reduce your po
 Selling a position means placing an **ask** (sell) order on a market where you already hold shares. You can sell your entire position to exit completely, or sell a portion to reduce your exposure.
 
 <Note>
-  All examples use the base URL `https://api.futuur.com`. Every request requires HMAC authentication headers. See the [Authentication](/authentication) guide for how to generate them.
+  All examples use `https://api.futuur.com/v2.0`. Every request requires HMAC authentication headers. See the [Authentication](/authentication) guide for how to generate them.
 </Note>
 
 <Steps>
@@ -21,7 +21,7 @@ Call `GET /wagers/` to see all positions you currently hold. Filter by `active=t
 import requests
 
 response = requests.get(
-    "https://api.futuur.com/wagers/",
+    "https://api.futuur.com/v2.0/wagers/",
     params={"active": True},
     headers={
         "Key": "YOUR_PUBLIC_KEY",
@@ -39,7 +39,7 @@ for wager in wagers:
 ```
 
 ```bash curl
-curl -G "https://api.futuur.com/wagers/" \
+curl -G "https://api.futuur.com/v2.0/wagers/" \
   --data-urlencode "active=true" \
   -H "Key: YOUR_PUBLIC_KEY" \
   -H "Timestamp: 1712500000" \
@@ -92,7 +92,7 @@ Use `shares` to specify exactly how many shares to sell. Set `price=null` for a 
 ```python python
 # Sell all shares immediately at the best available price
 response = requests.post(
-    "https://api.futuur.com/orders/",
+    "https://api.futuur.com/v2.0/orders/",
     json={
         "market": market_id,
         "side": "ask",
@@ -115,7 +115,7 @@ print("Sell order ID:", order["id"], "Status:", order["status"])
 
 ```bash curl
 # Sell all shares immediately at the best available price
-curl -X POST "https://api.futuur.com/orders/" \
+curl -X POST "https://api.futuur.com/v2.0/orders/" \
   -H "Key: YOUR_PUBLIC_KEY" \
   -H "Timestamp: 1712500000" \
   -H "HMAC: YOUR_HMAC_SIGNATURE" \
@@ -139,7 +139,7 @@ curl -X POST "https://api.futuur.com/orders/" \
 ```python python
 # Limit sell: only sell if the price reaches 0.70 or higher
 response = requests.post(
-    "https://api.futuur.com/orders/",
+    "https://api.futuur.com/v2.0/orders/",
     json={
         "market": market_id,
         "side": "ask",
@@ -162,7 +162,7 @@ print("Limit sell order placed. ID:", order["id"])
 
 ```bash curl
 # Limit sell: only sell if the price reaches 0.70 or higher
-curl -X POST "https://api.futuur.com/orders/" \
+curl -X POST "https://api.futuur.com/v2.0/orders/" \
   -H "Key: YOUR_PUBLIC_KEY" \
   -H "Timestamp: 1712500000" \
   -H "HMAC: YOUR_HMAC_SIGNATURE" \
@@ -200,7 +200,7 @@ To confirm the wager is fully closed, re-fetch your wagers list. A fully sold wa
 
 ```python python
 response = requests.get(
-    "https://api.futuur.com/wagers/",
+    "https://api.futuur.com/v2.0/wagers/",
     params={"active": True},
     headers={
         "Key": "YOUR_PUBLIC_KEY",
@@ -217,7 +217,7 @@ else:
 ```
 
 ```bash curl
-curl -G "https://api.futuur.com/wagers/" \
+curl -G "https://api.futuur.com/v2.0/wagers/" \
   --data-urlencode "active=true" \
   -H "Key: YOUR_PUBLIC_KEY" \
   -H "Timestamp: 1712500000" \
@@ -239,7 +239,7 @@ You don't have to sell your entire position at once. Pass a `shares` value small
 shares_to_sell = shares_held / 2
 
 response = requests.post(
-    "https://api.futuur.com/orders/",
+    "https://api.futuur.com/v2.0/orders/",
     json={
         "market": market_id,
         "side": "ask",
@@ -278,7 +278,7 @@ If your limit sell order hasn't filled yet and you want to cancel it, use `PATCH
 order_id = order["id"]
 
 response = requests.patch(
-    f"https://api.futuur.com/orders/{order_id}/cancel/",
+    f"https://api.futuur.com/v2.0/orders/{order_id}/cancel/",
     headers={
         "Key": "YOUR_PUBLIC_KEY",
         "Timestamp": "1712500000",
@@ -290,7 +290,7 @@ print("Cancelled:", response.status_code == 204)
 ```
 
 ```bash curl
-curl -X PATCH "https://api.futuur.com/orders/99999/cancel/" \
+curl -X PATCH "https://api.futuur.com/v2.0/orders/99999/cancel/" \
   -H "Key: YOUR_PUBLIC_KEY" \
   -H "Timestamp: 1712500000" \
   -H "HMAC: YOUR_HMAC_SIGNATURE"

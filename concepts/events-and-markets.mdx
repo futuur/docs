@@ -1,9 +1,9 @@
 ---
 title: "Events & Markets"
-description: "Understand events (predictions) and markets (outcomes) in Futuur."
+description: "Understand events, binary markets, and long/short positions in Futuur."
 ---
 
-An **event** is a prediction question that you can bet on — for example, "Who will win the 2024 US Presidential Election?" or "Will Bitcoin exceed $100,000 by end of year?" Each event has multiple **markets**, which represent the possible outcomes you can bet on.
+An **event** is a prediction question that you can bet on — for example, "Who will win the 2024 US Presidential Election?" or "Will Bitcoin exceed $100,000 by end of year?" Each event has one or more **markets**, which are the outcomes you can trade.
 
 <Note>
   The API uses the term `markets` for what were previously called "Outcomes" in older versions of the API. Events were previously called "Questions."
@@ -23,7 +23,7 @@ An event defines the question, the resolution criteria, and the timeframe. Key f
 | `markets` | Array of outcome markets |
 | `bet_end_date` | When betting closes |
 | `resolve_date` | When the event was resolved |
-| `resolution_mode` | How markets resolve within the event (see below) |
+| `markets_correlation` | How markets relate to each other (see below) |
 | `description` | Full question details and resolution criteria |
 
 ### Event statuses
@@ -45,67 +45,46 @@ An event defines the question, the resolution criteria, and the timeframe. Key f
     Trading is temporarily paused on this event.
   </Accordion>
   <Accordion title="reversed">
-    A previous resolution was reversed. Check the event for updated resolution details.
+    A previous resolution was reversed.
   </Accordion>
 </AccordionGroup>
 
+### Markets correlation
+
+The relationship between markets within an event is defined by **markets correlation**:
+
+<CardGroup cols={2}>
+  <Card title="Linked prices" icon="link">
+    Markets are correlated. The sum of all market prices equals 1, and placing a bet on one market automatically affects the prices of other markets in the same event. This is the default correlation type.
+  </Card>
+  <Card title="Independent" icon="unlink">
+    Markets operate independently. Each market's price is calculated separately, and betting on one market does not affect others.
+  </Card>
+</CardGroup>
+
+The correlation type determines how prices are calculated and how bets impact market dynamics within an event.
+
 ## Markets
 
-Each market is a single outcome within an event. For example, the event "Who will win the 2024 US Presidential Election?" might have markets for "Candidate A", "Candidate B", and "Other."
+A **market** represents a single tradeable outcome within an event. For example, in an election event, each candidate would be a separate market.
 
 Key fields on a market object include:
 
 | Field | Description |
 |---|---|
 | `id` | Unique identifier |
-| `title` | The outcome this market represents |
-| `price` | Current implied probability (0–1) |
-| `status` | Market status: `active`, `resolved`, `paused`, `stopped`, `cancelled`, or `reversed` |
-| `position_labels` | Label style: `yesno`, `updown`, or `custom` |
+| `title` | The outcome name |
+| `price` | Current probability (0 to 1) |
+| `status` | Market status |
+| `volume` | Total trading volume |
 
-The `price` field reflects the market's current probability. A price of `0.65` means the market is trading at a 65% chance of that outcome occurring.
+## Long vs short positions
 
-## Resolution modes
+When placing an order, you specify a **position**:
 
-Events use a `resolution_mode` field that determines how many markets can resolve to long (win):
-
-<Tabs>
-  <Tab title="exclusive">
-    Only one market within the event can resolve to long. This is the default for mutually exclusive outcomes where exactly one result wins.
-
-    **Example:** A presidential election event where only one candidate can win.
-  </Tab>
-  <Tab title="non_exclusive">
-    Multiple markets can resolve to long. Each market has independent resolution rules.
-
-    **Example:** An event asking "Which of these features will ship in Q1?" where several outcomes can be true at the same time.
-  </Tab>
-</Tabs>
-
-## Browsing and filtering events
-
-Use `GET /events/` to list events. The endpoint supports the following filters:
-
-| Parameter | Description |
+| Position | Description |
 |---|---|
-| `categories` | Filter by one or more category IDs |
-| `tag` | Filter by tag name |
-| `search` | Full-text search on event titles (max 100 chars) |
-| `currency_mode` | `play_money` or `real_money` — filters events by the trading mode |
-| `resolved_only` | Set to `true` to return only resolved events |
-| `pending_resolution` | Set to `true` to return events awaiting resolution |
-| `live` | Set to `true` to return only currently live events |
+| `long` | You believe this outcome **will** happen. You profit if the market resolves to Yes. |
+| `short` | You believe this outcome **will not** happen. You profit if the market resolves to No. |
 
-For live or in-play markets, use the `live=true` filter on [`GET /events/`](/api-reference/events/list) to discover active events, then poll [`GET /events/{id}/`](/api-reference/events/retrieve) for updated details.
-
-```bash
-# List events in a category using play money
-GET /events/?categories=5&currency_mode=play_money
-
-# List resolved events
-GET /events/?resolved_only=true&currency_mode=play_money
-```
-
-<Tip>
-  Use `currency_mode=play_money` while developing and testing your integration to avoid real financial exposure.
-</Tip>
+For a binary market (Yes/No), going long on "Yes" is equivalent to going short on "No".
