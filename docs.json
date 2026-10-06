@@ -55,6 +55,7 @@
             "group": "On-chain trading",
             "pages": [
               "concepts/on-chain-trading",
+              "concepts/conditional-tokens",
               "guides/on-chain-first-order"
             ]
           },

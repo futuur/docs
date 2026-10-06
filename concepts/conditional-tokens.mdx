@@ -1,0 +1,54 @@
+---
+title: "Conditional tokens"
+description: "Coming soon: ERC-1155 Yes/No positions for binary events and exclusive multi-outcome events."
+tag: "Coming soon"
+---
+
+<Note>
+  On-chain outcome tokens are coming soon. Today's production API still uses HMAC-only ledger settlement, and share balances stay in the database. This page describes the builder model so you can prepare. Nothing here is live on `https://api.futuur.com`.
+</Note>
+
+Futuur is adding Polymarket-shaped **conditional tokens**. The CLOB still matches off-chain. Collateral still moves on-chain at match. After the first cutover, each filled position is also an ERC-1155 token you hold in your Safe.
+
+Matching and two-layer auth are unchanged. See [On-chain trading](/concepts/on-chain-trading).
+
+## Two rails
+
+Every event uses **one** rail. You do not mix them on the same book.
+
+| Event shape | Outcome tokens | Complementary both-buy |
+|---|---|---|
+| Binary (two markets, or Yes/No) | One binary condition. Yes and No are the two slots. | Bid Yes + bid No on that event |
+| Exclusive, three or more markets | One binary condition **per market**. Exactly one market may resolve Yes. | Bid Yes + bid No on the **same** market |
+| Independent multi-outcome | Stays on pool-simulated shares | Not a complete set |
+
+Exclusive N≥3 is **not** one n-slot condition. It is a bag of binary conditions. Cross-market Yes vs Yes is not a complete set and does not mint.
+
+## What you hold
+
+Each market has a **Yes** token and a **No** token. A complete set (Yes + No of the same condition) is redeemable 1:1 for collateral.
+
+On exclusive events you can also **convert** a bag of No tokens into the complementary Yes tokens plus leftover collateral. Example: a 3-way race. 1 No on Red = 1 Yes on Blue + 1 Yes on Green.
+
+## Match shapes
+
+| Match | What happens on-chain |
+|---|---|
+| Bid vs ask | The seller's Yes (or No) token moves to the buyer. Collateral moves the other way. |
+| Same-condition both-buy | Collateral splits into Yes + No. Each trader receives their side. |
+| Same-condition both-sell | Yes + No merge back to collateral. |
+| Exclusive convert | A No bag burns into complementary Yes (operator-assisted). |
+
+Place still does not mint. Tokens move only when a match settles.
+
+## Resolution
+
+Winning Yes tokens redeem 1:1 for collateral. Losing tokens redeem to zero. Cancel refunds purchase cost on the pool-simulated rail; the exclusive-token cancel path is not part of this model yet.
+
+## Not in this release
+
+- Live API fields for token ids, convert, or on-chain redeem
+- A dedicated exchange contract that fills two Safes in one `matchOrders`
+- Official SDKs
+
+You still call `https://api.futuur.com`. HMAC authenticates HTTP. The Safe owner signs every on-chain create. See [Place an on-chain order](/guides/on-chain-first-order).

@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-09-18 — Conditional tokens (coming soon)
+
+Documented the coming-soon ERC-1155 outcome-token model (binary CTF and exclusive N≥3). Production remains HMAC-only ledger settlement. No unpublished endpoints were added to API Reference.
+
+### Added
+
+- `concepts/conditional-tokens.mdx` — two rails (binary vs exclusive N≥3), Yes/No ERC-1155, convert, match shapes, resolution. Tagged Coming soon.
+
+### Changed
+
+- `concepts/on-chain-trading.mdx` — complementary both-buy is per-condition; settlement table distinguishes first-cutover collateral from later outcome tokens; “Not in this release” now points at conditional tokens instead of saying positions stay in the DB forever
+- `concepts/orders.mdx`, `guides/on-chain-first-order.mdx`, `introduction.mdx` — links to conditional tokens
+- `docs.json`: On-chain trading group includes `concepts/conditional-tokens`
+
 ## 2026-09-08 — On-chain trading (coming soon)
 
 Documented the coming-soon CLOB / on-chain builder flow. Production remains HMAC-only ledger settlement. No unpublished endpoints were added to API Reference.

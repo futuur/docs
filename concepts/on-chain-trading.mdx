@@ -41,7 +41,9 @@ See [Place an on-chain order](/guides/on-chain-first-order) for the step-by-step
 
 The matching engine is a **CLOB**. User orders match each other first. The platform AMM is backup liquidity — it does not jump a better-priced user order.
 
-**Complementary both-buy** is a first-class match on binary markets. If you bid long at 0.55 and someone else bids short at 0.45, the prices sum to 1 and the orders can match without an ask on the book.
+**Complementary both-buy** is a first-class match. If you bid long at 0.55 and someone else bids short at 0.45, the prices sum to 1 and the orders can match without an ask on the book.
+
+On a **binary** event, that is Yes vs No of the same event. On an **exclusive** event with three or more markets, it is Yes vs No of the **same** market — not Yes on one market vs Yes on another. See [Conditional tokens](/concepts/conditional-tokens).
 
 | Priority | What matches |
 |---|---|
@@ -49,17 +51,17 @@ The matching engine is a **CLOB**. User orders match each other first. The platf
 | 1 | Complementary both-buy (bid Yes + bid No when prices sum to ≥ 1) |
 | 2 | Leftover size may hit the AMM |
 
-A filled on-chain order without an ERC-20 `Transfer` is a failure. The API does not credit shares until collateral has moved.
+A filled on-chain order without a collateral `Transfer` is a failure. The API does not credit positions until collateral has moved.
 
 ## Settlement at match
 
-Shares stay in the Futuur database. Only the collateral token moves on-chain.
+The first on-chain cutover moves **collateral** (OOM or USDC) and keeps share balances in the Futuur database. A later cutover mints those positions as ERC-1155 outcome tokens. Matching stays the same CLOB either way.
 
-| Match type | On-chain transfer |
-|---|---|
-| Bid vs ask | Bidder Safe → asker Safe (via the pool) |
-| Bid vs bid (both-buy) | Each user Safe → pool |
-| Ask vs ask (both-sell) | Pool → each user Safe |
+| Match type | Collateral (first cutover) | Outcome tokens (later) |
+|---|---|---|
+| Bid vs ask | Bidder Safe → asker Safe (via the pool) | Transfer the filled ERC-1155 |
+| Bid vs bid (both-buy) | Each user Safe → pool | Split a complete set; each trader receives their side |
+| Ask vs ask (both-sell) | Pool → each user Safe | Merge a complete set back to collateral |
 
 ## Two-layer auth
 
@@ -78,9 +80,9 @@ HMAC never replaces the wallet signature. Get both credentials from [Get your AP
 
 ## Not in this release
 
-These are not part of the first on-chain cutover:
+These are not live on `https://api.futuur.com`:
 
-- Conditional / outcome tokens on-chain (positions stay in the database)
-- A dedicated exchange contract (settlement uses the pool Safe + ERC-20 `transferFrom`)
+- [Conditional / outcome tokens](/concepts/conditional-tokens) (ERC-1155 Yes/No positions; binaries and exclusive N≥3)
+- A dedicated exchange contract (settlement uses the pool Safe; operator fills come later)
 - An official TypeScript or Python SDK
 - Separate CLOB, Gamma, or Relayer hosts — you still call `https://api.futuur.com`
