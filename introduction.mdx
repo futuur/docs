@@ -28,6 +28,20 @@ That is `https://api.futuur.com` + `/v2.0`. Include the version in every request
   For reference, the deprecated v1.0 documentation is available at: [https://api.futuur.com/v1.0/docs](https://api.futuur.com/v1.0/docs)
 </Note>
 
+<Note>
+  For AI agents and automated integrations, access the OpenAPI schema directly at: [https://api.futuur.com/docs/schema/](https://api.futuur.com/docs/schema/). This endpoint provides the complete API specification in JSON format, perfect for code generation, API clients, and AI-powered integrations.
+</Note>
+
+## User-Agent header
+
+Send a non-empty `User-Agent` header that identifies your client, for example `MyApp/1.0` or the default value sent by your HTTP library (`python-requests/2.32.0`). This applies to public reads as well as authenticated calls.
+
+A browser-like value is not required. Scripts and servers, including clients running on cloud hosts, can call `/v2.0/`, `/v1.5/`, and `/api/`.
+
+<Warning>
+  `User-Agent` is not part of the HMAC signature. Send it alongside `Key`, `Timestamp`, and `HMAC`; do not include it in the string you sign.
+</Warning>
+
 ## Key resources
 
 | Resource | Description |
@@ -45,50 +59,5 @@ The API supports two currency modes:
 - **Real money (USDC, USDT, USD)** — live trading mode. Requires a funded account.
 
 <Note>
-  Start with play money to verify your authentication and order logic before switching to real money mode.
+  Start with play money to verify your authentication and order flow before switching to real money.
 </Note>
-
-## Authentication
-
-Every authenticated request requires HMAC-SHA512 authentication using a public/private key pair. [Get your API keys](/guides/get-api-keys) from **Settings** → **API keys**, then see [Authentication](/authentication) for the signing process.
-
-<Note>
-  On-chain CLOB trading is coming soon. HMAC still authenticates every request. When settlement moves on-chain, each create will also need an EIP-712 wallet signature. See [On-chain trading](/concepts/on-chain-trading).
-</Note>
-
-## For AI agents
-
-The full OpenAPI schema is available at [https://api.futuur.com/docs/schema/](https://api.futuur.com/docs/schema/). Use this to explore all available endpoints, parameters, and response shapes.
-
-## Next steps
-
-<CardGroup cols={2}>
-  <Card title="Get your API keys" icon="key" href="/guides/get-api-keys">
-    Create HMAC keys in Settings, or derive them from your wallet.
-  </Card>
-  <Card title="Authentication" icon="lock" href="/authentication">
-    Generate HMAC signatures and authenticate your first request.
-  </Card>
-  <Card title="Events and markets" icon="chart-line" href="/concepts/events-and-markets">
-    Understand how events, outcomes, and markets are structured.
-  </Card>
-  <Card title="Placing a bet" icon="arrow-right" href="/guides/placing-a-bet">
-    Follow a step-by-step guide to placing your first order.
-  </Card>
-  <Card title="On-chain trading" icon="blocks" href="/concepts/on-chain-trading">
-    Coming soon: CLOB matching with on-chain settlement and outcome tokens.
-  </Card>
-  <Card title="List events" icon="list" href="/api-reference/events/list">
-    Browse the full reference for the events endpoint.
-  </Card>
-  <Card title="My balances" icon="wallet" href="/api-reference/me/balances">
-    Fetch per-currency ledger balances for your account.
-  </Card>
-  <Card title="Realtime (websockets)" icon="radio" href="/api-reference/websocket/overview">
-    Subscribe to realtime market and account events over Pusher.
-  </Card>
-</CardGroup>
-
-## Support
-
-For questions or issues, contact [support@futuur.com](mailto:support@futuur.com).
