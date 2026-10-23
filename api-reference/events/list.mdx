@@ -76,11 +76,11 @@ Returns a paginated list of events.
 </ResponseField>
 
 <ResponseField name="next" type="string">
-  URL for the next page of results. `null` if there are no more pages.
+  URL for the next page of results, or `null` if there are no more pages.
 </ResponseField>
 
 <ResponseField name="previous" type="string">
-  URL for the previous page of results. `null` if on the first page.
+  URL for the previous page of results, or `null` if on the first page.
 </ResponseField>
 
 <ResponseField name="results" type="object[]" required>
@@ -93,9 +93,9 @@ Returns a paginated list of events.
 
 ```bash cURL
 curl -G "https://api.futuur.com/v2.0/events/" \
-  --data-urlencode "search=election" \
+  --data-urlencode "search=US election" \
   --data-urlencode "currency_mode=play_money" \
-  --data-urlencode "limit=10"
+  --data-urlencode "limit=5"
 ```
 
 ```python Python
@@ -104,53 +104,35 @@ import requests
 response = requests.get(
     "https://api.futuur.com/v2.0/events/",
     params={
-        "search": "election",
+        "search": "US election",
         "currency_mode": "play_money",
-        "limit": 10,
+        "limit": 5,
     },
 )
 
 events = response.json()
-print(f"Found {events['count']} events")
+print(f"Total events: {events['count']}")
 for event in events["results"]:
     print(event["id"], event["title"])
 ```
 
-```javascript JavaScript
-const response = await fetch(
-  "https://api.futuur.com/v2.0/events/?" +
-    new URLSearchParams({
-      search: "election",
-      currency_mode: "play_money",
-      limit: "10",
-    })
-);
-
-const events = await response.json();
-console.log(`Found ${events.count} events`);
-events.results.forEach((event) => {
-  console.log(event.id, event.title);
-});
-```
-
 </CodeGroup>
 
-## Example response
+### Example response
 
 ```json
 {
-  "count": 156,
-  "next": "https://api.futuur.com/v2.0/events/?limit=10&offset=10",
+  "count": 42,
+  "next": "https://api.futuur.com/v2.0/events/?limit=5&offset=5",
   "previous": null,
   "results": [
     {
       "id": 12345,
       "title": "Who will win the 2024 US Presidential Election?",
-      "slug": "who-will-win-2024-us-presidential-election",
+      "slug": "2024-us-presidential-election",
       "status": "open",
       "markets": [...],
-      "markets_correlation": "linked_prices",
-      "category": [...]
+      "markets_correlation": "linked_prices"
     }
   ]
 }
