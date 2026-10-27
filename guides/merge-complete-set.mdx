@@ -1,0 +1,205 @@
+---
+title: "Merge a complete set"
+description: "Coming soon: quote and merge overlapping long and short shares on one market back to collateral."
+tag: "Coming soon"
+---
+
+<Note>
+  Complete-set merge is not live on `https://api.futuur.com` yet. The same handler will exist on `/v1.5/` and `/v2.0/`. Examples below use `https://api.futuur.com/v2.0`. Sign the request the same way as any other private call. See [Authentication](/authentication).
+</Note>
+
+When you already hold both long and short on one market, in one currency, merge the overlap back to collateral at **$1 per set**. A resolved market is redeemed, not merged. This call does not place an order and does not move the quote.
+
+Play money (`OOM`) and real money (`USDC`) are separate merges. Splitting collateral into a new YES+NO set is a later step, documented in [Split before quoting](/guides/split-before-quoting). This page is only the merge.
+
+## Who can call it
+
+The phase-one endpoint accepts the house market maker and allowlisted accounts. Session auth (the site), OAuth, wallet JWT, and HMAC all use the same handler. An HMAC caller merging `USDC` also needs real-money API access on that key. Anyone else receives `not_enabled`.
+
+The house market maker also merges on its own after a fill that increases its smaller side. You do not call this endpoint for that. You call it for your own inventory.
+
+## What you can merge
+
+Quote first. The overlap is the shares that are free on both sides:
+
+- Open long shares, minus shares reserved by your own asks
+- Open short shares, minus shares reserved by your own asks
+- `k = min(long, short)`
+
+Resting bids stay up. A pair is a complete set only on a binary, including a linked event with two markets. An exclusive event with three or more markets is not a long/short complete set, and neither is a NegRisk event. Those return `not_a_complete_set`.
+
+## Quote the overlap
+
+```
+GET https://api.futuur.com/v2.0/inventory-merges/?outcome={outcome}&currency={currency}
+```
+
+<ParamField query="outcome" type="integer" required>
+  Market id. Long and short are the two sides of this market.
+</ParamField>
+
+<ParamField query="currency" type="string" required>
+  `OOM` or `USDC`.
+</ParamField>
+
+<ResponseField name="outcome" type="integer" required>
+  Market id you quoted.
+</ResponseField>
+
+<ResponseField name="currency" type="string" required>
+  Currency you quoted.
+</ResponseField>
+
+<ResponseField name="long_shares" type="number" required>
+  Open long shares not reserved by your own asks.
+</ResponseField>
+
+<ResponseField name="short_shares" type="number" required>
+  Open short shares not reserved by your own asks.
+</ResponseField>
+
+<ResponseField name="mergeable" type="number" required>
+  `k`, the overlap: `min(long_shares, short_shares)`.
+</ResponseField>
+
+<ResponseField name="residual_side" type="string" required>
+  `long`, `short`, or `flat` after a max merge. The larger side is what remains.
+</ResponseField>
+
+<ResponseField name="collateral" type="number" required>
+  Collateral a max merge would return. One currency unit per merged set.
+</ResponseField>
+
+## Perform the merge
+
+```
+POST https://api.futuur.com/v2.0/inventory-merges/
+```
+
+Send the body as form fields, the same way you create an order.
+
+<ParamField body="outcome" type="integer" required>
+  Market id.
+</ParamField>
+
+<ParamField body="currency" type="string" required>
+  `OOM` or `USDC`.
+</ParamField>
+
+<ParamField body="amount" type="string">
+  `max`, or an explicit size up to `k`. Omitted means `max`. A larger size returns `over_merge`.
+</ParamField>
+
+<ParamField body="idempotency_key" type="string">
+  Retrying a confirmed key returns the original merge and does not pay twice. A key that is still in progress returns `merge_in_progress`.
+</ParamField>
+
+<ResponseField name="id" type="integer" required>
+  Merge record id.
+</ResponseField>
+
+<ResponseField name="outcome" type="integer" required>
+  Market id.
+</ResponseField>
+
+<ResponseField name="currency" type="string" required>
+  Currency merged.
+</ResponseField>
+
+<ResponseField name="amount" type="number" required>
+  Shares closed on each side.
+</ResponseField>
+
+<ResponseField name="long_shares" type="number" required>
+  Long shares still open after the merge.
+</ResponseField>
+
+<ResponseField name="short_shares" type="number" required>
+  Short shares still open after the merge.
+</ResponseField>
+
+<ResponseField name="mergeable" type="number" required>
+  Overlap still left. `0` when this call merged the whole pair.
+</ResponseField>
+
+<ResponseField name="residual_side" type="string" required>
+  Side still open after this merge, or `flat`.
+</ResponseField>
+
+<ResponseField name="collateral" type="number" required>
+  Collateral credited, equal to `amount`.
+</ResponseField>
+
+<ResponseField name="cost_basis" type="number" required>
+  Cost of the shares closed. Profit is `collateral` minus this number, and it can be negative.
+</ResponseField>
+
+<ResponseField name="realized_profit" type="number" required>
+  `collateral` minus `cost_basis`.
+</ResponseField>
+
+<ResponseField name="rail" type="string" required>
+  `ledger` credits the ledger. `onchain` pays from the Pool Safe to your Safe and fails closed if the Pool cannot pay. `tokenized` burns the YES+NO pair and returns the ERC-20. The request body is the same on every rail.
+</ResponseField>
+
+<ResponseField name="idempotency_key" type="string">
+  The key stored for this merge, when you sent one.
+</ResponseField>
+
+### Example
+
+Quote a market, then merge the whole overlap:
+
+```bash
+curl "https://api.futuur.com/v2.0/inventory-merges/?outcome=123&currency=USDC" \
+  -H "Key: $FUTUUR_KEY" \
+  -H "Timestamp: $TIMESTAMP" \
+  -H "HMAC: $HMAC"
+
+curl -X POST "https://api.futuur.com/v2.0/inventory-merges/" \
+  -H "Key: $FUTUUR_KEY" \
+  -H "Timestamp: $TIMESTAMP" \
+  -H "HMAC: $HMAC" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "outcome=123&currency=USDC&amount=max&idempotency_key=merge-123-usdc-1"
+```
+
+A successful merge looks like this:
+
+```json
+{
+  "id": 1,
+  "outcome": 123,
+  "currency": "USDC",
+  "amount": 2,
+  "long_shares": 0,
+  "short_shares": 4,
+  "mergeable": 0,
+  "residual_side": "short",
+  "collateral": 2,
+  "cost_basis": 2.8325,
+  "realized_profit": -0.8325,
+  "rail": "onchain",
+  "idempotency_key": "merge-123-usdc-1"
+}
+```
+
+That account held 2 long and 6 short. The merge closed 2 of each, paid $2, and left 4 short. The quote on the book did not change.
+
+## Errors
+
+| Code | HTTP | When |
+|---|---|---|
+| `not_enabled` | 403 | The flag is off, or the account is not the house market maker and not allowlisted. |
+| `real_money_not_allowed` | 403 | An HMAC caller merges `USDC` without real-money API access. |
+| `invalid_amount` | 400 | `outcome` or `currency` is missing, or `amount` is not `max` or a positive size. |
+| `not_found` | 404 | That market id does not exist. |
+| `no_pair` | 400 | You do not hold both sides, or asks already reserve the overlap. |
+| `over_merge` | 400 | `amount` is larger than `k`. |
+| `resolved_market` | 400 | The event is resolved. Redeem the winner. Do not merge. |
+| `cancelled_market` | 400 | The event is cancelled. It is refunded, not merged. |
+| `not_a_complete_set` | 400 | Exclusive or linked events with three or more markets, or a NegRisk event. |
+| `merge_in_progress` | 400 | This idempotency key is already running. |
+| `collateral_failed` | 400 | On-chain or tokenized payment failed. Shares stay where they were. |
+
+Error bodies are `{ "code", "detail" }`.

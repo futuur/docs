@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-10-27 — Inventory merge (coming soon)
+
+Documented the phase-one complete-set merge so API callers can prepare. It is not on `https://api.futuur.com` yet, so it is a guide rather than an API Reference page. Overlapping long and short shares on one market return collateral at $1 a set. Split-before-quoting is documented only and is not implemented.
+
+### Added
+
+- `guides/merge-complete-set.mdx` — `GET` and `POST /v2.0/inventory-merges/`, who may call, and the error codes. A resolved market is redeemed, not merged. Tagged Coming soon.
+- `guides/split-before-quoting.mdx` — split collateral into a YES+NO set before quoting. Tagged Coming soon. Phase one covers the merge half only.
+
+### Changed
+
+- `concepts/on-chain-trading.mdx` — “Not in this release” links the merge and split guides.
+- `docs.json`: Guides includes both pages. No API Reference entry, because the endpoint is not in the production schema.
+
 ## 2026-09-18 — Conditional tokens (coming soon)
 
 Documented the coming-soon ERC-1155 outcome-token model (binary CTF and exclusive N≥3). Production remains HMAC-only ledger settlement. No unpublished endpoints were added to API Reference.

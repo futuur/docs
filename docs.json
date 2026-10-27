@@ -66,6 +66,8 @@
               "guides/get-api-keys",
               "guides/placing-a-bet",
               "guides/selling-a-position",
+              "guides/merge-complete-set",
+              "guides/split-before-quoting",
               "guides/reading-the-order-book"
             ]
           }
