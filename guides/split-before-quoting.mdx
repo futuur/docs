@@ -1,0 +1,33 @@
+---
+title: "Split before quoting"
+description: "Documented phase after the in-house merge. Collateral is split into a YES+NO set so both sides can be sold. Not built in phase one."
+tag: "Coming soon"
+---
+
+<Note>
+  This is documentation only. It is the phase after the in-house inventory merge, and it is not built in phase one. Nothing on this page is live on `https://api.futuur.com`.
+</Note>
+
+Polymarket market makers take collateral and split it into a complete YES+NO set before they quote. The maker then holds sellable inventory on both sides. A complete set is collateral, not a bet: whichever side wins, the pair is worth $1. Merging it back returns $1 per set.
+
+```
+1 collateral  →  split  →  1 YES + 1 NO
+1 YES + 1 NO  →  merge  →  1 collateral
+```
+
+## What phase one already does
+
+Phase one simulates the merging half of that experience. When the house market maker (or an allowlisted account) already holds both long and short on one market, [Merge a complete set](/guides/merge-complete-set) closes the overlap and returns collateral at $1 a set.
+
+That merge does not create the pair. It only recycles a pair that trading already left behind. The quote curve does not move.
+
+## What this phase specifies, and does not build
+
+Split would run before quoting:
+
+1. Take collateral from the maker.
+2. Split it into one YES and one NO for that market.
+3. Quote sells from that inventory. The set itself is still collateral.
+4. Merge any complete set that is no longer needed. Phase one is this step, on shares that already exist.
+
+Splitting is not implemented. There is no split endpoint, and phase one does not mint a YES+NO set in the database or on-chain.
