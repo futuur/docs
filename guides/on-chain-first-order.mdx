@@ -215,6 +215,7 @@ When on-chain settlement is on, `PATCH /wagers/` returns `onchain_sell_requires_
 | `trading_not_enabled` / `needsApproval: true` | Enable trading first |
 | Intent recover mismatch | You signed with a key that is not `wallet_address` / the Safe owner |
 | `onchain_sell_requires_limit_order` | Used `PATCH /wagers/` instead of a signed ask |
+| `Not enough shares to complete the Ask limit order.` | The ask is larger than your position. Shares settle on-chain in 0.01 steps, so 0.68 against a 0.67 position fails |
 | Insufficient balance | The Safe lacks OOM or USDC on-chain |
 | `401 authentication_failed` | Bad HMAC sort, clock skew, or revoked key |
 
