@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026-11-03 — Phase-one accuracy pass
+
+Brought the docs in line with production, and the coming-soon on-chain pages in line with the phase-one build. On-chain trading stays tagged Coming soon.
+
+### Fixed
+
+- `authentication.mdx` — the Python example used `datetime.utcnow().timestamp()`, which reads naive UTC as local time and sends a timestamp off by the machine's UTC offset. It now uses `int(time.time())`.
+
+### Changed
+
+- `concepts/on-chain-trading.mdx` (Coming soon) — matching is best price first, user or AMM. A resting user order wins only at an equal price. The old text said user orders always matched first.
+- `guides/on-chain-first-order.mdx` (Coming soon) — common errors include an ask larger than the position (on-chain shares settle in 0.01 steps).
+
+### Added
+
+- `api-reference/orders/create.mdx` — `time_in_force` (`gtc` default, `ioc`). It is live on production and was undocumented.
+
 ## 2026-10-27 — Inventory merge (coming soon)
 
 Documented the phase-one complete-set merge so API callers can prepare. It is not on `https://api.futuur.com` yet, so it is a guide rather than an API Reference page. Overlapping long and short shares on one market return collateral at $1 a set. Split-before-quoting is documented only and is not implemented.

@@ -23,7 +23,7 @@ Every authenticated request must include these three headers:
 | Header | Value |
 |--------|-------|
 | `Key` | Your public key |
-| `Timestamp` | Current Unix timestamp (seconds since epoch) |
+| `Timestamp` | Current Unix timestamp in seconds (UTC epoch, for example `int(time.time())`) |
 | `HMAC` | SHA-512 hexdigest of the signed parameter string |
 
 ## Signing process
@@ -61,7 +61,7 @@ Every authenticated request must include these three headers:
 ```python python
 import hashlib
 import hmac
-import datetime
+import time
 from collections import OrderedDict
 from urllib.parse import urlencode
 
@@ -71,7 +71,7 @@ PUBLIC_KEY = "your_public_key"
 # Collect all request parameters plus Key and Timestamp
 params = {
     "Key": PUBLIC_KEY,
-    "Timestamp": int(datetime.datetime.utcnow().timestamp()),
+    "Timestamp": int(time.time()),
     "category": 5,  # any query/body params for this request
 }
 

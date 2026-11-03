@@ -39,17 +39,17 @@ See [Place an on-chain order](/guides/on-chain-first-order) for the step-by-step
 
 ## Matching
 
-The matching engine is a **CLOB**. User orders match each other first. The platform AMM is backup liquidity — it does not jump a better-priced user order.
+The matching engine is a **CLOB**. The best price fills first, whether it comes from another user or the platform AMM. At the same price, a resting user order fills before the AMM.
 
 **Complementary both-buy** is a first-class match. If you bid long at 0.55 and someone else bids short at 0.45, the prices sum to 1 and the orders can match without an ask on the book.
 
 On a **binary** event, that is Yes vs No of the same event. On an **exclusive** event with three or more markets, it is Yes vs No of the **same** market — not Yes on one market vs Yes on another. See [Conditional tokens](/concepts/conditional-tokens).
 
-| Priority | What matches |
+| Rule | What it means |
 |---|---|
-| 1 | User bid vs user ask at crossing prices |
-| 1 | Complementary both-buy (bid Yes + bid No when prices sum to ≥ 1) |
-| 2 | Leftover size may hit the AMM |
+| Best price first | Your order takes the best crossing price on the book, user or AMM |
+| User before AMM at a tie | At equal prices, a resting user order fills before the AMM |
+| Complementary both-buy | A bid Yes and a bid No whose prices sum to ≥ 1 cross like a bid and an ask |
 
 A filled on-chain order without a collateral `Transfer` is a failure. The API does not credit positions until collateral has moved.
 

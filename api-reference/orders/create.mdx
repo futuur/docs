@@ -57,6 +57,10 @@ POST https://api.futuur.com/v2.0/orders/
   Position direction. Use `long` to bet in favor of the outcome, or `short` to bet against it.
 </ParamField>
 
+<ParamField body="time_in_force" type="string" default="gtc">
+  `gtc` (default): the order rests on the book until it is fully filled or canceled. `ioc` (immediate or cancel): the order fills right away at `price` or better, and any unfilled remainder is canceled. `ioc` requires a `price`. A priceless order is already a market order.
+</ParamField>
+
 <ParamField body="expired_at" type="string">
   ISO 8601 datetime at which an unfilled or partially filled limit order is automatically canceled. Set to `null` for no expiration.
 </ParamField>
