@@ -1,9 +1,9 @@
 ---
-title: 'List events'
-description: 'Retrieve a paginated list of prediction market events with optional filters.'
+title: "List events"
+description: "Retrieve a paginated list of prediction market events with optional filters."
 ---
 
-Retrieve a list of prediction market events. Use query parameters to filter by category, search term, currency mode, and other criteria.
+Retrieve a list of prediction market events. Filter by category, tag, search term, currency mode, date range, and status flags. This endpoint does not require authentication.
 
 ## Endpoint
 
@@ -14,61 +14,63 @@ GET https://api.futuur.com/v2.0/events/
 ## Authentication
 
 <Note>
-  This endpoint does not require authentication. You can call it without HMAC headers.
+  This endpoint does not require authentication. Public event data is accessible to all clients.
 </Note>
 
 ## Request
 
-<ParamField query="bet_end_date_after" type="string">
-  Inclusive lower bound for `bet_end_date`, ISO 8601 with a timezone (for example `2026-11-01T00:00:00Z`). Events without `bet_end_date` are excluded. Combines with the list status window: open and pending resolution, unless `live`, `resolved_only`, or `pending_resolution` is set.
-</ParamField>
+### Query Parameters
 
-<ParamField query="bet_end_date_before" type="string">
-  Inclusive upper bound for `bet_end_date`, ISO 8601 with a timezone (for example `2026-11-01T00:00:00Z`). Events without `bet_end_date` are excluded. Combines with the list status window: open and pending resolution, unless `live`, `resolved_only`, or `pending_resolution` is set.
-</ParamField>
-
-<ParamField query="categories" type="integer[]">
-  Comma-separated category IDs. A root category includes its descendants. An event matches any listed category.
-</ParamField>
-
-<ParamField query="category_slug" type="string[]">
-  Optional comma-separated category slugs, as an alternative to `categories`. A root slug includes its descendants. An event matches any listed slug. When `categories` is also set, the event must match both.
+<ParamField query="search" type="string">
+  Case-insensitive search across the event title, market names, categories, and tags. Maximum 100 characters.
 </ParamField>
 
 <ParamField query="currency_mode" type="string" default="play_money">
-  Filter by currency mode. One of `play_money` or `real_money`.
+  Filter by currency mode: `play_money` or `real_money`. Defaults to `play_money`.
 </ParamField>
 
-<ParamField query="hide_my_bets" type="boolean" default="false">
-  Authenticated only. When `true`, excludes events where you have active bets.
+<ParamField query="categories" type="array[integer]">
+  Comma-separated category IDs. A root category includes its descendants. An event matches any listed category.
+</ParamField>
+
+<ParamField query="category_slug" type="array[string]">
+  Comma-separated category slugs as an alternative to `categories`. A root slug includes its descendants. An event matches any listed slug. When `categories` is also set, the event must match both.
+</ParamField>
+
+<ParamField query="tag" type="array[string]">
+  Comma-separated tag slugs or names, up to 10. An event matches if it has any listed tag. Matching is case-insensitive.
+</ParamField>
+
+<ParamField query="bet_end_date_after" type="string">
+  Inclusive lower bound for `bet_end_date`, ISO 8601 with timezone (e.g., `2026-11-01T00:00:00Z`). Events without `bet_end_date` are excluded. Combines with the list status window: open and pending resolution, unless `live`, `resolved_only`, or `pending_resolution` is set.
+</ParamField>
+
+<ParamField query="bet_end_date_before" type="string">
+  Inclusive upper bound for `bet_end_date`, ISO 8601 with timezone (e.g., `2026-11-01T00:00:00Z`). Events without `bet_end_date` are excluded. Combines with the list status window: open and pending resolution, unless `live`, `resolved_only`, or `pending_resolution` is set.
 </ParamField>
 
 <ParamField query="live" type="boolean" default="false">
-  When `true`, returns events that are live now or start within 12 hours.
-</ParamField>
-
-<ParamField query="only_markets_i_follow" type="boolean" default="false">
-  Authenticated only. When `true`, returns only events the user follows.
-</ParamField>
-
-<ParamField query="pending_resolution" type="boolean" default="false">
-  When `true`, returns unresolved events whose close time has passed.
+  When `true`, return events that are live now or start within 12 hours.
 </ParamField>
 
 <ParamField query="resolved_only" type="boolean" default="false">
-  When `true`, returns only resolved events.
+  When `true`, return only resolved events.
 </ParamField>
 
-<ParamField query="search" type="string">
-  Case-insensitive search across the event title, market names, categories, and tags. Between 1 and 100 characters.
+<ParamField query="pending_resolution" type="boolean" default="false">
+  When `true`, return unresolved events whose close time has passed.
 </ParamField>
 
-<ParamField query="tag" type="string[]">
-  Comma-separated tag slug or name, up to 10. An event matches if it has any listed tag. Matching is case-insensitive. A name follows the request language; a slug does not.
+<ParamField query="hide_my_bets" type="boolean" default="false">
+  Authenticated only. Omit events the user has already bet on.
+</ParamField>
+
+<ParamField query="only_markets_i_follow" type="boolean" default="false">
+  Authenticated only. Return only events the user follows.
 </ParamField>
 
 <ParamField query="ordering" type="string">
-  Field to sort results by. Allowed values: `relevance`, `-relevance`, `created_on`, `-created_on`, `bet_end_date`, `-bet_end_date`, `wagers_count`, `-wagers_count`, `volume`, `-volume`, `open_date`, `-open_date`, `resolve_date`, `-resolve_date`. Prefix with `-` for descending order.
+  Field to use when ordering results. Allowed values: `relevance`, `-relevance`, `created_on`, `-created_on`, `bet_end_date`, `-bet_end_date`, `wagers_count`, `-wagers_count`, `volume`, `-volume`, `open_date`, `-open_date`, `resolve_date`, `-resolve_date`. Prefix with `-` for descending order.
 </ParamField>
 
 <ParamField query="limit" type="integer">
@@ -76,12 +78,12 @@ GET https://api.futuur.com/v2.0/events/
 </ParamField>
 
 <ParamField query="offset" type="integer">
-  The initial index from which to return the results.
+  The initial index from which to return results (pagination offset).
 </ParamField>
 
 ## Response
 
-Returns a paginated list of events.
+Returns a paginated list of event objects.
 
 <ResponseField name="count" type="integer" required>
   Total number of events matching the query.
@@ -95,38 +97,83 @@ Returns a paginated list of events.
   URL for the previous page of results, or `null` if on the first page.
 </ResponseField>
 
-<ResponseField name="results" type="object[]" required>
+<ResponseField name="results" type="array" required>
   Array of event objects.
+  <Expandable title="Event object properties">
+    <ResponseField name="id" type="integer">
+      Unique event identifier.
+    </ResponseField>
+    <ResponseField name="title" type="string">
+      Event title/question.
+    </ResponseField>
+    <ResponseField name="markets" type="array">
+      Array of market (outcome) objects for this event.
+    </ResponseField>
+    <ResponseField name="bet_end_date" type="string">
+      ISO 8601 timestamp when betting closes.
+    </ResponseField>
+    <ResponseField name="status" type="string">
+      Current event status.
+    </ResponseField>
+  </Expandable>
 </ResponseField>
 
 ## Example
 
 <CodeGroup>
 
-```bash cURL
-curl -G "https://api.futuur.com/v2.0/events/" \
-  --data-urlencode "currency_mode=play_money" \
-  --data-urlencode "search=bitcoin" \
-  --data-urlencode "ordering=-volume" \
-  --data-urlencode "limit=10"
-```
-
-```python Python
+```python python
 import requests
 
 response = requests.get(
     "https://api.futuur.com/v2.0/events/",
     params={
+        "search": "US election",
         "currency_mode": "play_money",
-        "search": "bitcoin",
-        "ordering": "-volume",
         "limit": 10,
+        "ordering": "-volume",
     },
 )
 
-events = response.json()
-for event in events["results"]:
-    print(event["title"])
+data = response.json()
+for event in data["results"]:
+    print(event["id"], event["title"])
+```
+
+```bash curl
+curl -G "https://api.futuur.com/v2.0/events/" \
+  --data-urlencode "search=US election" \
+  --data-urlencode "currency_mode=play_money" \
+  --data-urlencode "limit=10" \
+  --data-urlencode "ordering=-volume"
 ```
 
 </CodeGroup>
+
+```json Sample response
+{
+  "count": 42,
+  "next": "https://api.futuur.com/v2.0/events/?limit=10&offset=10",
+  "previous": null,
+  "results": [
+    {
+      "id": 12345,
+      "title": "Who will win the 2024 US Presidential Election?",
+      "markets": [
+        {
+          "id": 67890,
+          "name": "Candidate A",
+          "price": 0.55
+        },
+        {
+          "id": 67891,
+          "name": "Candidate B",
+          "price": 0.45
+        }
+      ],
+      "bet_end_date": "2024-11-05T00:00:00Z",
+      "status": "open"
+    }
+  ]
+}
+```
