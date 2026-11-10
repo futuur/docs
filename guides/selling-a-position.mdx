@@ -9,6 +9,10 @@ Selling a position means placing an **ask** (sell) order on a market where you a
   All examples use `https://api.futuur.com/v2.0`. Every request requires HMAC authentication headers. See the [Authentication](/authentication) guide for how to generate them.
 </Note>
 
+<Note>
+  On the phase-one preview host, orders in `OOM` and `USDC` also need the signed-intent fields (`order_intent_signature`, `order_intent_expiry`, `order_intent_nonce`, `max_usdc_raw`). The bodies below show the order fields only. See [Place an on-chain order](/guides/on-chain-first-order) and [Environment](/environment).
+</Note>
+
 <Steps>
 
 <Step title="List your active wagers">
@@ -83,14 +87,16 @@ print(f"Selling {shares_held} shares on market {market_id} ({position} position)
 
 To sell, place a `POST /orders/` request with `side="ask"`. Match the `position` field to the position type you hold — `long` for long shares, `short` for short shares.
 
-Use `shares` to specify exactly how many shares to sell. Set `price=null` for a market sell (executes immediately at the best available bid), or set a specific `price` to place a limit sell.
+Use `shares` to specify exactly how many shares to sell. Send `time_in_force="ioc"` with the lowest `price` you accept to sell immediately, or leave the default (`gtc`) to rest a limit sell on the book.
 
-**Market sell (sell immediately):**
+A market sell (`price=null`) cannot be used for `OOM` or `USDC` on the phase-one preview host, because the signed intent contains a price. On that host, on-chain positions also cannot be sold with `PATCH /wagers/{id}/`; that call returns `onchain_sell_requires_limit_order`.
+
+**Immediate sell (`ioc`):**
 
 <CodeGroup>
 
 ```python python
-# Sell all shares immediately at the best available price
+# Sell all shares now, at 0.40 or better. The unfilled remainder is canceled.
 response = requests.post(
     "https://api.futuur.com/v2.0/orders/",
     json={
@@ -99,7 +105,8 @@ response = requests.post(
         "currency": currency,
         "position": position,
         "shares": shares_held,
-        "price": None,
+        "price": "0.40",
+        "time_in_force": "ioc",
     },
     headers={
         "Key": "YOUR_PUBLIC_KEY",
@@ -114,7 +121,7 @@ print("Sell order ID:", order["id"], "Status:", order["status"])
 ```
 
 ```bash curl
-# Sell all shares immediately at the best available price
+# Sell all shares now, at 0.40 or better. The unfilled remainder is canceled.
 curl -X POST "https://api.futuur.com/v2.0/orders/" \
   -H "Key: YOUR_PUBLIC_KEY" \
   -H "Timestamp: 1712500000" \
@@ -125,8 +132,9 @@ curl -X POST "https://api.futuur.com/v2.0/orders/" \
     "side": "ask",
     "currency": "OOM",
     "position": "long",
-    "shares": 150.0,
-    "price": null
+    "shares": "150",
+    "price": "0.40",
+    "time_in_force": "ioc"
   }'
 ```
 

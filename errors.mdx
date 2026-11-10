@@ -1,0 +1,168 @@
+---
+title: "Errors"
+description: "Error response format, HTTP statuses, and every error code the order and wallet endpoints return."
+---
+
+All API errors use one JSON shape. Read the HTTP status first, then `errors[].code`.
+
+## Response format
+
+```json
+{
+  "type": "client_error",
+  "errors": [
+    {
+      "code": "MarketClosed",
+      "detail": "Market is closed for trading.",
+      "attr": null
+    }
+  ]
+}
+```
+
+| Field | Meaning |
+|---|---|
+| `type` | `validation_error` (400), `client_error` (other 4xx), or `server_error` (5xx) |
+| `errors[].code` | Machine-readable code. Match on this |
+| `errors[].detail` | Human-readable message. Wording can change |
+| `errors[].attr` | The request field the error refers to, or `null` |
+
+One response can hold several entries, for example one per invalid field.
+
+### On-chain order errors look different
+
+Errors raised by the signed-order checks are sent as a `400` with **two** entries. The first carries the message. The second has `attr: "code"` and puts the code in `detail`. Both entries have `code: "invalid"`.
+
+```json 400 Bad Request
+{
+  "type": "validation_error",
+  "errors": [
+    {
+      "code": "invalid",
+      "detail": "The order intent was signed with a nonce that another order on this Safe already used. Fetch a new signing context (POST /orders/signing-context/) and sign again.",
+      "attr": "detail"
+    },
+    {
+      "code": "invalid",
+      "detail": "order_intent_nonce_stale",
+      "attr": "code"
+    }
+  ]
+}
+```
+
+To read the code of a `400`, look for the entry with `attr == "code"` and take its `detail`. Some on-chain errors have no such entry; match those on the message entry (`attr == "detail"`).
+
+```python python
+def onchain_code(response_json):
+    for error in response_json.get("errors", []):
+        if error.get("attr") == "code":
+            return error["detail"]
+    return None
+```
+
+## Authentication and limits
+
+| Status | Code | Cause | What to do |
+|---|---|---|---|
+| 401 | `authentication_failed` | Any HMAC failure: unknown key, wrong signature, bad or stale `Timestamp` | Check the [signing rules](/authentication). Sync your clock |
+| 401 | `not_authenticated` | No credentials, or the `HMAC` / `Key` header is missing | Send all three headers |
+| 403 | `permission_denied` | The action is closed to API keys (`POST /me/safe/`) | Do it signed in with your wallet in the web app |
+| 403 | `UserUnconfirmedEmail` | The account email is not confirmed | Confirm the email, then retry |
+| 404 | `not_found` | The object does not exist, is not yours, or is not in a state the endpoint acts on | See the endpoint page |
+| 409 | `idempotency_key_in_progress` | The same `Idempotency-Key` request is still running | Wait for the first response |
+| 429 | `throttled` | A [rate limit](/rate-limits) was exceeded | Wait `Retry-After` seconds |
+| 503 | `trading_halted` | Trading is paused for everyone | Poll `GET /trading-status/` and retry when `trading_halted` is `false` |
+
+## Wallet-derived API keys
+
+Returned by `POST /api-keys/derive/`.
+
+| Status | Code | Cause | What to do |
+|---|---|---|---|
+| 400 | `api_key_derive_expired` | `timestamp` is more than 120 seconds from the server clock | Sign again with the current time |
+| 400 | `api_key_derive_invalid_signature` | The signature is malformed | Sign the exact `DeriveApiKey` typed data |
+| 400 | `api_key_derive_address_mismatch` | The signature recovers to a different address than `address` | Sign with the owner key, on the active chain ID |
+| 400 | `api_key_derive_replay` | The same `timestamp` and `nonce` were already used | Change `nonce` or wait a second |
+| 400 | `api_key_derive_signer_unknown` | No Futuur account has this wallet address | Sign in with the wallet once in the web app |
+| 403 | `public_api_access_blocked` | API access is blocked for the account | Contact Futuur |
+
+## Order validation
+
+Returned by `POST /orders/` before any signature check. In batch endpoints the same errors appear inside each item's `errors` instead of as an HTTP error.
+
+| Status | Code | `attr` | Cause | What to do |
+|---|---|---|---|---|
+| 400 | `required`, `invalid`, `invalid_choice`, `null` | field | A field is missing or malformed, for example a price with more than 2 decimals or outside the allowed digits | Fix the field |
+| 400 | `InvalidShares` | `shares` | `shares` is not greater than `0.02` | Send more than 0.02 shares |
+| 403 | `InvalidShares` | `shares` | `shares` is missing | Send `shares` |
+| 400 | `PriceRequired` | `price` | `time_in_force` is `ioc`, or `shares` is `"max"`, and `price` is missing | Send a price |
+| 400 | `InvalidSharesMax` | `shares` or `max_shares` | `shares: "max"` on a bid, `max_shares` without `shares: "max"`, or `max_shares` not above zero | Use `"max"` only on asks |
+| 400 | `NoSellableShares` | `shares` | `shares: "max"` found nothing to sell | Nothing to do |
+| 403 | `OrderBookNotEnabled` | — | The event has no order book | Pick another event |
+| 403 | `MarketClosed` | — | The event or market is not open for trading | Stop quoting. Watch `market-status-change` |
+| 403 | `OutcomeDisabled` | — | The market is disabled, awaiting resolution | Stop quoting |
+| 403 | `InvalidPrice` | `price` | The price rounds to `0.00` or `1.00` | Use `0.01` to `0.99` |
+| 403 | `OrderBookMinAmountNotAllowed` | `amount` | The order is worth less than `0.01` | Increase shares or price |
+| 403 | `UserNotEnoughBalance` | `amount` | No account for the currency, or for `OOM` the Safe is not deployed or holds no OOM | Fund the Safe. See [Environment](/environment) |
+| 403 | `RealMoneyBetNotAllowed` | — | The event does not allow real money, or **Real money trading** is off for the API key | Turn it on in **Settings** → **API keys** |
+| 403 | `UserBlockedBets` | — | The account is blocked from trading | Contact Futuur |
+| 403 | `OrderBookNotWagerForAsk` | `shares` | An ask without an open position on that market and side | Check `GET /wagers/` |
+| 403 | `OrderBookNotEnoughSharesForAsk` | `shares` | The ask is larger than the position. Unsettled sales are subtracted | Sell fewer shares |
+| 403 | `OrderBookConflictingOrders` | — | Your open asks already reserve those shares | Cancel them, or send `cancel_conflicting_orders: true` |
+| 403 | `OrderBookInvalidAmount` | `amount` | You sent `amount` and it no longer matches the book | Omit `amount`, or requote |
+| 403 | `MakerOnlyOrder` | — | The account may only place resting orders and this one would cross | Reprice so it does not cross |
+| 503 | `IOCUnavailable` | — | An `ioc` order could not finish matching inside the request. The order was canceled | Fetch a new signing context and retry |
+
+## On-chain order errors
+
+Returned by `POST /orders/` on the phase-one preview host, in the [two-entry form](#on-chain-order-errors-look-different). All are `400`.
+
+| Code | Cause | What to do |
+|---|---|---|
+| `order_intent_signature_required` | The order is in `OOM` or `USDC` and has no `order_intent_signature`. Message: `order_intent_signature is required for on-chain limit orders.` The code entry can be absent; match on the message | Sign a `LimitOrderIntent` |
+| `price_required` | A market order (`price: null`). An intent signs a price | Send a price with `time_in_force: "ioc"` |
+| `order_intent_expired` | `order_intent_expiry` is in the past | Fetch a new signing context and sign again |
+| `order_intent_nonce_stale` | The signed nonce was already used by another order on this Safe | Fetch a new signing context and sign again |
+| `order_intent_nonce_not_issued` | `order_intent_nonce` is higher than the Safe's next nonce | Use the `nonce` from the signing context |
+| `max_usdc_raw_too_low` | The signed `maxUsdcRaw` is below what the order needs now. The book moved | Fetch a new signing context and sign again |
+| `insufficient_onchain_available` | The Safe balance, minus what your other open bids on this market reserve, does not cover this bid | Fund the Safe, cancel bids, or reduce size |
+| `trading_not_enabled` | The pool has no allowance and no approval was supplied. Also the code of every `POST /me/safe/enable-trading/` failure | [Enable trading](/api-reference/me/safe#enable-trading) |
+
+On-chain errors without a code entry:
+
+| Message | Cause | What to do |
+|---|---|---|
+| `A deployed Safe wallet is required for on-chain limit orders.` | No Safe registered for the chain, or it is not deployed | Register and deploy the Safe |
+| `On-chain OOM is required before placing play-money orders.` | The Safe holds no OOM | Wait for the OOM mint, then check `GET /me/safe-wallet/?refresh=1` |
+| `order_intent_expiry is required for on-chain limit orders (pass expiry from signing context).` | `order_intent_expiry` missing | Send the `expiry` you signed |
+| `Intent signature does not recover to the Safe owner address.` | Wrong key, or the signed message differs from the order you sent in any field | Sign with the owner EOA. Send the same market, side, position, price, shares, nonce, expiry, and `max_usdc_raw` you signed |
+
+`POST /orders/signing-context/` returns `400` with one entry (`attr: "detail"`) and one of these messages: `No Safe registered for this chain.`, `Safe is not deployed on-chain yet.`, `No enabled pool wallet for this chain.`, `No ledger account for <currency>.`
+
+<Tip>
+  After any failed create, fetch a new signing context before you sign again. Do not reuse the previous nonce or `maxUsdcRaw`.
+</Tip>
+
+## Cancel
+
+| Status | Code | Cause | What to do |
+|---|---|---|---|
+| 404 | `not_found` | `PATCH /orders/{id}/cancel/` on an order that is not yours, is already `filled`, `partial_filled`, or `canceled`, or whose event is no longer open | Treat as already closed. Confirm with `GET /orders/?status=...` |
+| 403 | `LimitOrderBeingProcessing` | The order is `processing` (being matched) | Retry shortly |
+
+Batch cancel and cancel-all report per-order results in a `200` response instead.
+
+## Wagers
+
+| Status | Code | Cause | What to do |
+|---|---|---|---|
+| 403 | `onchain_sell_requires_limit_order` | `PATCH /wagers/{id}/` on a position held on-chain | Sell with a signed `ask` order |
+
+## Websocket authorization
+
+`POST /pusher/auth/` answers with a plain `{"detail": "..."}` body, not the format above: `400` when `channel_name` or `socket_id` is missing, `401` without valid credentials, and `403` for a private channel that is not your own `private-user-{user_id}`.
+
+## Server errors
+
+A `5xx` with `type: "server_error"` means the request did not complete. For an order create, list your orders before retrying: the order may exist.

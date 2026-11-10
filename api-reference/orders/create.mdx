@@ -1,9 +1,9 @@
 ---
 title: 'Create order'
-description: 'Place a new limit or market order on a prediction market outcome.'
+description: 'Place a limit order on a prediction market outcome.'
 ---
 
-Place a new limit order or market order on a specific market outcome. Set `price` to a value between 0 and 1 for a limit order, or leave it `null` to execute at the current market price.
+Place an order on a specific market outcome. Set `price` between `0.01` and `0.99`. Use the default `time_in_force` (`gtc`) to rest on the book, or `ioc` to fill immediately and cancel the remainder.
 
 ## Endpoint
 
@@ -17,17 +17,19 @@ POST https://api.futuur.com/v2.0/orders/
   This endpoint requires HMAC authentication. Include the `Key`, `Timestamp`, and `HMAC` headers on every request. See the [authentication guide](/authentication) for signing instructions.
 </Note>
 
-<Note>
-  On-chain CLOB trading is coming soon. The live request body is HMAC-only. When settlement moves on-chain, creates will also require `chain_id`, `order_intent_signature`, and `order_intent_expiry`. Those fields are **not** accepted on production today. See [Place an on-chain order](/guides/on-chain-first-order).
-</Note>
+<Warning>
+  On the phase-one preview host ([Environment](/environment)), every order in `OOM` or `USDC` must also carry a signed `LimitOrderIntent`: send the [signed intent fields](#signed-intent-fields-phase-one) below. HMAC alone returns `400`. Production (`https://api.futuur.com`) does not accept those fields yet.
+</Warning>
 
 ## Headers
 
 <ParamField header="Idempotency-Key" type="string">
-  Optional. A unique value chosen by the client for a logical operation. Replaying the same `POST` with the same key and the same JSON body returns the stored response without creating a duplicate order. A different body (for example, a new price) produces a different fingerprint, so requoting is not blocked.
+  Optional. A unique value chosen by the client for a logical operation. Replaying the same `POST` with the same key and the same body after a successful response returns the stored response without creating a duplicate order. A replay while the first request is still running returns `409`. A different body (for example, a new price) produces a different fingerprint, so requoting is not blocked.
 </ParamField>
 
 ## Request
+
+Send decimals as strings (`"0.42"`). It keeps the HMAC signature simple and avoids float rounding.
 
 <ParamField body="market" type="integer" required>
   The market (outcome) ID to place the order on.
@@ -41,48 +43,96 @@ POST https://api.futuur.com/v2.0/orders/
   Currency for the order. One of `USDC`, `USDT`, `USD`, or `OOM`.
 </ParamField>
 
-<ParamField body="price" type="number">
-  Limit price expressed as a probability between 0 and 1. Set to `null` to place a market order that executes immediately at the best available price.
+<ParamField body="shares" type="decimal | string" required>
+  Number of shares to buy or sell. Must be greater than `0.02`. For `OOM` and `USDC` on the preview host, use at most two decimals: the signed intent counts shares in units of `0.01`.
+
+  On an ask, the string `"max"` sells the shares you hold minus the shares reserved by your open asks. The resolved quantity is returned in `shares_requested`. `"max"` requires a `price`, is rejected on a bid (`InvalidSharesMax`), and returns `NoSellableShares` when there is nothing to sell. For `OOM` and `USDC` on the preview host, **send an explicit share count**: the signed `sharesRaw` must equal the quantity `"max"` resolves to, which you cannot know for certain when you sign. A mismatch fails the signature check.
+
+  A create without `shares` is rejected with `InvalidShares`.
 </ParamField>
 
-<ParamField body="shares" type="number">
-  Number of shares to buy or sell.
+<ParamField body="max_shares" type="decimal">
+  Optional cap, only valid with `shares: "max"`. The order sells the smaller of this value and the sellable amount.
 </ParamField>
 
-<ParamField body="amount" type="number">
-  Total cost of the order in currency units. Used for validation against `shares` and `price`. Optional if `shares` is provided.
+<ParamField body="price" type="decimal">
+  Limit price as a probability, from `0.01` to `0.99`, in steps of `0.01`. A price with more than two decimals is rejected.
+
+  `null` or omitted makes a market order. Market orders are rejected for `OOM` and `USDC` on the preview host with `price_required`: send a price with `time_in_force: "ioc"`.
 </ParamField>
 
-<ParamField body="position" type="string">
+<ParamField body="position" type="string" default="long">
   Position direction. Use `long` to bet in favor of the outcome, or `short` to bet against it.
 </ParamField>
 
 <ParamField body="time_in_force" type="string" default="gtc">
-  `gtc` (default): the order rests on the book until it is fully filled or canceled. `ioc` (immediate or cancel): the order fills right away at `price` or better, and any unfilled remainder is canceled. `ioc` requires a `price`. A priceless order is already a market order.
+  `gtc` (default): the order rests on the book until it is fully filled or canceled. `ioc` (immediate or cancel): the order fills right away at `price` or better, and any unfilled remainder is canceled. `ioc` requires a `price` and does not match your own resting orders.
 </ParamField>
 
 <ParamField body="expired_at" type="string">
-  ISO 8601 datetime at which an unfilled or partially filled limit order is automatically canceled. Set to `null` for no expiration.
+  ISO 8601 datetime after which the order no longer matches. `null` for none. For a signed order the API lowers it to the signed `expiry` if it is later or missing.
 </ParamField>
 
 <ParamField body="cancel_conflicting_orders" type="boolean" default="false">
-  When `true`, any existing open orders that conflict with this order are canceled before the new order is placed.
+  When `true`, your open asks that reserve the shares this ask needs are canceled before the new order is placed. Without it, that case returns `OrderBookConflictingOrders`.
 </ParamField>
+
+<ParamField body="amount" type="decimal">
+  Optional. Your expected total, used only as a cross-check. It does not size the order. Leave it out unless you want the create to fail when the book moved.
+</ParamField>
+
+### Signed intent fields (phase one)
+
+Required for `OOM` and `USDC` on the preview host. Take the values from [`POST /orders/signing-context/`](/guides/on-chain-first-order) and the signature you made over its `eip712` payload.
+
+<ParamField body="order_intent_signature" type="string" required>
+  Hex EIP-712 signature of the `LimitOrderIntent`, made by the Safe owner EOA.
+</ParamField>
+
+<ParamField body="order_intent_expiry" type="integer" required>
+  The `expiry` you signed (Unix seconds). Must be in the future.
+</ParamField>
+
+<ParamField body="order_intent_nonce" type="integer">
+  The `nonce` you signed. Send it. When omitted, the API assumes the Safe's current nonce. A nonce another order already used returns `order_intent_nonce_stale`; a nonce above the current one returns `order_intent_nonce_not_issued`.
+</ParamField>
+
+<ParamField body="max_usdc_raw" type="integer">
+  The `maxUsdcRaw` you signed, in raw token units (6 decimals). Send it. It follows the live book, so this is how the API verifies the amount you actually signed. A value below what the order needs now returns `max_usdc_raw_too_low`. It is `0` for asks.
+</ParamField>
+
+<ParamField body="chain_id" type="integer">
+  Optional. Defaults to the active chain (`84532` on the preview host).
+</ParamField>
+
+The intent covers `market`, `side`, `position`, `price`, `shares`, the nonce, the expiry, and `maxUsdcRaw`. The order you send must match what you signed in every one of them, or the signature does not verify.
+
+<Warning>
+  The nonce is one counter per Safe and each accepted order uses the next value. Run **signing context → sign → create** one order at a time per Safe. Two orders signed from the same signing context cannot both be accepted. After any failed create, fetch a new signing context before signing again.
+</Warning>
 
 ## Response
 
-Returns `201 Created` with the newly created order object.
+Returns `201 Created` with the order object. A `gtc` order is returned as `processing`: matching runs after the response. An `ioc` order is matched before the response but can still read `processing` while its fills settle. Read the final state from [List orders](/api-reference/orders/list).
 
 <ResponseField name="id" type="integer" required>
   Unique ID of the created order.
 </ResponseField>
 
-<ResponseField name="market" type="integer" required>
-  Market (outcome) ID the order is placed on.
+<ResponseField name="event" type="object" required>
+  The event the market belongs to: `id`, `title`, `slug`, `status`, `is_wagerable`, `resolve_date`, `bet_end_date`, `order_book_enabled`, `resolution_mode`, `markets_count`.
+</ResponseField>
+
+<ResponseField name="market" type="object" required>
+  The market (outcome), as a nested object: `id`, `title`, `title_verbose`, `price`, `long_label`, `short_label`, `status`, `resolution`, and volume, liquidity, and depth figures. It is not a bare ID.
 </ResponseField>
 
 <ResponseField name="side" type="string" required>
   Order side: `bid` or `ask`.
+</ResponseField>
+
+<ResponseField name="position" type="string" required>
+  Position direction: `long` or `short`.
 </ResponseField>
 
 <ResponseField name="currency" type="string" required>
@@ -90,90 +140,156 @@ Returns `201 Created` with the newly created order object.
 </ResponseField>
 
 <ResponseField name="price" type="number">
-  Limit price between 0 and 1, or `null` for a market order.
+  Limit price.
 </ResponseField>
 
-<ResponseField name="shares" type="number">
-  Number of shares in the order.
+<ResponseField name="shares" type="number" required>
+  Shares still unfilled.
 </ResponseField>
 
-<ResponseField name="amount" type="number">
-  Cost of the order in currency units.
+<ResponseField name="shares_requested" type="number" required>
+  Shares the order was created with.
 </ResponseField>
 
-<ResponseField name="position" type="string">
-  Position direction: `long` or `short`.
+<ResponseField name="shares_filled" type="number" required>
+  Shares filled so far.
+</ResponseField>
+
+<ResponseField name="shares_cancelled" type="number" required>
+  For a finished `ioc` order, the shares that were canceled. `0` otherwise, including while an `ioc` order is still `processing`.
+</ResponseField>
+
+<ResponseField name="average_price" type="number">
+  Average fill price, or `null` before any fill.
+</ResponseField>
+
+<ResponseField name="proceeds" type="number">
+  Net cash of the fills where this order was the taker, after the fee: what a bid paid or an ask received. `null` if it has no taker fill.
+</ResponseField>
+
+<ResponseField name="time_in_force" type="string" required>
+  `gtc` or `ioc`.
 </ResponseField>
 
 <ResponseField name="status" type="string" required>
-  Initial order status. Typically `open` or `processing` immediately after creation.
+  `processing`, `open`, `filled`, `partial_filled`, `partial_filled_cancelled`, or `canceled`. See [Order lifecycle](/concepts/orders#order-lifecycle).
 </ResponseField>
 
 <ResponseField name="expired_at" type="string">
-  Expiration datetime, or `null` if no expiration is set.
+  Expiration datetime, or `null`.
 </ResponseField>
 
-<ResponseField name="created_at" type="string" required>
+<ResponseField name="created" type="string" required>
   ISO 8601 datetime when the order was created.
 </ResponseField>
 
+<ResponseField name="settlement_mode" type="string" required>
+  `onchain` for signed orders, otherwise `ledger` or empty.
+</ResponseField>
+
+<ResponseField name="settlement_status" type="string" required>
+  On-chain state: `ready`, `approval_pending`, `settling`, `settled`, `failed`, `none`, or empty. See [Settlement](/concepts/orders#settlement).
+</ResponseField>
+
+<ResponseField name="chain_id" type="integer">
+  Chain of an on-chain order, or `null`.
+</ResponseField>
+
+There is no `amount` field in the response, and the timestamp is `created`, not `created_at`.
+
 ## Error codes
 
-<Warning>
-  The following application-level error codes may be returned in the response body when the order cannot be created.
-</Warning>
+Errors use the format in [Errors](/errors), which lists every code with its HTTP status and what to do. The ones you are most likely to meet:
 
-| Error code | Description |
-| --- | --- |
-| `RealMoneyForbiddenCountry` | Real-money trading is not available in your country. |
-| `RealMoneyBetNotAllowed` | Your account is not permitted to place real-money orders. |
-| `EmailNotConfirmed` | You must confirm your email address before placing orders. |
-| `UserBlockedBets` | Your account has been blocked from placing orders. |
-| `InvalidHMACKey` | The HMAC signature or key is invalid. |
-| `UserNotEnoughBalance` | Your account balance is insufficient for this order. |
-| `InvalidShares` | The number of shares specified is not valid. |
-| `OutcomeDisabled` | The selected market outcome is currently disabled. |
-| `MarketClosed` | The market is closed and no longer accepting orders. |
-| `OrderBookMarketClosed` | The order book for this market is closed. |
-| `OrderBookConflictingOrders` | Conflicting open orders exist. Set `cancel_conflicting_orders` to `true` to resolve. |
-| `OrderBookInvalidAmount` | The order amount does not meet the minimum or maximum requirements. |
+| Status | Code | Description |
+| --- | --- | --- |
+| 400 | `order_intent_nonce_stale` | The signed nonce was already used. Fetch a new signing context and sign again. |
+| 400 | `order_intent_nonce_not_issued` | `order_intent_nonce` is above the Safe's next nonce. |
+| 400 | `max_usdc_raw_too_low` | The book moved and the signed cap no longer covers the order. Sign again. |
+| 400 | `insufficient_onchain_available` | The Safe balance does not cover this bid next to your other open bids on the market. |
+| 400 | `order_intent_expired` | The signed expiry is in the past. |
+| 400 | `price_required` | A market order in an on-chain currency. |
+| 400 | `InvalidShares` | `shares` is not greater than `0.02`. |
+| 400 | `PriceRequired` | `ioc` or `shares: "max"` without a price. |
+| 403 | `MarketClosed`, `OutcomeDisabled`, `OrderBookNotEnabled` | The market is not tradable. |
+| 403 | `UserNotEnoughBalance` | No balance in that currency, or no OOM in the Safe. |
+| 403 | `RealMoneyBetNotAllowed` | Real money is not enabled for the event or for the API key. |
+| 403 | `OrderBookNotWagerForAsk`, `OrderBookNotEnoughSharesForAsk` | The ask exceeds your position. |
+| 403 | `OrderBookConflictingOrders` | Your open asks already reserve those shares. |
+| 429 | `throttled` | More than 30 creates in a minute. See [Rate limits](/rate-limits). |
+| 503 | `IOCUnavailable` | The `ioc` match could not finish. The order was canceled. |
+| 503 | `trading_halted` | Trading is paused. |
+
+<Note>
+  On-chain codes arrive in a `400` as the `detail` of the entry whose `attr` is `"code"`. See [On-chain order errors look different](/errors#on-chain-order-errors-look-different).
+</Note>
 
 ## Example
+
+A signed `ioc` bid on the preview host. The body uses string values, so the HMAC string is built from exactly these strings.
 
 <CodeGroup>
 
 ```bash cURL
 curl --request POST \
-  --url "https://api.futuur.com/v2.0/orders/" \
-  --header "Key: pk_live_abc123def456" \
+  --url "https://web3-phase-01-preview.staging.cloud.futuur.com/v2.0/orders/" \
+  --header "Key: YOUR_PUBLIC_KEY" \
   --header "Timestamp: 1712534400" \
-  --header "HMAC: 3a9f2c1b...sha512signature" \
+  --header "HMAC: YOUR_HMAC_SIGNATURE" \
   --header "Content-Type: application/json" \
   --data '{
-    "market": 3801,
+    "market": "3801",
     "side": "bid",
-    "currency": "USDC",
-    "price": 0.65,
-    "shares": 100,
     "position": "long",
-    "cancel_conflicting_orders": false
+    "currency": "OOM",
+    "price": "0.42",
+    "shares": "3",
+    "time_in_force": "ioc",
+    "chain_id": "84532",
+    "order_intent_signature": "0x...",
+    "order_intent_expiry": "1715126400",
+    "order_intent_nonce": "17",
+    "max_usdc_raw": "1296540"
   }'
 ```
 
 </CodeGroup>
 
-```json Sample response (201 Created)
+```json Sample response (201 Created), nested objects trimmed
 {
   "id": 10483,
-  "market": 3801,
+  "event": {
+    "id": 873,
+    "title": "Will it rain in Lisbon on Friday?",
+    "slug": "will-it-rain-in-lisbon-on-friday",
+    "status": "open",
+    "is_wagerable": true,
+    "order_book_enabled": true
+  },
+  "market": {
+    "id": 3801,
+    "title": "Yes",
+    "long_label": "Yes",
+    "short_label": "No"
+  },
+  "price": 0.42,
+  "shares": 3.0,
+  "shares_requested": 3.0,
+  "shares_filled": 0.0,
+  "shares_cancelled": 0.0,
+  "currency": "OOM",
   "side": "bid",
-  "currency": "USDC",
-  "price": 0.65,
-  "shares": 100.0,
-  "amount": 65.0,
   "position": "long",
-  "status": "open",
-  "expired_at": null,
-  "created_at": "2026-04-07T11:30:00Z"
+  "expired_at": "2024-05-08T00:00:00Z",
+  "status": "processing",
+  "created": "2024-04-08T00:00:00Z",
+  "time_in_force": "ioc",
+  "average_price": null,
+  "proceeds": null,
+  "settlement_mode": "onchain",
+  "settlement_status": "ready",
+  "chain_id": 84532
 }
 ```
+
+For the full flow in runnable Python, see [End-to-end Python bot](/guides/on-chain-bot-example).

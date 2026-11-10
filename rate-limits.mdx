@@ -3,31 +3,65 @@ title: "Rate limits"
 description: "Understand Futuur API rate limits and how to stay within them."
 ---
 
-The Futuur API enforces rate limits per authenticated user to ensure fair access and platform stability.
+The Futuur API enforces rate limits per authenticated user to ensure fair access and platform stability. Several limits can apply to one request. The request is rejected as soon as any of them is exceeded.
 
 ## Limits
 
-| Window | Limit |
-|--------|-------|
-| Per minute | 2,000 requests |
-| Per day | 1,000,000 requests |
+### All HMAC requests
 
-Both limits apply to your account (identified by your public key), not per IP address. The limits are shared across all endpoints — different paths and querystrings count against the same bucket.
+| Window | Limit | Counted |
+|--------|-------|---------|
+| Per minute | 2,000 requests | Per account, fixed UTC minute |
+| Per day | 1,000,000 requests | Per account, fixed UTC day |
+
+Both limits apply to your account, not to an IP address or a single key: every HMAC key of the account shares one bucket. They cover all endpoints together — different paths and querystrings count against the same bucket.
+
+### Per-endpoint limits
+
+These apply on top of the account-wide limits.
+
+| Endpoints | Limit | Scope |
+|-----------|-------|-------|
+| `POST /orders/`, `POST /orders/batch/`, `POST /orders/batch-update/` | **30 requests per minute**, shared by the three endpoints | Per account |
+| `PATCH /orders/{id}/cancel/`, `POST /orders/batch-cancel/`, `POST /orders/cancel-all/` | 2,000 requests per minute | Per account |
+| `POST /api-keys/derive/` | 30 requests per minute | Per IP address |
+| `POST /me/safe/` | 20 requests per minute | Per account |
+| `POST /me/safe/sponsor-user-operation/`, `/me/safe/submit-user-operation/`, `/me/safe/enable-trading/`, `/me/safe/pimlico-rpc/` | 60 requests per minute, shared | Per account |
+| Failed HMAC authentication | 300 failures per minute | Per IP address |
+
+<Warning>
+  Order creation is the tight limit. You can send 30 create requests per minute, not 2,000. `POST /orders/signing-context/`, cancels, and reads do not count against the 30. Size a quoting loop around that number.
+</Warning>
+
+The per-endpoint limits use a rolling 60-second window. The account-wide limits reset on the UTC minute and the UTC day.
 
 ## What happens when you exceed a limit
 
-When you exceed a rate limit, the API returns HTTP `429 Too Many Requests` with a `Retry-After` header indicating when you can retry. Back off until the indicated time.
+When you exceed a rate limit, the API returns HTTP `429 Too Many Requests` with code `throttled` and a `Retry-After` header giving the seconds to wait. Back off until the indicated time.
+
+```json 429 Too Many Requests
+{
+  "type": "client_error",
+  "errors": [
+    {
+      "code": "throttled",
+      "detail": "Request was throttled. Expected available in 12 seconds.",
+      "attr": null
+    }
+  ]
+}
+```
 
 <Warning>
-  Requests carrying HMAC headers that fail authentication are also limited per IP, and sustained abuse is rate-limited at the network edge.
+  Requests carrying HMAC headers that fail authentication are also limited per IP. After 300 failures in a minute, further HMAC requests from that address get `429` until the minute ends.
 </Warning>
 
-## Duplicate POST requests
+## Retrying a POST
 
-Submitting the same POST request more than once within a 1-second window causes a `wager_action_duplicated` error. This protects against accidental double-submission of orders.
+`POST /orders/`, `POST /orders/batch/`, and `POST /orders/batch-update/` accept an optional `Idempotency-Key` header. If you repeat the same `POST` with the same key and the same body after a successful response, the API returns the stored response and does not create another order. A repeat sent while the first request is still running returns `409` with code `idempotency_key_in_progress`. A different body is a different request, so requoting at a new price is not blocked.
 
 <Note>
-  The duplicate check is based on request content, not idempotency keys. If you need to retry a failed POST, wait at least 1 second before resubmitting.
+  On the phase-one preview host a signed order can only be accepted once: the first create consumes its nonce. A retry after a timeout returns `order_intent_nonce_stale` when the first attempt went through. List your orders before you sign again.
 </Note>
 
 ## Best practices
@@ -57,3 +91,7 @@ def request_with_backoff(url, headers, max_retries=5):
         return response
     return response
 ```
+
+<Note>
+  HMAC headers carry a timestamp, so build fresh headers for every retry instead of reusing the ones from the first attempt.
+</Note>

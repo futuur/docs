@@ -3,14 +3,14 @@ title: "Placing a bet"
 description: "Step-by-step guide to placing your first order on a Futuur prediction market."
 ---
 
-This guide walks you through finding an event, checking the current price, and placing an order — from a quick market order to a precise limit order.
+This guide walks you through finding an event, checking the current price, and placing an order — from an immediate order that takes the best prices to a limit order that rests on the book.
 
 <Note>
   All examples use `https://api.futuur.com/v2.0`. Authenticated requests require HMAC headers. See [Get your API keys](/guides/get-api-keys) and the [Authentication](/authentication) guide for how to generate them.
 </Note>
 
 <Note>
-  On-chain CLOB trading is coming soon. This guide is the live ledger flow. When settlement moves on-chain, creates will also need an EIP-712 `LimitOrderIntent` — see [Place an on-chain order](/guides/on-chain-first-order).
+  On the phase-one preview host, orders in `OOM` and `USDC` also need the signed-intent fields (`order_intent_signature`, `order_intent_expiry`, `order_intent_nonce`, `max_usdc_raw`). The bodies below show the order fields only. See [Place an on-chain order](/guides/on-chain-first-order) and [Environment](/environment).
 </Note>
 
 <Steps>
@@ -90,9 +90,11 @@ Note the `id` of the market you want to bet on and its current `price` (implied 
 
 </Step>
 
-<Step title="Place a market order">
+<Step title="Place an immediate order">
 
-To buy shares immediately at the best available price, set `price` to `null`. This is a market order.
+To buy shares right away, send `time_in_force: "ioc"` with the highest `price` you accept. The order fills at that price or better, and any unfilled remainder is canceled.
+
+A market order (`price: null`) cannot be used for `OOM` or `USDC` on the phase-one preview host, because the signed intent contains a price.
 
 <CodeGroup>
 
@@ -106,12 +108,13 @@ response = requests.post(
         "Content-Type": "application/json",
     },
     json={
-        "market": 67890,
+        "market": "67890",
         "side": "bid",
         "position": "long",
-        "amount": 100,
+        "shares": "100",
         "currency": "OOM",
-        "price": None,
+        "price": "0.47",
+        "time_in_force": "ioc",
     },
 )
 
@@ -125,12 +128,13 @@ curl -X POST "https://api.futuur.com/v2.0/orders/" \
   -H "HMAC: YOUR_HMAC_SIGNATURE" \
   -H "Content-Type: application/json" \
   -d '{
-    "market": 67890,
+    "market": "67890",
     "side": "bid",
     "position": "long",
-    "amount": 100,
+    "shares": "100",
     "currency": "OOM",
-    "price": null
+    "price": "0.47",
+    "time_in_force": "ioc"
   }'
 ```
 
@@ -140,7 +144,7 @@ curl -X POST "https://api.futuur.com/v2.0/orders/" \
 
 <Step title="Place a limit order">
 
-To specify the exact price you're willing to pay, include a `price` value between 0 and 1. The order will only fill when the market reaches your price.
+To rest on the book at your own price, send a `price` between `0.01` and `0.99` and leave `time_in_force` at its default (`gtc`). The order fills when someone trades against it.
 
 <CodeGroup>
 
@@ -154,12 +158,12 @@ response = requests.post(
         "Content-Type": "application/json",
     },
     json={
-        "market": 67890,
+        "market": "67890",
         "side": "bid",
         "position": "long",
-        "amount": 100,
+        "shares": "100",
         "currency": "OOM",
-        "price": 0.45,
+        "price": "0.45",
     },
 )
 
@@ -173,18 +177,18 @@ curl -X POST "https://api.futuur.com/v2.0/orders/" \
   -H "HMAC: YOUR_HMAC_SIGNATURE" \
   -H "Content-Type: application/json" \
   -d '{
-    "market": 67890,
+    "market": "67890",
     "side": "bid",
     "position": "long",
-    "amount": 100,
+    "shares": "100",
     "currency": "OOM",
-    "price": 0.45
+    "price": "0.45"
   }'
 ```
 
 </CodeGroup>
 
-If the current market price is above 0.45, your order will sit in the order book until someone is willing to sell at that price.
+If the best ask is above 0.45, your order rests on the book until someone sells at that price. The response shows `status: "processing"` first; the order becomes `open` once matching has run. See [Order lifecycle](/concepts/orders#order-lifecycle).
 
 </Step>
 

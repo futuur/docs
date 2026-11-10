@@ -1,98 +1,432 @@
 ---
-title: "Register Safe address"
-description: "Register a Safe smart account address for the authenticated user."
+title: "Safe wallet"
+description: "Register your Safe, read its state, relay UserOperations, and enable trading."
 ---
 
-Register a [Safe](https://safe.global) smart account address with your Futuur account. After registration, you can use your Safe to fund and settle real money trades on supported chains.
+Your [Safe](https://safe.global) smart account holds the collateral you trade with. This page covers the endpoints that register it, report its state, relay its ERC-4337 UserOperations, and give the pool the standing allowance that bids need.
 
 <Note>
-  On-chain CLOB trading is coming soon. Registering a Safe is available today. Enable-trading, signing-context, and per-order EIP-712 intents are described in [On-chain trading](/concepts/on-chain-trading) so you can prepare.
+  These endpoints are part of phase one and run on the preview host only. See [Environment](/environment) for the chain and addresses. They are not live on `https://api.futuur.com`.
 </Note>
 
-## Endpoint
+| Endpoint | Purpose | API keys |
+|---|---|---|
+| [`POST /me/safe/`](#register-your-safe) | Register the Safe address | Not allowed |
+| [`GET /me/safe-wallet/`](#read-your-safe) | Read deploy state and balance | Allowed |
+| [`POST /me/safe/deployed/`](#confirm-deployment) | Tell the API the Safe was deployed | Allowed |
+| [`GET /me/safe/trading-status/`](#trading-status) | Check the pool allowance | Allowed |
+| [`POST /me/safe/enable-trading/`](#enable-trading) | Submit the signed `approve` UserOperation | Allowed |
+| [`POST /me/safe/sponsor-user-operation/`](#relay) | Get paymaster data for a UserOperation | Allowed |
+| [`POST /me/safe/submit-user-operation/`](#relay) | Send a signed UserOperation | Allowed |
+| [`GET /me/safe/user-operation-receipt/`](#relay) | Read a UserOperation receipt | Allowed |
+| [`POST /me/safe/pimlico-rpc/`](#relay) | Allowlisted bundler JSON-RPC | Allowed |
 
-```
-POST https://api.futuur.com/v2.0/me/safe/
-```
+[Withdrawing USDC](#withdraw-from-the-safe) uses the relay endpoints and is not available to API keys.
 
 ## Authentication
 
 <Note>
-  This endpoint requires HMAC authentication. Include the `Key`, `Timestamp`, and `HMAC` headers on every request. See the [authentication guide](/authentication) for signing instructions.
+  All endpoints require authentication. `POST /me/safe/` only accepts a wallet sign-in session. The others also accept HMAC headers (`Key`, `Timestamp`, `HMAC`). See the [authentication guide](/authentication).
 </Note>
 
-## Request
+<Warning>
+  The relay and enable-trading bodies contain a nested `user_operation` object. With HMAC, a nested value is signed as its Python `repr`, so sign these requests from Python or use a wallet session. See [How values become text](/authentication#how-values-become-text).
+</Warning>
+
+## Register your Safe
+
+```
+POST https://web3-phase-01-preview.staging.cloud.futuur.com/v2.0/me/safe/
+```
+
+Stores the address of your Safe for the active chain. The call is idempotent for the same address. It does not deploy anything.
+
+An HMAC API key cannot call this endpoint. It returns `403` with code `permission_denied` and detail `This action is not available to API keys.` Register the Safe while signed in with your wallet. The Futuur web app does this for you on first sign-in.
 
 <ParamField body="safe_address" type="string" required>
-  The Safe smart account address (e.g. `0xAbC...123`).
+  The address of the Safe owned by your wallet.
 </ParamField>
 
-<ParamField body="chain_id" type="integer" required>
-  The chain ID where the Safe is deployed. For example, `1` for Ethereum mainnet or `137` for Polygon.
+<ParamField body="chain_id" type="integer">
+  Optional. Defaults to the active chain. Any other value is rejected.
 </ParamField>
 
-## Response
+### Rules
 
-Returns `200 OK` with the updated `UserPrivate` object — the same shape as `GET /me/`. Use this response to confirm the Safe address has been associated with your account.
+The address is accepted only when all of these hold:
 
-<ResponseField name="id" type="integer" required>
-  Your account identifier.
-</ResponseField>
+- Your account has a `wallet_address`. That EOA is the Safe owner.
+- The address is not your owner EOA itself.
+- You have no Safe registered yet, or you are sending the same address again. A registered Safe **cannot be changed**.
+- The address is not registered to another account.
+- If a contract already exists at the address, it is a 1-of-1 Safe whose only owner is your `wallet_address`. A Safe that is not deployed yet is accepted as a predicted address and checked the same way once it has code.
 
-<ResponseField name="username" type="string">
-  Your account username.
-</ResponseField>
+A rejected address returns `400` with `attr: "safe_address"` and one of these messages:
 
-<ResponseField name="email" type="string" required>
-  The email address associated with your account.
-</ResponseField>
+| Message | Cause |
+|---|---|
+| `Invalid Safe address format` | Not a 20-byte hex address |
+| `A wallet address is required before registering a Safe.` | The account has no `wallet_address` |
+| `Safe address cannot be the owner wallet address.` | You sent the EOA |
+| `A different Safe is already registered for this account.` | You tried to change the Safe |
+| `This Safe is already registered to another account.` | The address belongs to someone else |
+| `Safe is not a 1-of-1 Safe owned by the user wallet address.` | Wrong owner set or threshold |
+| `<address> is not a Safe contract.` | The contract at the address is not a Safe |
+| `Could not verify Safe ownership on-chain; try again.` | The chain read failed |
+| `This Safe is being registered; try again shortly.` | A concurrent registration of the same address |
 
-<ResponseField name="wallet" type="object" required>
-  Dictionary containing balances for every currency in your wallet.
-</ResponseField>
+### Response
 
-<ResponseField name="is_wallet_user" type="string" required>
-  `true` if you signed up via wallet (Privy).
-</ResponseField>
+Returns `200 OK` with the [Safe wallet object](#safe-wallet-object) plus a `migration` object describing the legacy-balance migration check (it includes a `reason`).
 
-<ResponseField name="real_currency_enabled" type="boolean" required>
-  Whether real money trading is enabled for your account.
-</ResponseField>
+## Read your Safe
 
-<ResponseField name="kyc_status" type="string" required>
-  Current KYC status. One of `no_need`, `requested`, `initialized`, `refused`, `approved`, or `by_passed`.
-</ResponseField>
-
-<Tip>
-  See [Account information](/api-reference/me/information) for the full list of `UserPrivate` fields returned by this endpoint.
-</Tip>
-
-## Example
-
-```bash cURL
-curl --request POST \
-  --url "https://api.futuur.com/v2.0/me/safe/" \
-  --header "Key: YOUR_PUBLIC_KEY" \
-  --header "Timestamp: 1712500000" \
-  --header "HMAC: YOUR_HMAC_SIGNATURE" \
-  --header "Content-Type: application/json" \
-  --data '{
-    "safe_address": "0xAbC1234567890DefAbC1234567890DefAbC12345",
-    "chain_id": 137
-  }'
 ```
+GET https://web3-phase-01-preview.staging.cloud.futuur.com/v2.0/me/safe-wallet/
+```
+
+<ParamField query="chain_id" type="integer">
+  Optional. Defaults to the active chain.
+</ParamField>
+
+<ParamField query="refresh" type="string">
+  Send `1` to re-read the token balance from the chain instead of using the cached value.
+</ParamField>
+
+Returns `200 OK` with the Safe wallet object. If you have no Safe on that chain it returns `404` with this body:
+
+```json 404 Not Found
+{
+  "detail": "No Safe registered for this chain.",
+  "onchain_settlement_enabled": true,
+  "play_money_onchain_settlement_enabled": true
+}
+```
+
+### Safe wallet object
+
+<ResponseField name="address" type="string">
+  The Safe address.
+</ResponseField>
+
+<ResponseField name="chain_id" type="integer">
+  Chain the Safe is on.
+</ResponseField>
+
+<ResponseField name="deploy_status" type="string">
+  One of `not_deployed`, `not_required`, `deploying`, `deployed`, `failed`. Orders need `deployed`.
+</ResponseField>
+
+<ResponseField name="deployed_at" type="string | null">
+  When deployment was confirmed.
+</ResponseField>
+
+<ResponseField name="deploy_tx" type="string | null">
+  Deployment transaction hash.
+</ResponseField>
+
+<ResponseField name="deploy_error" type="string | null">
+  Last deployment error.
+</ResponseField>
+
+<ResponseField name="last_balance" type="number | null">
+  Last collateral balance read from the chain.
+</ResponseField>
+
+<ResponseField name="last_balance_check_at" type="string | null">
+  When `last_balance` was read.
+</ResponseField>
+
+<ResponseField name="migration_status" type="string">
+  Legacy-balance migration: `none`, `pending`, `done`, or `failed`.
+</ResponseField>
+
+<ResponseField name="migration_tx" type="string | null">
+  Migration transaction hash.
+</ResponseField>
+
+<ResponseField name="migrated_at" type="string | null">
+  When the migration finished.
+</ResponseField>
+
+<ResponseField name="migration_error" type="string | null">
+  Last migration error.
+</ResponseField>
+
+<ResponseField name="onchain_settlement_enabled" type="boolean">
+  Whether real-money orders settle on-chain on this host.
+</ResponseField>
+
+<ResponseField name="play_money_onchain_settlement_enabled" type="boolean">
+  Whether `OOM` orders settle on-chain on this host.
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  When the Safe was registered.
+</ResponseField>
+
+<ResponseField name="updated_at" type="string">
+  Last update.
+</ResponseField>
+
+## Confirm deployment
+
+```
+POST https://web3-phase-01-preview.staging.cloud.futuur.com/v2.0/me/safe/deployed/
+```
+
+Tells the API that your Safe now has code on-chain so it can update `deploy_status`. All fields are optional.
+
+<ParamField body="chain_id" type="integer">
+  Defaults to the active chain.
+</ParamField>
+
+<ParamField body="transaction_hash" type="string">
+  Hash of the deployment transaction.
+</ParamField>
+
+<ParamField body="user_operation_hash" type="string">
+  Hash of the UserOperation that deployed the Safe.
+</ParamField>
+
+Returns `200 OK` with the Safe wallet object.
+
+## Trading status
+
+```
+GET https://web3-phase-01-preview.staging.cloud.futuur.com/v2.0/me/safe/trading-status/
+```
+
+Reports whether the pool has a standing allowance on your Safe for one currency.
+
+<ParamField query="currency" type="string" default="USDC">
+  `USDC` or `OOM`. Check each currency you trade.
+</ParamField>
+
+<ParamField query="chain_id" type="integer">
+  Defaults to the active chain.
+</ParamField>
+
+<ResponseField name="enabled" type="boolean">
+  `true` when the Safe is deployed and the allowance is at least half of the maximum `uint256`.
+</ResponseField>
+
+<ResponseField name="chainId" type="integer">
+  Chain the status is for.
+</ResponseField>
+
+<ResponseField name="currency" type="string">
+  Currency the status is for.
+</ResponseField>
+
+<ResponseField name="safeAddress" type="string | null">
+  Your Safe, or `null` if none is registered.
+</ResponseField>
+
+<ResponseField name="ownerAddress" type="string | null">
+  Your owner EOA.
+</ResponseField>
+
+<ResponseField name="poolAddress" type="string | null">
+  The `approve` spender.
+</ResponseField>
+
+<ResponseField name="collateralToken" type="string | null">
+  ERC-20 address of the currency. `usdcToken` carries the same value.
+</ResponseField>
+
+<ResponseField name="allowanceRaw" type="string">
+  Current allowance in raw token units.
+</ResponseField>
+
+<ResponseField name="approveAmountRaw" type="string">
+  The amount to approve: the maximum `uint256`.
+</ResponseField>
+
+<ResponseField name="deployed" type="boolean">
+  Whether the Safe is deployed.
+</ResponseField>
+
+<ResponseField name="detail" type="string | null">
+  A reason when trading is not enabled, for example `No Safe registered for this chain.` or `Safe is not deployed on-chain yet.`
+</ResponseField>
 
 ```json Sample response (200 OK)
 {
-  "id": 42,
-  "username": "trader_jane",
-  "email": "jane@example.com",
-  "wallet": {
-    "OOM": "5000.00",
-    "USDC": "100.00"
-  },
-  "is_wallet_user": "true",
-  "real_currency_enabled": true,
-  "kyc_status": "approved"
+  "enabled": false,
+  "chainId": 84532,
+  "currency": "OOM",
+  "safeAddress": "0xYourSafe",
+  "ownerAddress": "0xYourOwner",
+  "poolAddress": "0xbC42f13000Da4D895cB5dD9375511846332A5053",
+  "usdcToken": "0x9e89a2c1dA308052EFAF590e71bEfF256AF9F7a4",
+  "collateralToken": "0x9e89a2c1dA308052EFAF590e71bEfF256AF9F7a4",
+  "allowanceRaw": "0",
+  "approveAmountRaw": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+  "deployed": true,
+  "detail": null
 }
 ```
+
+## Enable trading
+
+```
+POST https://web3-phase-01-preview.staging.cloud.futuur.com/v2.0/me/safe/enable-trading/
+```
+
+Submits a **signed** ERC-4337 UserOperation in which your Safe calls `approve(poolAddress, amount)` on the collateral token, then waits until the allowance is visible on-chain. Do this once per currency. After it succeeds, bids need no per-order approval.
+
+<ParamField body="user_operation" type="object" required>
+  A complete EntryPoint v0.7 UserOperation, signed by the Safe owner. The API checks that:
+
+  - `sender` is your registered Safe,
+  - `signature` is not empty,
+  - `callData` is a Safe `executeUserOp` call that makes a plain, zero-value call to `approve(pool, amount)` on the token of `currency`.
+
+  Any other call is rejected. Approve `approveAmountRaw` from the trading status: `enabled` only turns `true` for an allowance of at least half the maximum `uint256`.
+</ParamField>
+
+<ParamField body="currency" type="string" default="USDC">
+  `USDC` or `OOM`. Must match the token the UserOperation approves.
+</ParamField>
+
+<ParamField body="chain_id" type="integer">
+  Defaults to the active chain.
+</ParamField>
+
+### Response
+
+Returns `200 OK` with the [trading status](#trading-status) fields plus:
+
+<ResponseField name="alreadyEnabled" type="boolean">
+  `true` when the allowance was already in place. Nothing was submitted.
+</ResponseField>
+
+<ResponseField name="userOperationHash" type="string | null">
+  Hash of the submitted UserOperation, or `null` when `alreadyEnabled` is `true`.
+</ResponseField>
+
+<ResponseField name="confirmedAt" type="string">
+  When the allowance was confirmed. Present only when a UserOperation was submitted.
+</ResponseField>
+
+The request blocks while the API polls the allowance, for up to about 20 seconds.
+
+### Errors
+
+Every failure returns `400` in the [two-entry form](/errors#on-chain-order-errors-look-different) with code `trading_not_enabled`. Read the message:
+
+| Message | What to do |
+|---|---|
+| `user_operation.signature is required. Sign after POST /me/safe/sponsor-user-operation.` | Sign the UserOperation after you merge the paymaster fields |
+| `No Safe registered for this chain. POST /me/safe/ with safe_address and chain_id first.` | Register the Safe |
+| `Safe is not deployed on-chain yet.` | Deploy the Safe |
+| `user_operation.sender does not match your registered Safe address` | Use your Safe as `sender` |
+| `user_operation must be approve(pool, amount) on the settlement token` | Build the call against `collateralToken` and `poolAddress` from the trading status |
+| `Invalid Safe UserOperation signature (AA24). ...` | The owner signature does not match the final UserOperation. Sign after sponsorship |
+| `Approval UserOperation was submitted but standing allowance was not confirmed in time. ...` | Wait, then check the trading status again before resubmitting |
+
+## Relay
+
+The API relays UserOperations for your Safe to its bundler and paymaster so you do not need your own. The relay accepts only these operations from your registered Safe:
+
+- the **deploy** operation: a zero-value call from the Safe to itself with empty data,
+- **`approve(pool, amount)`** on a collateral token, and
+- a **USDC withdrawal**, `transfer(to, amount)`, for wallet sign-in sessions only. See [Withdraw from the Safe](#withdraw-from-the-safe).
+
+Anything else returns `400` with the message `This UserOperation is not allowed through the relay`. If you send `entry_point`, it must be the EntryPoint in [Environment](/environment).
+
+### Sponsor a UserOperation
+
+```
+POST https://web3-phase-01-preview.staging.cloud.futuur.com/v2.0/me/safe/sponsor-user-operation/
+```
+
+<ParamField body="user_operation" type="object" required>
+  The unsigned UserOperation. `sender` must be your registered Safe.
+</ParamField>
+
+<ParamField body="chain_id" type="integer">
+  Defaults to the active chain.
+</ParamField>
+
+<ParamField body="entry_point" type="string">
+  Optional. Must be the supported EntryPoint.
+</ParamField>
+
+Returns `200 OK` with the paymaster's `pm_sponsorUserOperation` result, unchanged. Merge those fields into the UserOperation, then sign it with the owner key.
+
+### Submit a UserOperation
+
+```
+POST https://web3-phase-01-preview.staging.cloud.futuur.com/v2.0/me/safe/submit-user-operation/
+```
+
+Takes the same body with the **signed** UserOperation. Returns:
+
+```json Sample response (200 OK)
+{
+  "userOperationHash": "0x..."
+}
+```
+
+### Read a receipt
+
+```
+GET https://web3-phase-01-preview.staging.cloud.futuur.com/v2.0/me/safe/user-operation-receipt/?user_operation_hash=0x...
+```
+
+Returns the bundler's receipt, or `{}` while the UserOperation is not yet included. `hash` is accepted as an alias of `user_operation_hash`. `chain_id` is optional.
+
+### Bundler JSON-RPC
+
+```
+POST https://web3-phase-01-preview.staging.cloud.futuur.com/v2.0/me/safe/pimlico-rpc/
+```
+
+A JSON-RPC pass-through for smart-account client libraries.
+
+<ParamField body="method" type="string" required>
+  One of `pm_sponsorUserOperation`, `eth_sendUserOperation`, `eth_estimateUserOperationGas`, `eth_getUserOperationReceipt`, `pimlico_getUserOperationGasPrice`. Other methods are rejected.
+</ParamField>
+
+<ParamField body="params" type="array" required>
+  The JSON-RPC parameters. For the first three methods, `params[0]` is the UserOperation (same restrictions as above) and `params[1]` must be the supported EntryPoint.
+</ParamField>
+
+<ParamField body="chain_id" type="integer">
+  Defaults to the active chain.
+</ParamField>
+
+Returns `200 OK` with `{"result": ...}`. A bundler error is also a `200`, shaped `{"error": {"message": "...", "code": ..., "data": ...}}`. A request the relay refuses is a `400`.
+
+## Withdraw from the Safe
+
+To move `USDC` out of your Safe, relay a UserOperation whose **single call** is `transfer(to, amount)` on the USDC token:
+
+1. Build the UserOperation with your Safe as `sender`.
+2. `POST /me/safe/sponsor-user-operation/` and merge the paymaster fields.
+3. Sign it with the owner key.
+4. `POST /me/safe/submit-user-operation/`. Keep the returned `userOperationHash`.
+5. Poll `GET /me/safe/user-operation-receipt/?user_operation_hash=...` until the receipt is returned.
+
+Rules:
+
+- `USDC` only. `OOM` cannot be withdrawn.
+- It is a plain, zero-value call to the USDC token with exactly `transfer(to, amount)`.
+- `to` is not the zero address, the token itself, or the pool.
+- `amount` is greater than zero, in raw units (6 decimals).
+- You are signed in with your wallet. A request authenticated with an **HMAC API key is refused**.
+- It is sent with `submit-user-operation`. Through `pimlico-rpc` a withdrawal can be estimated and sponsored, but `eth_sendUserOperation` is refused.
+
+A UserOperation that breaks a rule returns `400` with `This UserOperation is not allowed through the relay`.
+
+### Relay errors
+
+Relay failures return `400` with the message in the entry whose `attr` is `detail`. When the bundler rejected the call, further entries whose `attr` starts with `pimlico` carry its error data.
+
+## Related
+
+- [Environment](/environment) — chain, token, pool, and EntryPoint addresses
+- [Place an on-chain order](/guides/on-chain-first-order) — where these calls fit
+- [Errors](/errors) — error format and codes

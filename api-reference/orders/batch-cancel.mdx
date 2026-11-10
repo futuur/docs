@@ -20,7 +20,7 @@ POST https://api.futuur.com/v2.0/orders/batch-cancel/
 ## Request
 
 <ParamField body="order_ids" type="integer[]" required>
-  Array of limit order IDs to cancel. Must contain at least one ID.
+  Array of limit order IDs to cancel. Must contain at least one ID. For HMAC, an array is signed as its Python `repr` (`[100, 101, 102]`, with a space after each comma). See [How values become text](/authentication#how-values-become-text).
 </ParamField>
 
 ## Response
@@ -40,7 +40,10 @@ Returns `200 OK` with a result item for each requested order ID, in the same ord
 </ResponseField>
 
 <ResponseField name="error" type="string">
-  Human-readable error message when `success` is `false`. For example, `Order is being processed.` or `Order already filled.`
+  Message when `success` is `false`. One of:
+
+  - `Order is being processed.` — the order is `processing`. Retry shortly.
+  - `Order not found or not cancelable.` — the ID is not yours, does not exist, or the order is already `filled`, `partial_filled`, `partial_filled_cancelled`, or `canceled`.
 </ResponseField>
 
 ## Example
@@ -65,7 +68,7 @@ curl --request POST \
 [
   { "index": 0, "order_id": 100, "success": true },
   { "index": 1, "order_id": 101, "success": false, "error": "Order is being processed." },
-  { "index": 2, "order_id": 102, "success": true }
+  { "index": 2, "order_id": 102, "success": false, "error": "Order not found or not cancelable." }
 ]
 ```
 

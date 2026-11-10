@@ -1,24 +1,26 @@
 ---
 title: "Place an on-chain order"
-description: "Coming soon: enable trading, fetch a signing context, sign LimitOrderIntent, and POST a limit order."
-tag: "Coming soon"
+description: "Enable trading, fetch a signing context, sign LimitOrderIntent, and POST a limit order on the phase-one preview host."
+tag: "Preview"
 ---
 
 <Note>
-  On-chain CLOB trading is coming soon. Today's production API still uses HMAC-only ledger settlement. This page describes the builder flow so you can prepare. The endpoints below are **not live** on `https://api.futuur.com` yet.
+  This flow is live on the phase-one **preview host** on Base Sepolia (chain ID `84532`). All paths below are relative to `https://web3-phase-01-preview.staging.cloud.futuur.com`. See [Environment](/environment) for addresses and test funds. The endpoints are **not live** on `https://api.futuur.com`.
 </Note>
 
-Every on-chain create is pre-signed. HMAC authenticates the HTTP request. The Safe **owner EOA** signs EIP-712 `LimitOrderIntent`. HMAC keys alone cannot create OOM or USDC orders once on-chain settlement is on.
+Every on-chain create is pre-signed. HMAC authenticates the HTTP request. The Safe **owner EOA** signs EIP-712 `LimitOrderIntent`. HMAC keys alone cannot create OOM or USDC orders.
 
-If you do not have credentials yet, start with [Get your API keys](/guides/get-api-keys). For the matching and settlement model, see [On-chain trading](/concepts/on-chain-trading). Outcome tokens (Yes/No ERC-1155) are a later cutover — see [Conditional tokens](/concepts/conditional-tokens).
+If you do not have credentials yet, start with [Get your API keys](/guides/get-api-keys). For the matching and settlement model, see [On-chain trading](/concepts/on-chain-trading). For one runnable script that does all of this, see [End-to-end Python bot](/guides/on-chain-bot-example).
 
 ## Prerequisites
 
-1. A Futuur account with `wallet_address` linked and a registered Safe (`POST /me/safe/`).
-2. HMAC public and private keys for L2 request signing.
-3. The owner EOA private key — the same key that owns the Safe.
-4. The Safe funded with OOM and/or USDC on the active chain.
-5. Trading enabled once per collateral token.
+1. A Futuur account with `wallet_address` set. You get it by signing in with the owner wallet.
+2. A registered, deployed Safe that is a 1-of-1 Safe owned by that wallet. An API key cannot register a Safe: sign in to the web app with the wallet once and it registers and deploys the Safe for you. Check with `GET /v2.0/me/safe-wallet/` — `deploy_status` must be `deployed`. See [Safe wallet](/api-reference/me/safe).
+3. HMAC public and private keys for L2 request signing.
+4. The owner EOA private key — the same key that owns the Safe.
+5. The Safe funded with OOM and/or USDC. See [Get test funds](/environment#get-test-funds).
+6. Trading enabled once per collateral token (step 1).
+7. For `USDC` with an API key: **Real money trading** turned on for the key.
 
 ## Step 1 — Enable trading
 
@@ -35,10 +37,25 @@ POST /v2.0/me/safe/enable-trading/
 
 | Endpoint | Role |
 |---|---|
-| `GET /me/safe/trading-status/` | Returns whether that currency already has a standing approve |
-| `POST /me/safe/enable-trading/` | Submits the signed approve UserOperation |
+| `GET /me/safe/trading-status/` | Returns `enabled`, the `poolAddress` to approve, and the `collateralToken` |
+| `POST /me/safe/enable-trading/` | Submits your **signed** approve UserOperation and waits for the allowance |
 
-After this succeeds, signing-context returns `needsApproval: false` and creates are intent-only.
+The `approve` is sent from the Safe, so it is an ERC-4337 UserOperation signed by the owner. The body of `enable-trading` is:
+
+```json
+{
+  "currency": "OOM",
+  "user_operation": { "sender": "0xYourSafe", "callData": "0x...", "signature": "0x...", "...": "..." }
+}
+```
+
+The API only accepts a UserOperation whose `callData` is `approve(pool, amount)` on that currency's token. Building and signing a Safe UserOperation needs a smart-account library; the web app does it for you. Request and response fields, the relay endpoints, and the errors are in [Safe wallet](/api-reference/me/safe#enable-trading).
+
+After this succeeds, `enabled` is `true`, signing-context returns `needsApproval: false`, and creates are intent-only.
+
+<Warning>
+  A bid placed without the allowance is still accepted, but its matches fail at settlement. Check `enabled` (or `needsApproval`) before you quote.
+</Warning>
 
 <Tip>
   Do this once per token (OOM and USDC). You do not repeat it on every order.
@@ -46,7 +63,7 @@ After this succeeds, signing-context returns `needsApproval: false` and creates 
 
 ## Step 2 — Signing context
 
-Call this **once at submit time**, not on every UI keystroke.
+Call this **once per order, right before you sign**.
 
 ```http
 POST /v2.0/orders/signing-context/
@@ -56,26 +73,50 @@ HMAC-authenticated. Body:
 
 ```json
 {
-  "market": 3801,
-  "price": 0.42,
-  "shares": 3,
+  "market": "3801",
+  "price": "0.42",
+  "shares": "3",
   "currency": "USDC",
   "position": "long",
-  "side": "bid",
-  "chain_id": 8453
+  "side": "bid"
 }
 ```
 
+| Request field | Required | Notes |
+|---|---|---|
+| `market` | Yes | Market (outcome) ID |
+| `price` | Yes | `0.01`–`0.99`, at most two decimals |
+| `shares` | Yes | Greater than `0.02`. Use at most two decimals |
+| `currency` | Yes | `OOM` or `USDC` |
+| `position` | Yes | `long` or `short` |
+| `side` | Yes | `bid` or `ask` |
+| `chain_id` | No | Defaults to your Safe's chain |
+
 | Response field | Meaning |
 |---|---|
-| `eip712` | Typed data to sign (`domain`, `types`, `message`, `primaryType`) |
-| `ownerAddress` | EOA that must sign — must match the recovered signer |
+| `eip712` | Typed data to sign: `domain`, `types`, `primaryType`, `message`. `types` holds `LimitOrderIntent` only; add `EIP712Domain` yourself if your library needs it |
+| `chainId` | Chain the intent is for |
 | `safeAddress` | Your Safe (collateral holder) |
+| `ownerAddress` | EOA that must sign — must match the recovered signer |
 | `poolAddress` | Approve spender and clearing wallet |
-| `maxUsdcRaw` | Bid cap: notional + taker fee, in raw token units |
-| `expiry` | Pass back as `order_intent_expiry` |
-| `nonce` | Per-Safe replay counter |
-| `needsApproval` | If `true`, enable trading first |
+| `currency` | Echo of the request currency |
+| `collateralToken` | ERC-20 address of the currency. `usdcToken` carries the same value |
+| `nonce` | The Safe's **next** order nonce. Pass back as `order_intent_nonce` |
+| `expiry` | Unix seconds, **30 days** from now. Pass back as `order_intent_expiry` |
+| `maxUsdcRaw` | String. Bid cap in raw token units (6 decimals): the larger of the current book cost and `price × shares` plus the taker fee. `"0"` for an ask. Pass back as `max_usdc_raw` |
+| `allowanceRaw` | String. Current pool allowance, read for bids. `"0"` for asks or when the chain read fails |
+| `needsApproval` | `true` when this is a bid and the allowance is below `maxUsdcRaw`. Enable trading first |
+
+Things to know about the context:
+
+- It does **not** reserve the nonce. The nonce is one counter per Safe, and the first accepted create takes it. Two contexts fetched back to back return the same nonce.
+- `maxUsdcRaw` follows the live book. Send the value you signed as `max_usdc_raw` so the API verifies that amount. If the book has moved against you, create returns `max_usdc_raw_too_low`.
+- It does not check your balance or that the market is open. Create does.
+- A failed request returns `400` with a message such as `Safe is not deployed on-chain yet.` See [Errors](/errors#on-chain-order-errors).
+
+<Warning>
+  Run **signing context → sign → create** strictly one after another for each Safe. Do not sign several orders from one context and do not run two of these sequences in parallel: the second create gets `order_intent_nonce_stale`. After any failed create, start again from a new signing context.
+</Warning>
 
 ## Step 3 — Sign LimitOrderIntent
 
@@ -86,7 +127,7 @@ Sign `eip712` with the **owner EOA**, not the Safe contract address. Domain: `Fu
   "domain": {
     "name": "FutuurLimitOrder",
     "version": "1",
-    "chainId": 8453,
+    "chainId": 84532,
     "verifyingContract": "0x0000000000000000000000000000000000000000"
   },
   "types": {
@@ -107,21 +148,34 @@ Sign `eip712` with the **owner EOA**, not the Safe contract address. Domain: `Fu
   "primaryType": "LimitOrderIntent",
   "message": {
     "orderId": 0,
-    "chainId": 8453,
+    "chainId": 84532,
     "safeAddress": "0xYourSafe",
     "marketId": 3801,
     "side": "bid",
     "position": "long",
     "priceRaw": 42,
     "sharesRaw": 300,
-    "maxUsdcRaw": "1296540",
-    "nonce": 1,
-    "expiry": 1712503600
+    "maxUsdcRaw": 1296540,
+    "nonce": 17,
+    "expiry": 1715126400
   }
 }
 ```
 
-Use the `eip712` object from signing-context as-is. `maxUsdcRaw` must match exactly.
+| Message field | How it is built |
+|---|---|
+| `orderId` | Always `0` |
+| `chainId` | `84532` |
+| `safeAddress` | Your Safe, checksummed |
+| `marketId` | The `market` ID |
+| `side`, `position` | The strings you sent: `bid` / `ask`, `long` / `short` |
+| `priceRaw` | `price × 100`. `0.42` is `42` |
+| `sharesRaw` | `shares × 100`, with shares rounded to two decimals. `3` is `300` |
+| `maxUsdcRaw` | Raw token units, 6 decimals. `1.29654` is `1296540`. `0` for an ask |
+| `nonce` | The Safe's next order nonce |
+| `expiry` | Unix seconds |
+
+Use the `eip712` object from signing-context as-is. Every field must equal what the API rebuilds from your create request, or the signature does not recover to your owner address. The create must carry the same `market`, `side`, `position`, `price`, and `shares` you asked the context for.
 
 <CodeGroup>
 
@@ -179,45 +233,70 @@ Send the usual order fields plus:
 
 | Field | Required | Notes |
 |---|---|---|
-| `chain_id` | Yes | Must match signing-context |
 | `order_intent_signature` | Yes | Hex signature from step 3 |
-| `order_intent_expiry` | Yes | `expiry` from signing-context |
+| `order_intent_expiry` | Yes | `expiry` from signing-context. Must be in the future |
+| `order_intent_nonce` | Send it | `nonce` from signing-context. If omitted, the API assumes the Safe's current nonce |
+| `max_usdc_raw` | Send it | `maxUsdcRaw` from signing-context. If omitted, the API looks up the value it issued in the last 15 minutes, or recomputes it |
+| `chain_id` | No | Defaults to the active chain |
 
 ```json
 {
-  "market": 3801,
+  "market": "3801",
   "side": "bid",
   "position": "long",
-  "price": 0.42,
-  "shares": 3,
+  "price": "0.42",
+  "shares": "3",
   "currency": "USDC",
-  "chain_id": 8453,
+  "time_in_force": "ioc",
+  "chain_id": "84532",
   "order_intent_signature": "0x...",
-  "order_intent_expiry": 1712503600
+  "order_intent_expiry": "1715126400",
+  "order_intent_nonce": "17",
+  "max_usdc_raw": "1296540"
 }
 ```
 
-Sign the HTTP request with HMAC as usual. See [Authentication](/authentication).
+Sign the HTTP request with HMAC as usual. The body above uses string values so the HMAC string is built from exactly what you send. See [Authentication](/authentication).
 
-Bids match only after `settlement_status` is `ready` (standing allowance confirmed). Asks become `ready` as soon as the intent verifies.
+Choose the order type with `time_in_force`:
+
+- `gtc` (default) rests on the book. Create returns `processing`, then the order becomes `open` or `filled`.
+- `ioc` takes liquidity at your price or better and cancels the rest. A market order (`price: null`) is not accepted on-chain; this is the replacement.
+
+The order stops matching at the signed `expiry` at the latest, even if you send a later `expired_at`.
+
+Read the result from the response and then from [`GET /orders/`](/api-reference/orders/list): `status`, `shares_filled`, `average_price`, and `settlement_status`. Fills settle on-chain after the response. See [Order lifecycle](/concepts/orders#order-lifecycle).
 
 ## Selling
 
-Do **not** sell on-chain OOM or USDC with `PATCH /wagers/{id}/`. That path only moves the internal ledger. Use a signed `side=ask` create instead.
+Do **not** sell on-chain OOM or USDC with `PATCH /wagers/{id}/`. That path only moves the internal ledger and returns `onchain_sell_requires_limit_order`. Use a signed `side=ask` create instead.
 
-When on-chain settlement is on, `PATCH /wagers/` returns `onchain_sell_requires_limit_order`.
+An ask signs `maxUsdcRaw: 0` and needs no allowance. Send an exact share count. With `shares: "max"` the signed `sharesRaw` must still equal the quantity that is sold, so a bot should not use it. Shares settle in steps of 0.01, so an ask of 0.68 against a 0.67 position fails.
+
+## Canceling
+
+`PATCH /v2.0/orders/{id}/cancel/` needs HMAC only. No wallet signature. Only `open` orders can be canceled. See [Cancel order](/api-reference/orders/cancel).
 
 ## Common errors
 
 | Symptom | Cause |
 |---|---|
-| `order_intent_signature is required` | On-chain settlement is on and the create was unsigned |
-| `trading_not_enabled` / `needsApproval: true` | Enable trading first |
-| Intent recover mismatch | You signed with a key that is not `wallet_address` / the Safe owner |
+| `order_intent_signature is required for on-chain limit orders.` | The create was unsigned |
+| `order_intent_nonce_stale` | Another order used that nonce first. Fetch a new signing context and sign again |
+| `order_intent_nonce_not_issued` | You sent a nonce above the Safe's next nonce |
+| `max_usdc_raw_too_low` | The book moved after you signed. Fetch a new signing context |
+| `insufficient_onchain_available` | The Safe balance does not cover this bid next to your other open bids on the market |
+| `price_required` | A market order. Send a price with `time_in_force: "ioc"` |
+| `Intent signature does not recover to the Safe owner address.` | You signed with a key that is not `wallet_address`, or the create differs from what you signed |
+| `needsApproval: true` | Enable trading first |
 | `onchain_sell_requires_limit_order` | Used `PATCH /wagers/` instead of a signed ask |
-| `Not enough shares to complete the Ask limit order.` | The ask is larger than your position. Shares settle on-chain in 0.01 steps, so 0.68 against a 0.67 position fails |
-| Insufficient balance | The Safe lacks OOM or USDC on-chain |
-| `401 authentication_failed` | Bad HMAC sort, clock skew, or revoked key |
+| `Not enough shares to complete the Ask limit order.` | The ask is larger than your position |
+| `403 UserNotEnoughBalance` | The Safe holds no OOM, or is not deployed |
+| `403 RealMoneyBetNotAllowed` | Real money trading is off for the API key or the event |
+| `401 authentication_failed` | Bad HMAC string, clock skew, or a deactivated key |
+| `429 throttled` | More than 30 creates in a minute |
+
+On-chain codes arrive in a `400` as the `detail` of the entry whose `attr` is `"code"`. The full list, with what to do for each, is in [Errors](/errors).
 
 <Warning>
   Never store the owner wallet key in git or client-side code. HMAC keys cannot create on-chain orders by themselves.

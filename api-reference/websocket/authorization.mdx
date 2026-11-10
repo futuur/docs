@@ -11,13 +11,17 @@ API bots call Futuur's channel authorization endpoint:
 POST https://api.futuur.com/v2.0/pusher/auth/
 ```
 
-`POST https://api.futuur.com/v2.0/pusher/user-auth/` is also available and unchanged. Authenticate with HMAC headers (`Key`, `Timestamp`, `HMAC`). Sign the request using alphabetically sorted parameters:
+`POST https://api.futuur.com/v2.0/pusher/user-auth/` is also available and unchanged. Authenticate with HMAC headers (`Key`, `Timestamp`, `HMAC`). The string to sign is every parameter — `Key`, `Timestamp`, `channel_name`, and `socket_id` — sorted by name in **case-sensitive code-point order**, so the capitalized `Key` and `Timestamp` come first:
 
 ```
 Key={{your_public_key}}&Timestamp={{current_timestamp}}&channel_name={{channel_name}}&socket_id={{socket_id}}
 ```
 
-See [Authentication](/authentication) for the general HMAC signing flow.
+<Warning>
+  Do not sort with `localeCompare`. It is case-insensitive and puts `channel_name` before `Key`, which gives a signature the server rejects with `401 authentication_failed`. Encode the values the way Python `urlencode` does. See [Authentication](/authentication#signing-process) for the exact rules.
+</Warning>
+
+On the phase-one preview host, use the base URL from [Environment](/environment).
 
 <CodeGroup>
 
@@ -36,9 +40,15 @@ async function authorizeChannel(socketId, channelName) {
     channel_name: channelName,
     socket_id: socketId,
   };
-  const rawToSign = new URLSearchParams(
-    Object.entries(paramsToSign).sort(([a], [b]) => a.localeCompare(b)),
-  ).toString();
+  // Python quote_plus: space becomes "+", and ! ' ( ) * are escaped.
+  const quotePlus = (text) =>
+    encodeURIComponent(text)
+      .replace(/[!'()*]/g, (c) => "%" + c.charCodeAt(0).toString(16).toUpperCase())
+      .replace(/%20/g, "+");
+  const rawToSign = Object.keys(paramsToSign)
+    .sort() // code-unit order: "Key", "Timestamp", "channel_name", "socket_id"
+    .map((k) => `${quotePlus(k)}=${quotePlus(paramsToSign[k])}`)
+    .join("&");
   const signature = crypto
     .createHmac("sha512", API_PRIVATE_KEY)
     .update(rawToSign)
@@ -85,7 +95,9 @@ const channel = pusher.subscribe("private-user-1");
 
 </CodeGroup>
 
-A user may only subscribe to their own `private-user-{user_id}` channel. Public channels (`event` and `event-{event_id}`) do not require authorization.
+A user may only subscribe to their own `private-user-{user_id}` channel; any other private or presence channel returns `403`. Your user ID is the `id` in [`GET /me/`](/api-reference/me/information). Public channels (`event` and `event-{event_id}`) do not require authorization.
+
+The endpoint returns `{"auth": "..."}` on success. Its errors are plain `{"detail": "..."}` bodies: `400` when `channel_name` or `socket_id` is missing, `401` when the HMAC check fails, `403` for a channel that is not yours.
 
 ## Related
 

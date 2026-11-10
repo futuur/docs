@@ -36,9 +36,11 @@
             "group": "Get Started",
             "pages": [
               "introduction",
+              "environment",
               "guides/get-api-keys",
               "authentication",
               "rate-limits",
+              "errors",
               "guides/mcp"
             ]
           },
@@ -56,7 +58,8 @@
             "pages": [
               "concepts/on-chain-trading",
               "concepts/conditional-tokens",
-              "guides/on-chain-first-order"
+              "guides/on-chain-first-order",
+              "guides/on-chain-bot-example"
             ]
           },
           {

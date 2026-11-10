@@ -3,9 +3,15 @@ title: "Batch create orders"
 description: "Submit between 1 and 20 limit orders in a single request."
 ---
 
-Create multiple limit or market orders in a single API call. Each item in the `orders` array is validated and matched independently — partial failures do not block successful orders in the same batch.
+Create multiple limit orders in a single API call. Each item in the `orders` array is validated and matched independently — partial failures do not block successful orders in the same batch.
 
-Use this endpoint to quote ladders, hedge positions, or rebalance across multiple markets without sending separate requests.
+<Warning>
+  **On-chain currencies (`OOM`, `USDC`) on the phase-one preview host.** An on-chain order is only accepted with its own signed `LimitOrderIntent`, and the per-Safe nonce allows one order per signature. An item without a valid intent fails. Hosts that do not read the intent fields on batch items reject every on-chain item. The supported way to quote is a loop over [`POST /orders/`](/api-reference/orders/create): signing context → sign → create, one order at a time. See [Quote with a per-order loop](#quote-with-a-per-order-loop).
+</Warning>
+
+<Warning>
+  **This endpoint replaces your quotes.** Before the first item on a market is created, **every open order you have on that event, market, and currency is canceled**, whatever the value of `cancel_conflicting_orders`. Their IDs come back in `cancelled_existing_order_ids`. If that item then fails, its cancellations are rolled back. Later items on the same market in the same batch do not cancel again.
+</Warning>
 
 ## Endpoint
 
@@ -43,10 +49,10 @@ POST https://api.futuur.com/v2.0/orders/batch/
       Position direction: `long` (in favor of the outcome) or `short` (against).
     </ResponseField>
     <ResponseField name="price" type="number">
-      Limit price between 0 and 1. Use `null` for a market order.
+      Limit price from `0.01` to `0.99`, with at most two decimals. `null` makes a market order, which is rejected for `OOM` and `USDC` on the preview host.
     </ResponseField>
     <ResponseField name="shares" type="number" required>
-      Number of shares to buy or sell. Submitted as a decimal string.
+      Number of shares to buy or sell, greater than `0.02`. Submitted as a decimal string. On an ask, `"max"` sells your sellable shares (optionally capped by `max_shares`).
     </ResponseField>
     <ResponseField name="amount" type="number">
       Optional total cost for validation against `shares` and `price`.
@@ -54,18 +60,21 @@ POST https://api.futuur.com/v2.0/orders/batch/
     <ResponseField name="currency" type="string" required>
       Currency for the order: `USDC`, `USDT`, `USD`, or `OOM`.
     </ResponseField>
+    <ResponseField name="time_in_force" type="string" default="gtc">
+      `gtc` or `ioc`. `ioc` requires a price.
+    </ResponseField>
     <ResponseField name="expired_at" type="string">
-      ISO 8601 datetime when the order should auto-cancel. `null` for no expiration.
+      ISO 8601 datetime after which the order no longer matches. `null` for no expiration.
     </ResponseField>
     <ResponseField name="cancel_conflicting_orders" type="boolean" default="false">
-      When `true`, conflicting open orders are canceled before the new order is placed.
+      When `true`, your open asks that reserve the shares an ask needs are canceled before it is placed. This is separate from the replace behaviour above, which always applies.
     </ResponseField>
   </Expandable>
 </ParamField>
 
 ## Response
 
-Returns `200 OK` with one result per submitted order, plus the IDs of any conflicting orders that were canceled to make room for them.
+Returns `200 OK` with one result per submitted order, plus the IDs of your existing orders that were canceled and replaced. A batch returns `200` even when every item failed, so check each `success`.
 
 <ResponseField name="results" type="object[]" required>
   Per-order result, returned in the same order as the request.
@@ -77,16 +86,16 @@ Returns `200 OK` with one result per submitted order, plus the IDs of any confli
       `true` if the order was created.
     </ResponseField>
     <ResponseField name="order" type="object">
-      Created limit order. Present when `success` is `true`.
+      Created limit order, in the shape described in [Create order](/api-reference/orders/create#response). Present when `success` is `true`.
     </ResponseField>
     <ResponseField name="errors" type="any">
-      Validation error for this order. Present when `success` is `false`. May be a string or an object describing field-level issues.
+      The reason this order failed. Present when `success` is `false`. It is a message string, or an object keyed by field name. A failed signed-intent check is an object with `detail` and, when there is one, `code`.
     </ResponseField>
   </Expandable>
 </ResponseField>
 
 <ResponseField name="cancelled_existing_order_ids" type="integer[]" required>
-  IDs of existing open orders that were canceled because `cancel_conflicting_orders` was set on one or more items in the batch.
+  IDs of your existing open orders on the touched markets that were canceled and replaced by this batch.
 </ResponseField>
 
 ## Example
@@ -127,7 +136,7 @@ curl --request POST \
 
 </CodeGroup>
 
-```json Sample response (200 OK)
+```json Sample response (200 OK), nested objects trimmed
 {
   "results": [
     {
@@ -135,26 +144,63 @@ curl --request POST \
       "success": true,
       "order": {
         "id": 10501,
-        "event": "873",
-        "market": "2231",
+        "event": { "id": 873, "title": "Will it rain in Lisbon on Friday?" },
+        "market": { "id": 2231, "title": "Yes" },
         "price": 0.43,
         "shares": 13.0,
         "shares_requested": 13.0,
-        "shares_filled": "0.0",
+        "shares_filled": 0.0,
+        "shares_cancelled": 0.0,
         "currency": "OOM",
         "side": "bid",
         "position": "long",
         "expired_at": null,
-        "status": "open",
-        "created": "2026-04-07T12:00:00Z"
+        "status": "processing",
+        "created": "2026-04-07T12:00:00Z",
+        "time_in_force": "gtc",
+        "average_price": null,
+        "proceeds": null,
+        "settlement_mode": "onchain",
+        "settlement_status": "ready",
+        "chain_id": 84532
       }
     },
     {
       "index": 1,
       "success": false,
-      "errors": "InvalidShares"
+      "errors": {
+        "shares": ["shares must be greater than 0.02."]
+      }
     }
   ],
-  "cancelled_existing_order_ids": []
+  "cancelled_existing_order_ids": [10488, 10490]
 }
 ```
+
+## Quote with a per-order loop
+
+For `OOM` and `USDC` on the preview host, place each quote with its own signed create. The nonce is sequential per Safe, so do not run these in parallel for one Safe.
+
+```python python
+# sign(), signing_context(), and sign_intent() are defined in the end-to-end example.
+quotes = [
+    {"market": "2231", "side": "bid", "position": "long", "price": "0.43", "shares": "13"},
+    {"market": "2231", "side": "bid", "position": "short", "price": "0.44", "shares": "13"},
+]
+
+for quote in quotes:
+    order = {**quote, "currency": "OOM"}
+    context = signing_context(order)              # POST /orders/signing-context/
+    body = {
+        **order,
+        "chain_id": str(context["chainId"]),
+        "order_intent_signature": sign_intent(context["eip712"]),
+        "order_intent_expiry": str(context["expiry"]),
+        "order_intent_nonce": str(context["nonce"]),
+        "max_usdc_raw": context["maxUsdcRaw"],
+    }
+    response = requests.post(f"{BASE}/orders/", json=body, headers=sign(body))
+    response.raise_for_status()                   # on an error, fetch a new context and sign again
+```
+
+Create requests are limited to 30 per minute per account. See [Rate limits](/rate-limits) and the [end-to-end example](/guides/on-chain-bot-example).
