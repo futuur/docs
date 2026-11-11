@@ -1,0 +1,97 @@
+---
+title: "Environment"
+description: "Host, chain, token and pool addresses, test funds, and what is live in phase one of on-chain trading."
+---
+
+Phase one of on-chain trading runs on a **preview host** against **Base Sepolia**. It is a test environment: the tokens have no value and the database can be reset.
+
+On this host every order in `OOM` or `USDC` must carry an EIP-712 `LimitOrderIntent` signed by the Safe owner. HMAC alone cannot create an order. Production (`https://api.futuur.com`) does not accept the on-chain fields yet.
+
+## Host
+
+| | Value |
+|---|---|
+| API base URL | `https://web3-phase-01-preview.staging.cloud.futuur.com/v2.0` |
+| OpenAPI schema | `https://web3-phase-01-preview.staging.cloud.futuur.com/docs/schema/` |
+| Trading halt flag | `GET /v2.0/trading-status/` (no auth) returns `trading_halted` |
+
+Paths end with a trailing slash, for example `POST /v2.0/orders/`.
+
+## Chain
+
+| | Value |
+|---|---|
+| Network | Base Sepolia |
+| Chain ID | `84532` |
+| Public RPC | `https://sepolia.base.org` |
+| ERC-4337 EntryPoint (v0.7) | `0x0000000071727De22E5E9d8BAf0edAc6f37da032` |
+
+`chain_id` is optional on every endpoint that takes it and defaults to the active chain. A different value is rejected. Base mainnet (`8453`) is not active on this host.
+
+## Tokens and pool
+
+| Role | Address | Decimals | Notes |
+|---|---|---|---|
+| `USDC` collateral | `0xA10E77cF8E1F71a44D374646AF5fd9641C5161Bd` | 6 | A mintable mock USDC (MUSDC), not Circle USDC |
+| `OOM` collateral | `0x9e89a2c1dA308052EFAF590e71bEfF256AF9F7a4` | 6 | Restricted ERC-20. Transfers and spenders are allowlisted by the token admin |
+| Pool (clearing Safe and `approve` spender) | `0xbC42f13000Da4D895cB5dD9375511846332A5053` | — | Holds collateral between match and payout |
+
+<Warning>
+  Treat the API as the source of truth for these addresses. `POST /orders/signing-context/` and `GET /me/safe/trading-status/` return `poolAddress` and `collateralToken` for your request. Use those values when you build an `approve`, and stop if they differ from this table.
+</Warning>
+
+Amounts on-chain use 6 decimals for both tokens: `1 USDC = 1000000` raw units.
+
+## Get test funds
+
+| Asset | How |
+|---|---|
+| OOM | Minted to your Safe by the platform after the Safe is deployed. A new account receives 10,000 OOM. You cannot mint OOM yourself. |
+| USDC (MUSDC) | Minted by Futuur staff. Ask the Futuur team for a test mint to your Safe address. `[PLACEHOLDER: contact channel for test USDC]` |
+| Gas | UserOperations sent through the Futuur relay (`/me/safe/sponsor-user-operation/`) can be sponsored, so the Safe does not need ETH for them. |
+
+Check what arrived with `GET /me/safe-wallet/?refresh=1` and `GET /me/balances/`.
+
+## Account requirements
+
+- Your account has a `wallet_address` (the owner EOA). You get one by signing in with that wallet.
+- Your Safe is registered and deployed. See [Safe wallet](/api-reference/me/safe).
+- Trading is enabled once per currency (a standing `approve` to the pool).
+- For `USDC` orders signed with HMAC, **Real money trading** is turned on for the API key, and the event allows real money. Otherwise create returns `403 RealMoneyBetNotAllowed`.
+
+## What is live
+
+| Feature | Phase one |
+|---|---|
+| `POST /api-keys/derive/` (wallet → HMAC keys) | Live |
+| `POST /orders/signing-context/` | Live |
+| `POST /orders/` with a signed intent, `gtc` and `ioc` | Live |
+| Cancel, batch cancel, cancel all | Live |
+| Order book, events, markets, wagers, balances | Live |
+| Safe registration, relay, enable trading | Live |
+| Collateral settlement on-chain at match | Live, asynchronous |
+| Resolution payout Pool → Safe | Live, automatic |
+| Pusher websockets | Live. `[PLACEHOLDER: Pusher app key and cluster for the preview host]` |
+
+## What is not live
+
+| Feature | Status |
+|---|---|
+| Market orders (`price: null`) in `OOM` or `USDC` | Cannot be signed. Use `time_in_force: "ioc"` with a price |
+| `shares: "max"` in `OOM` or `USDC` | Do not rely on it. The signed `sharesRaw` must equal the resolved quantity, so send explicit shares |
+| `POST /orders/batch/` and `POST /orders/batch-update/` in `OOM` or `USDC` | Not the supported path. Each item needs its own signed intent, and a host that does not read intent fields on batch items rejects them. Loop over `POST /orders/` |
+| `GET /orders/{id}/` | Does not exist. Filter `GET /orders/` |
+| Fills or trades endpoint | Does not exist. Read fills from the order fields or the `order-update` websocket event |
+| Selling with `PATCH /wagers/{id}/` | Rejected for on-chain positions (`onchain_sell_requires_limit_order`). Place a signed `ask` |
+| Deposit endpoint for Safe balances | None. Transfer tokens to your Safe on-chain |
+| Withdrawing with an API key | Not available. A `USDC` withdrawal from the Safe goes through the relay with a wallet sign-in session. See [Safe wallet](/api-reference/me/safe#withdraw-from-the-safe) |
+| Withdrawing `OOM` | Not available |
+| ERC-1155 outcome tokens, split and merge | Not in phase one. Shares stay in the Futuur database |
+| Base mainnet | Not active |
+
+## Next steps
+
+- [Get your API keys](/guides/get-api-keys)
+- [Place an on-chain order](/guides/on-chain-first-order)
+- [End-to-end Python bot](/guides/on-chain-bot-example)
+- [Errors](/errors)

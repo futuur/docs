@@ -3,7 +3,7 @@ title: 'Cancel order'
 description: 'Cancel an open limit order by its ID.'
 ---
 
-Cancel an open limit order. Only orders with a status of `open` or `partial_filled` can be canceled. Orders that are already `filled`, `canceled`, or `processing` cannot be canceled.
+Cancel an open limit order. Only an order with status `open` can be canceled, including a `gtc` order that is partly filled (it stays `open`). Canceling stops the unfilled remainder; shares already filled stay filled. Canceling needs HMAC only, not a wallet signature.
 
 ## Endpoint
 
@@ -29,8 +29,17 @@ This endpoint does not accept a request body.
 
 Returns `204 No Content` on success. No response body is returned.
 
+Otherwise:
+
+| Order | Response |
+| --- | --- |
+| `processing` (being matched or settling) | `403` with code `LimitOrderBeingProcessing`. Retry shortly. |
+| `filled`, `partial_filled`, `partial_filled_cancelled`, or `canceled` | `404` with code `not_found`. |
+| Not yours, or does not exist | `404` with code `not_found`. |
+| On an event that is no longer open | `404` with code `not_found`. |
+
 <Warning>
-  Attempting to cancel an order that is already `filled`, `canceled`, or in `processing` state will return a `400` or `404` error. Verify the order status using [List orders](/api-reference/orders/list) before canceling.
+  A `404` does not tell you whether the order filled or was canceled. Read its final state from [List orders](/api-reference/orders/list) with the matching `status` filter.
 </Warning>
 
 ## Example
@@ -40,9 +49,9 @@ Returns `204 No Content` on success. No response body is returned.
 ```bash cURL
 curl --request PATCH \
   --url "https://api.futuur.com/v2.0/orders/10482/cancel/" \
-  --header "Key: pk_live_abc123def456" \
+  --header "Key: YOUR_PUBLIC_KEY" \
   --header "Timestamp: 1712534400" \
-  --header "HMAC: 3a9f2c1b...sha512signature"
+  --header "HMAC: YOUR_HMAC_SIGNATURE"
 ```
 
 </CodeGroup>

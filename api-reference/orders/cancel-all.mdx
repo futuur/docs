@@ -34,7 +34,7 @@ The request body is optional. If you submit an empty body, every active order on
 Returns `200 OK` with two arrays of order IDs.
 
 <ResponseField name="canceled_order_ids" type="integer[]" required>
-  IDs of orders that were successfully canceled.
+  IDs of orders that were successfully canceled. Only `open` orders are canceled.
 </ResponseField>
 
 <ResponseField name="processing_order_ids" type="integer[]" required>

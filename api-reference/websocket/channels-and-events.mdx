@@ -25,9 +25,9 @@ For client setup, see [Overview](/api-reference/websocket/overview). Private cha
 | `new-market` | `event` | A new market is added to an event |
 | `live-data-update` | `event` | Live data, status, or resolution changes |
 | `market-status-change` | `event`, `event-{event_id}` | Tradability fields change (status, bet window, disabled) |
-| `market-comment` | `event` | A user posts a comment on an event |
+| `new-comment` | `event` | A user posts a comment on an event |
 | `order-book-update` | `event-{event_id}` | Absolute top-N bid/ask levels for a changed market |
-| `balance-changed` | `private-user-{user_id}` | The user's balance changes |
+| `balance-change` | `private-user-{user_id}` | The user's balance changes |
 | `deposit-success` | `private-user-{user_id}` | A deposit completes |
 | `order-update` | `private-user-{user_id}` | An order is created or its status changes |
 | `position-update` | `private-user-{user_id}` | The user's wager shares change |
@@ -122,7 +122,7 @@ Emitted when an event's live data changes.
 
 Emitted on `event` and `event-{event_id}` when tradability fields change (`status`, bet window, or market `disabled`). Use this to start or stop quoting — do not rely on BBO alone.
 
-### market-comment
+### new-comment
 
 Emitted when a user posts a comment. Sent with a ~5s delay so replicas can catch up before clients refetch.
 
@@ -171,7 +171,7 @@ For depth beyond top-N, call [GET /markets/{id}/book/](/api-reference/markets/or
 
 Channel name pattern: `private-user-{user_id}`. Requires authorization via `POST https://api.futuur.com/v2.0/pusher/auth/`. Subscribe with `pusher.subscribe("private-user-" + userId)`.
 
-### balance-changed
+### balance-change
 
 Emitted when the user's balance changes. Carries no amount — refetch [GET /me/balances/](/api-reference/me/balances).
 
@@ -190,7 +190,18 @@ Emitted when a deposit completes.
 
 ### order-update
 
-Real-time order lifecycle updates: create / open acks (`pending`, `open`, including PROCESSING → OPEN) plus fill, partial fill, cancel, and expire. Useful for syncing resting orders without relying only on the REST response.
+Real-time order lifecycle updates: create / open acks (`pending`, `open`) plus fill, partial fill, cancel, and expire. Useful for syncing resting orders without relying only on the REST response.
+
+The `status` values here are not the REST [order statuses](/concepts/orders#order-lifecycle):
+
+| Websocket `status` | Meaning | REST `status` at that moment |
+|---|---|---|
+| `pending` | The order was created and is being matched | `processing` |
+| `open` | The order rests on the book | `open` |
+| `partial_filled` | Part of a resting order filled; the rest is still on the book | `open` |
+| `filled` | The order is fully filled | `filled` |
+| `canceled` | The order was canceled | `canceled` |
+| `expired` | The order was canceled after its `expired_at` | `canceled` |
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -198,17 +209,17 @@ Real-time order lifecycle updates: create / open acks (`pending`, `open`, includ
 | `market_id` | number | Market ID |
 | `event_id` | number | Event ID |
 | `status` | string | New status (e.g. `pending`, `open`, `filled`, `partial_filled`, `canceled`, `expired`) |
-| `previous_status` | string | null |
-| `side` | string | `bid` |
-| `position` | string | `l` (long) |
+| `previous_status` | string \| null | Status before this update, in the same vocabulary. `null` on the create ack |
+| `side` | string | `bid` or `ask` |
+| `position` | string | `long` or `short` |
 | `price` | number | null |
 | `shares_requested` | number | Requested quantity |
 | `shares_filled` | number | Total filled so far |
-| `shares_filled_delta` | number | Optional — filled in this update |
-| `avg_fill_price` | number | null |
+| `shares_filled_delta` | number | Only on `filled` and `partial_filled` — shares filled in this update |
+| `avg_fill_price` | number \| null | Only on `filled` and `partial_filled` — average fill price so far |
 | `currency` | string | Currency code |
 | `timestamp` | string | ISO 8601 with milliseconds |
-| `cancel_reason` | string | Optional — e.g. `user_requested` |
+| `cancel_reason` | string | Only on `canceled` and `expired` — one of `user_requested`, `market_closed`, `expired`, `insufficient_funds`, `admin`, `system` |
 | `expired_at` | string | Optional — ISO 8601 |
 | `is_system_initiated` | boolean | Optional |
 
@@ -238,11 +249,12 @@ Emitted when a user's wager shares change. Use for inventory sync.
 |-------|------|-------------|
 | `market_id` | number | Market (outcome) ID |
 | `event_id` | number | Event ID |
-| `position` | string | Position side |
+| `position` | string | `long` or `short` |
 | `currency` | string | Currency code |
 | `shares` | number | Current share quantity |
 | `purchases_amount` | number | Amount spent on purchases |
-| `avg_price` | number | Average purchase price |
+| `avg_price` | number \| null | Average purchase price |
+| `timestamp` | string | ISO 8601 emission time |
 
 ## Related
 

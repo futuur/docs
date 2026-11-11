@@ -1,0 +1,305 @@
+---
+title: "End-to-end Python bot"
+description: "One runnable script: derive API keys, check the Safe and trading status, sign a LimitOrderIntent, create the order with HMAC, poll it, and cancel it."
+tag: "Preview"
+---
+
+This script runs the whole phase-one flow against the preview host with nothing but the owner wallet key and a market ID. It places a resting bid, waits until the order is on the book, and cancels it.
+
+<Note>
+  The script targets the phase-one **preview host** on Base Sepolia (chain ID `84532`). See [Environment](/environment). It does not work against `https://api.futuur.com`.
+</Note>
+
+## Before you run it
+
+The script checks these and stops with a message if one is missing. It cannot do them for you:
+
+1. **Sign in once** to the preview web app with the owner wallet. That creates the account, sets `wallet_address`, and registers and deploys your Safe. An API key cannot register a Safe.
+2. **Fund the Safe.** OOM is minted to a new Safe by the platform. See [Get test funds](/environment#get-test-funds).
+3. **Enable trading** for the currency (the standing `approve` to the pool). See [Safe wallet](/api-reference/me/safe#enable-trading).
+
+Then:
+
+```bash
+pip install requests eth-account
+export FUTUUR_OWNER_KEY=0x...        # owner EOA private key. Never commit it
+export FUTUUR_MARKET_ID=3801         # an open market with an order book
+python bot.py
+```
+
+Pick a `FUTUUR_PRICE` below the best ask so the bid rests instead of filling. The default is `0.05`.
+
+## The script
+
+```python bot.py
+"""Phase-one end-to-end example: derive keys -> check Safe -> sign -> create -> poll -> cancel."""
+import hashlib
+import hmac
+import os
+import sys
+import time
+from decimal import Decimal
+from urllib.parse import urlencode
+
+import requests
+from eth_account import Account
+from eth_account.messages import encode_typed_data
+
+BASE = "https://web3-phase-01-preview.staging.cloud.futuur.com/v2.0"
+CHAIN_ID = 84532  # Base Sepolia
+
+OWNER_KEY = os.environ["FUTUUR_OWNER_KEY"]
+MARKET_ID = os.environ["FUTUUR_MARKET_ID"]
+CURRENCY = os.environ.get("FUTUUR_CURRENCY", "OOM")
+PRICE = os.environ.get("FUTUUR_PRICE", "0.05")    # 0.01-0.99, two decimals
+SHARES = os.environ.get("FUTUUR_SHARES", "10")    # more than 0.02, two decimals
+
+owner = Account.from_key(OWNER_KEY)
+
+EIP712_DOMAIN_TYPE = [
+    {"name": "name", "type": "string"},
+    {"name": "version", "type": "string"},
+    {"name": "chainId", "type": "uint256"},
+    {"name": "verifyingContract", "type": "address"},
+]
+
+
+def sign_typed_data(domain, types, primary_type, message):
+    """EIP-712 signature by the owner EOA, as a 0x-prefixed hex string."""
+    signable = encode_typed_data(full_message={
+        "types": {"EIP712Domain": EIP712_DOMAIN_TYPE, **types},
+        "primaryType": primary_type,
+        "domain": domain,
+        "message": message,
+    })
+    signature = owner.sign_message(signable).signature.hex()
+    return signature if signature.startswith("0x") else f"0x{signature}"
+
+
+# --- 1. Derive the HMAC pair from the wallet (no auth: the signature is the auth) ---
+
+def derive_api_keys():
+    timestamp = int(time.time())
+    nonce = 0
+    signature = sign_typed_data(
+        domain={
+            "name": "FutuurApiAuth",
+            "version": "1",
+            "chainId": CHAIN_ID,
+            "verifyingContract": "0x0000000000000000000000000000000000000000",
+        },
+        types={"DeriveApiKey": [
+            {"name": "address", "type": "address"},
+            {"name": "timestamp", "type": "string"},
+            {"name": "nonce", "type": "uint256"},
+            {"name": "message", "type": "string"},
+        ]},
+        primary_type="DeriveApiKey",
+        message={
+            "address": owner.address,
+            "timestamp": str(timestamp),          # a string in the typed data
+            "nonce": nonce,
+            "message": "Derive Futuur API credentials",
+        },
+    )
+    response = requests.post(f"{BASE}/api-keys/derive/", json={
+        "address": owner.address,
+        "timestamp": timestamp,                   # an integer in the body
+        "nonce": nonce,
+        "signature": signature,
+        "chain_id": CHAIN_ID,
+    })
+    response.raise_for_status()
+    keys = response.json()
+    return keys["public_key"], keys["private_key"]
+
+
+PUBLIC_KEY, PRIVATE_KEY = derive_api_keys()
+
+
+# --- 2. HMAC: sign the parameters exactly as the server rebuilds them ---
+
+def hmac_headers(params=None):
+    """Headers for a request whose query or top-level body fields are `params`."""
+    timestamp = str(int(time.time()))
+    to_sign = {**(params or {}), "Key": PUBLIC_KEY, "Timestamp": timestamp}
+    message = urlencode(sorted(to_sign.items()))
+    digest = hmac.new(PRIVATE_KEY.encode(), message.encode(), hashlib.sha512).hexdigest()
+    return {"Key": PUBLIC_KEY, "Timestamp": timestamp, "HMAC": digest}
+
+
+def get(path, params=None):
+    return requests.get(f"{BASE}{path}", params=params, headers=hmac_headers(params))
+
+
+def post(path, body):
+    # String values only: the signed text is then exactly the text that is sent.
+    return requests.post(f"{BASE}{path}", json=body, headers=hmac_headers(body))
+
+
+def onchain_code(response):
+    """Code of an on-chain 400: the detail of the entry whose attr is "code"."""
+    try:
+        errors = response.json().get("errors", [])
+    except ValueError:
+        return None
+    return next((e["detail"] for e in errors if e.get("attr") == "code"), None)
+
+
+# --- 3. Prerequisites the script cannot do for you ---
+
+def check_prerequisites():
+    wallet = get("/me/safe-wallet/")
+    if wallet.status_code == 404:
+        sys.exit("No Safe registered. Sign in to the preview web app with this wallet first.")
+    wallet.raise_for_status()
+    if wallet.json()["deploy_status"] != "deployed":
+        sys.exit(f"Safe is not deployed yet (deploy_status={wallet.json()['deploy_status']}).")
+
+    params = {"currency": CURRENCY}
+    status = get("/me/safe/trading-status/", params)
+    status.raise_for_status()
+    if not status.json()["enabled"]:
+        sys.exit(
+            f"Trading is not enabled for {CURRENCY}. Approve the pool "
+            f"({status.json()['poolAddress']}) from your Safe first."
+        )
+
+
+# --- 4. Signing context -> sign -> create. One at a time per Safe. ---
+
+def place_order(side, position, price, shares, time_in_force="gtc"):
+    order = {
+        "market": str(MARKET_ID),
+        "side": side,
+        "position": position,
+        "price": price,
+        "shares": shares,
+        "currency": CURRENCY,
+    }
+
+    context = post("/orders/signing-context/", order)
+    context.raise_for_status()
+    context = context.json()
+    if context["needsApproval"]:
+        sys.exit("needsApproval is true: enable trading before placing bids.")
+
+    # Never sign blind: check the message against the order you asked for.
+    message = context["eip712"]["message"]
+    assert context["eip712"]["domain"]["name"] == "FutuurLimitOrder"
+    assert context["eip712"]["domain"]["chainId"] == CHAIN_ID
+    assert message["orderId"] == 0
+    assert message["marketId"] == int(MARKET_ID)
+    assert (message["side"], message["position"]) == (side, position)
+    assert message["priceRaw"] == int(Decimal(price) * 100)        # 0.01 steps
+    assert message["sharesRaw"] == int(Decimal(shares) * 100)      # 0.01 steps
+    assert message["safeAddress"].lower() == context["safeAddress"].lower()
+    assert context["ownerAddress"].lower() == owner.address.lower()
+    notional_raw = int(Decimal(price) * Decimal(shares) * 10**6)   # 6 decimals
+    if side == "bid":
+        assert int(message["maxUsdcRaw"]) >= notional_raw          # notional + taker fee
+    else:
+        assert int(message["maxUsdcRaw"]) == 0
+
+    signature = sign_typed_data(
+        domain=context["eip712"]["domain"],
+        types=context["eip712"]["types"],
+        primary_type=context["eip712"]["primaryType"],
+        message=message,
+    )
+
+    body = {
+        **order,
+        "time_in_force": time_in_force,
+        "chain_id": str(context["chainId"]),
+        "order_intent_signature": signature,
+        "order_intent_expiry": str(context["expiry"]),
+        "order_intent_nonce": str(context["nonce"]),
+        "max_usdc_raw": str(context["maxUsdcRaw"]),
+    }
+    created = post("/orders/", body)
+    if created.status_code != 201:
+        # order_intent_nonce_stale / max_usdc_raw_too_low: fetch a new context and sign again.
+        sys.exit(f"Create failed: {created.status_code} {onchain_code(created)} {created.text}")
+    return created.json()
+
+
+# --- 5. Poll. There is no GET /orders/{id}/, so filter the list. ---
+
+def find_order(order_id, status):
+    params = {"market": str(MARKET_ID), "status": status, "limit": "20"}
+    response = get("/orders/", params)
+    response.raise_for_status()
+    return next((o for o in response.json()["results"] if o["id"] == order_id), None)
+
+
+def wait_until_resting(order_id, timeout=60):
+    """Return the order once it is `open`, or None if it left the book."""
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        order = find_order(order_id, "open")      # "open" also returns "processing"
+        if order is None:
+            return None                            # filled or canceled: look under those statuses
+        if order["status"] == "open":
+            return order
+        time.sleep(2)
+    sys.exit("Order is still processing.")
+
+
+# --- 6. Cancel. HMAC only, no wallet signature, no body. ---
+
+def cancel(order_id):
+    for _ in range(10):
+        response = requests.patch(f"{BASE}/orders/{order_id}/cancel/", headers=hmac_headers())
+        if response.status_code == 204:
+            return True
+        if response.status_code == 403:           # LimitOrderBeingProcessing: retry
+            time.sleep(2)
+            continue
+        if response.status_code == 404:           # no longer open: already filled or canceled
+            return False
+        response.raise_for_status()
+    return False
+
+
+if __name__ == "__main__":
+    check_prerequisites()
+
+    created = place_order("bid", "long", PRICE, SHARES)
+    print("created", created["id"], created["status"], created["settlement_status"])
+
+    resting = wait_until_resting(created["id"])
+    if resting is None:
+        filled = find_order(created["id"], "filled")
+        print("order left the book:", "filled" if filled else "canceled")
+        sys.exit(0)
+    print("resting", resting["id"], "filled so far:", resting["shares_filled"])
+
+    print("canceled" if cancel(resting["id"]) else "not canceled")
+    final = find_order(created["id"], "canceled")
+    if final:
+        print("final", final["status"], "shares_filled", final["shares_filled"])
+```
+
+## What each part relies on
+
+| Part | Rule it follows |
+|---|---|
+| Derive | `FutuurApiAuth` v1 domain on chain `84532`, `timestamp` within 120 seconds, and a signer that already has a Futuur account. Derive returns the existing key pair, so running the script again does not rotate keys |
+| HMAC | Python `urlencode` of the sorted parameters plus `Key` and `Timestamp`. Bodies use string values so the signed text equals the sent text. See [Authentication](/authentication) |
+| Prerequisites | `deploy_status` must be `deployed` and `enabled` must be `true` for the currency |
+| Intent | `FutuurLimitOrder` v1 domain. `priceRaw = price × 100`, `sharesRaw = shares × 100`, `maxUsdcRaw` in 6-decimal token units, `orderId = 0` |
+| Create | Sends the signed `nonce`, `expiry`, and `maxUsdcRaw` back. One context, one signature, one create |
+| Poll | `GET /orders/?status=open` returns `open` and `processing` orders. A `gtc` create returns `processing` first |
+| Cancel | Only `open` orders cancel. `403` means `processing`; `404` means the order is no longer open |
+
+## Adapting it
+
+- **Take liquidity:** call `place_order("bid", "long", "0.47", "10", time_in_force="ioc")`. The order fills at that price or better and the rest is canceled. Read `shares_filled` and `average_price` from the response, then from `GET /orders/?status=filled` or `status=partial_filled_cancelled`.
+- **Sell:** call `place_order("ask", "long", "0.60", "10")` with an exact share count no larger than your position.
+- **Quote several orders:** call `place_order` in a loop, one after another. The nonce is sequential per Safe, and creates are limited to 30 per minute.
+- **USDC:** set `FUTUUR_CURRENCY=USDC`, enable trading for USDC, and turn on **Real money trading** for the API key.
+
+<Warning>
+  Never log or commit the owner wallet key or the HMAC private key. Read them from the environment or a secret manager.
+</Warning>

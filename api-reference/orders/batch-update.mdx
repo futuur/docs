@@ -5,7 +5,13 @@ description: "Update between 1 and 20 open limit orders in a single request."
 
 Update multiple open limit orders in a single API call. Each update cancels the existing open order and creates a replacement with the updated fields, so all order-book validations run normally.
 
-Partial failures do not block successful updates in the same batch.
+Partial failures do not block successful updates in the same batch. If the replacement cannot be created, the original order is left as it was.
+
+<Warning>
+  **On-chain currencies (`OOM`, `USDC`) on the phase-one preview host.** An on-chain order is only accepted with its own signed `LimitOrderIntent`, and the per-Safe nonce allows one order per signature. An item without a valid intent fails. Hosts that do not read the intent fields on batch items reject every on-chain item. The supported way to quote is a loop over [`POST /orders/`](/api-reference/orders/create): signing context → sign → create, one order at a time. See [Quote with a per-order loop](/api-reference/orders/batch-create#quote-with-a-per-order-loop).
+</Warning>
+
+To requote an on-chain order, [cancel](/api-reference/orders/cancel) it and create a new signed order. Only `open` orders can be updated; an order that is `processing` returns `Order is being processed.` for that item.
 
 ## Endpoint
 
@@ -42,6 +48,12 @@ POST https://api.futuur.com/v2.0/orders/batch-update/
     <ResponseField name="expired_at" type="string | null">
       Updated ISO 8601 expiration datetime. Use `null` to remove expiration.
     </ResponseField>
+    <ResponseField name="time_in_force" type="string">
+      `gtc` or `ioc`. When omitted the replacement keeps the existing value.
+    </ResponseField>
+    <ResponseField name="market, side, position, currency" type="mixed">
+      Optional. The replacement keeps the existing value of any field you leave out. At least one field besides `id` is required.
+    </ResponseField>
   </Expandable>
 </ParamField>
 
@@ -62,7 +74,7 @@ Returns `200 OK` with one result per submitted update, in the same order as the 
 </ResponseField>
 
 <ResponseField name="order" type="object">
-  Replacement limit order. Present when `success` is `true`. See [List orders](/api-reference/orders/list) for the `LimitOrder` field reference.
+  Replacement limit order, with a **new `id`**. Present when `success` is `true`. See [Create order](/api-reference/orders/create#response) for the fields.
 </ResponseField>
 
 <ResponseField name="errors" type="any">
@@ -98,7 +110,7 @@ curl --request POST \
 
 </CodeGroup>
 
-```json Sample response (200 OK)
+```json Sample response (200 OK), nested objects trimmed
 [
   {
     "index": 0,
@@ -106,18 +118,25 @@ curl --request POST \
     "success": true,
     "order": {
       "id": 10550,
-      "event": "873",
-      "market": "2231",
+      "event": { "id": 873, "title": "Will it rain in Lisbon on Friday?" },
+      "market": { "id": 2231, "title": "Yes" },
       "price": 0.48,
       "shares": 12.0,
       "shares_requested": 12.0,
-      "shares_filled": "0.0",
+      "shares_filled": 0.0,
+      "shares_cancelled": 0.0,
       "currency": "OOM",
       "side": "bid",
       "position": "long",
       "expired_at": null,
-      "status": "open",
-      "created": "2026-06-25T12:00:00Z"
+      "status": "processing",
+      "created": "2026-06-25T12:00:00Z",
+      "time_in_force": "gtc",
+      "average_price": null,
+      "proceeds": null,
+      "settlement_mode": "onchain",
+      "settlement_status": "ready",
+      "chain_id": 84532
     }
   },
   {

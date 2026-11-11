@@ -5,6 +5,8 @@ description: 'Retrieve a paginated list of your limit orders, with optional filt
 
 Retrieve a list of limit orders associated with your account. By default, only `open` orders are returned. Use the query parameters to filter by market, event, currency mode, status, or order side.
 
+This is also how you read one order or its fills: there is no `GET /orders/{id}/` endpoint and no fills or trades endpoint. Filter by `market` and `status`, find the order by `id`, and read `shares_filled`, `average_price`, and `proceeds`.
+
 ## Endpoint
 
 ```
@@ -20,7 +22,13 @@ GET https://api.futuur.com/v2.0/orders/
 ## Request
 
 <ParamField query="status" type="string" default="open">
-  Filter orders by status. One of `open`, `partial_filled`, `filled`, `canceled`, or `processing`.
+  Filter orders by status. One of `open`, `processing`, `filled`, `partial_filled`, `partial_filled_cancelled`, or `canceled`. One value per request.
+
+  - `open` (default) returns orders that are `open` **or** `processing`, on events that are still open.
+  - `partial_filled_cancelled` returns `ioc` orders that filled in part.
+  - `partial_filled` returns the other partly filled, finished orders.
+
+  See [Order lifecycle](/concepts/orders#order-lifecycle).
 </ParamField>
 
 <ParamField query="side" type="string">
@@ -32,7 +40,7 @@ GET https://api.futuur.com/v2.0/orders/
 </ParamField>
 
 <ParamField query="event" type="integer">
-  Filter orders by event ID.
+  Filter orders by event ID. When this parameter is present, `event` and `market` in each result are plain IDs instead of nested objects.
 </ParamField>
 
 <ParamField query="currency" type="string">
@@ -56,11 +64,11 @@ GET https://api.futuur.com/v2.0/orders/
 </ParamField>
 
 <ParamField query="ordering" type="string">
-  Field to sort results by. Prefix with `-` for descending order (e.g., `-created_at`).
+  Field to sort results by: `created`, `price`, `market_title`, `expiration_date`, or `total`. Prefix with `-` for descending order (e.g., `-created`). The default is newest first.
 </ParamField>
 
 <ParamField query="limit" type="integer">
-  Number of results to return per page.
+  Number of results to return per page. The default is 20.
 </ParamField>
 
 <ParamField query="offset" type="integer">
@@ -98,35 +106,62 @@ Returns a paginated list of limit order objects.
     <ResponseField name="id" type="integer" required>
       Unique order ID.
     </ResponseField>
-    <ResponseField name="market" type="integer" required>
-      Market (outcome) ID the order is placed on.
+    <ResponseField name="event" type="object | integer" required>
+      The event as a nested object (`id`, `title`, `slug`, `status`, `is_wagerable`, and more). A plain event ID when the request has the `event` parameter.
+    </ResponseField>
+    <ResponseField name="market" type="object | integer" required>
+      The market (outcome) as a nested object (`id`, `title`, `price`, `long_label`, `short_label`, and more). A plain market ID when the request has the `event` parameter.
     </ResponseField>
     <ResponseField name="side" type="string" required>
       Order side: `bid` (buy) or `ask` (sell).
+    </ResponseField>
+    <ResponseField name="position" type="string" required>
+      Position direction: `long` (betting in favor of the outcome) or `short` (betting against).
     </ResponseField>
     <ResponseField name="currency" type="string" required>
       Currency used for the order: `USDC`, `USDT`, `USD`, or `OOM`.
     </ResponseField>
     <ResponseField name="price" type="number">
-      Limit price as a probability between 0 and 1. `null` for market orders.
+      Limit price as a probability between 0 and 1. Market orders are not listed.
     </ResponseField>
-    <ResponseField name="shares" type="number">
-      Number of shares in the order.
+    <ResponseField name="shares" type="number" required>
+      Shares still unfilled.
     </ResponseField>
-    <ResponseField name="amount" type="number">
-      Cost of the order in currency units.
+    <ResponseField name="shares_requested" type="number" required>
+      Shares the order was created with.
     </ResponseField>
-    <ResponseField name="position" type="string">
-      Position direction: `long` (betting in favor of the outcome) or `short` (betting against).
+    <ResponseField name="shares_filled" type="number" required>
+      Shares filled so far.
+    </ResponseField>
+    <ResponseField name="shares_cancelled" type="number" required>
+      For a finished `ioc` order, the shares that were canceled. `0` otherwise.
+    </ResponseField>
+    <ResponseField name="average_price" type="number">
+      Average fill price. `null` before any fill.
+    </ResponseField>
+    <ResponseField name="proceeds" type="number">
+      Net cash of the fills where this order was the taker, after the fee. `null` if it has no taker fill.
+    </ResponseField>
+    <ResponseField name="time_in_force" type="string" required>
+      `gtc` or `ioc`.
     </ResponseField>
     <ResponseField name="status" type="string" required>
-      Current order status: `open`, `partial_filled`, `filled`, `canceled`, or `processing`.
+      Current order status: `open`, `processing`, `filled`, `partial_filled`, `partial_filled_cancelled`, or `canceled`. A partly filled `gtc` order stays `open`.
     </ResponseField>
     <ResponseField name="expired_at" type="string">
       ISO 8601 datetime at which the order expires. `null` if no expiration is set.
     </ResponseField>
-    <ResponseField name="created_at" type="string" required>
+    <ResponseField name="created" type="string" required>
       ISO 8601 datetime when the order was created.
+    </ResponseField>
+    <ResponseField name="settlement_mode" type="string" required>
+      `onchain`, `ledger`, or empty.
+    </ResponseField>
+    <ResponseField name="settlement_status" type="string" required>
+      On-chain state: `ready`, `approval_pending`, `settling`, `settled`, `failed`, `none`, or empty. See [Settlement](/concepts/orders#settlement).
+    </ResponseField>
+    <ResponseField name="chain_id" type="integer">
+      Chain of an on-chain order, or `null`.
     </ResponseField>
   </Expandable>
 </ResponseField>
@@ -137,19 +172,21 @@ Returns a paginated list of limit order objects.
 
 ```bash cURL
 curl --request GET \
-  --url "https://api.futuur.com/v2.0/orders/?status=open&side=bid&limit=2" \
-  --header "Key: pk_live_abc123def456" \
+  --url "https://api.futuur.com/v2.0/orders/?status=open&event=873&limit=2" \
+  --header "Key: YOUR_PUBLIC_KEY" \
   --header "Timestamp: 1712534400" \
-  --header "HMAC: 3a9f2c1b...sha512signature"
+  --header "HMAC: YOUR_HMAC_SIGNATURE"
 ```
 
 </CodeGroup>
+
+The request filters by `event`, so `event` and `market` are IDs. Without `event` they are nested objects, as in [Create order](/api-reference/orders/create#example).
 
 ```json Sample response
 {
   "pagination": {
     "total": 47,
-    "next": "https://api.futuur.com/v2.0/orders/?limit=2&offset=2&status=open",
+    "next": "https://api.futuur.com/v2.0/orders/?event=873&limit=2&offset=2&status=open",
     "previous": null,
     "page_size": 2,
     "offset": 0
@@ -157,29 +194,47 @@ curl --request GET \
   "results": [
     {
       "id": 10482,
+      "event": 873,
       "market": 3801,
-      "side": "bid",
-      "currency": "USDC",
       "price": 0.65,
-      "shares": 100.0,
-      "amount": 65.0,
+      "shares": 60.0,
+      "shares_requested": 100.0,
+      "shares_filled": 40.0,
+      "shares_cancelled": 0.0,
+      "currency": "OOM",
+      "side": "bid",
       "position": "long",
-      "status": "open",
       "expired_at": null,
-      "created_at": "2026-04-05T14:22:10Z"
+      "status": "open",
+      "created": "2026-04-05T14:22:10Z",
+      "time_in_force": "gtc",
+      "average_price": 0.65,
+      "proceeds": null,
+      "settlement_mode": "onchain",
+      "settlement_status": "settled",
+      "chain_id": 84532
     },
     {
       "id": 10479,
-      "market": 4112,
-      "side": "bid",
-      "currency": "USDC",
+      "event": 873,
+      "market": 3802,
       "price": 0.42,
       "shares": 50.0,
-      "amount": 21.0,
+      "shares_requested": 50.0,
+      "shares_filled": 0.0,
+      "shares_cancelled": 0.0,
+      "currency": "OOM",
+      "side": "bid",
       "position": "long",
-      "status": "open",
       "expired_at": "2026-04-30T00:00:00Z",
-      "created_at": "2026-04-04T09:05:33Z"
+      "status": "open",
+      "created": "2026-04-04T09:05:33Z",
+      "time_in_force": "gtc",
+      "average_price": null,
+      "proceeds": null,
+      "settlement_mode": "onchain",
+      "settlement_status": "ready",
+      "chain_id": 84532
     }
   ]
 }

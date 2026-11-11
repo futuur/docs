@@ -19,7 +19,7 @@ Welcome to the Futuur API. Use this API to integrate prediction markets into you
     Understand events, markets, orders, and wagers.
   </Card>
   <Card title="On-chain trading" icon="blocks" href="/concepts/on-chain-trading">
-    Coming soon: CLOB matching with on-chain settlement.
+    CLOB matching with on-chain settlement. Phase one runs on the preview host.
   </Card>
   <Card title="API Reference" icon="code" href="/api-reference/events/list">
     Explore every endpoint with request and response details.
@@ -39,7 +39,7 @@ Welcome to the Futuur API. Use this API to integrate prediction markets into you
     Call `GET /events/` to list available prediction markets. Filter by category, tag, currency mode, or search term.
   </Step>
   <Step title="Place an order">
-    Call `POST /orders/` to place a limit or market order on any open event outcome. Choose a side (bid/ask) and position (long/short).
+    Call `POST /orders/` to place a limit order (`gtc` or `ioc`) on any open event outcome. Choose a side (bid/ask) and position (long/short).
   </Step>
 </Steps>
 
@@ -48,5 +48,5 @@ Welcome to the Futuur API. Use this API to integrate prediction markets into you
 </Note>
 
 <Note>
-  On-chain CLOB trading is coming soon. Today's production API still uses HMAC-only ledger settlement. See [On-chain trading](/concepts/on-chain-trading) to prepare.
+  Phase one of on-chain trading runs on a preview host on Base Sepolia, where every `OOM` and `USDC` order needs a wallet-signed intent. Production (`https://api.futuur.com`) still uses HMAC-only ledger settlement. See [Environment](/environment).
 </Note>

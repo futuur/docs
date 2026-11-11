@@ -48,9 +48,10 @@ When you create an order via `POST /orders/`, include the `currency` field to sp
   "market": 42,
   "side": "bid",
   "position": "long",
-  "amount": 100,
+  "shares": "100",
   "currency": "OOM",
-  "price": null
+  "price": "0.47",
+  "time_in_force": "ioc"
 }
 ```
 
@@ -61,16 +62,16 @@ Use `USDC` or `USDT` for real money orders:
   "market": 42,
   "side": "bid",
   "position": "long",
-  "amount": 10.00,
+  "shares": "10",
   "currency": "USDC",
-  "price": 0.60
+  "price": "0.60"
 }
 ```
 
 The `currency` value you supply must match the `currency_mode` of the event you are trading on. Mixing OOM with a real money event (or vice versa) will return an error.
 
 <Note>
-  On-chain CLOB trading is coming soon. Today's balances are ledger balances from [`GET /me/balances/`](/api-reference/me/balances). When settlement moves on-chain, OOM and USDC will sit in your Safe and move with ERC-20 `transferFrom` at match. See [On-chain trading](/concepts/on-chain-trading).
+  On the phase-one preview host, `OOM` and `USDC` sit in your Safe as ERC-20 tokens and move with `transferFrom` at match. Orders in those currencies need a signed intent, and a `USDC` order placed with an API key also needs **Real money trading** turned on for that key. See [Environment](/environment) and [On-chain trading](/concepts/on-chain-trading).
 </Note>
 
 ## Country restrictions
