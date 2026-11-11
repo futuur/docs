@@ -55,30 +55,21 @@ GET https://api.futuur.com/v2.0/wagers/
 
 Returns a paginated list of wager objects.
 
-<ResponseField name="pagination" type="object" required>
-  Pagination metadata for the result set.
-  <Expandable title="properties">
-    <ResponseField name="total" type="integer">
-      Total number of wagers matching the query.
-    </ResponseField>
-    <ResponseField name="next" type="string">
-      URL for the next page of results. `null` if there are no more pages.
-    </ResponseField>
-    <ResponseField name="previous" type="string">
-      URL for the previous page of results. `null` if on the first page.
-    </ResponseField>
-    <ResponseField name="page_size" type="integer">
-      Number of results returned per page.
-    </ResponseField>
-    <ResponseField name="offset" type="integer">
-      Current pagination offset.
-    </ResponseField>
-  </Expandable>
+<ResponseField name="count" type="integer" required>
+  Total number of wagers matching the query.
 </ResponseField>
 
-<ResponseField name="results" type="object[]" required>
-  Array of `WagerList` objects.
-  <Expandable title="Wager properties">
+<ResponseField name="next" type="string">
+  URL to the next page of results, or `null` if there are no more pages.
+</ResponseField>
+
+<ResponseField name="previous" type="string">
+  URL to the previous page of results, or `null` if on the first page.
+</ResponseField>
+
+<ResponseField name="results" type="array" required>
+  Array of wager objects.
+  <Expandable title="Wager object properties">
     <ResponseField name="id" type="integer" required>
       Unique wager ID.
     </ResponseField>
@@ -109,103 +100,48 @@ Returns a paginated list of wager objects.
     <ResponseField name="shares" type="number" required>
       Consolidated shares held in this wager.
     </ResponseField>
-    <ResponseField name="shares_in_canonical" type="number" required>
-      Consolidated shares expressed in the event's canonical currency.
-    </ResponseField>
-    <ResponseField name="total_amount" type="string" required>
-      Total amount associated with the wager.
-    </ResponseField>
-    <ResponseField name="purchases_amount" type="number">
-      Cost basis of the open position, adjusted for partial sales.
-    </ResponseField>
-    <ResponseField name="active_purchases_amount" type="string" required>
-      Amount from active purchases on this wager.
-    </ResponseField>
-    <ResponseField name="active_purchases">
-      Purchases from the last outcome bought in this event.
-    </ResponseField>
-    <ResponseField name="roi" type="string" required>
-      Return on investment for the wager.
-    </ResponseField>
-    <ResponseField name="earnings" type="string" required>
-      Earnings associated with the wager.
-    </ResponseField>
-    <ResponseField name="amount_on_win" type="string" required>
-      Projected payout if the wager wins.
-    </ResponseField>
-    <ResponseField name="amount_on_sell" type="string" required>
-      Amount available if the position is sold now.
-    </ResponseField>
-    <ResponseField name="last_profit" type="number">
-      Last profit when the event resolved or the wager was sold. `null` if not applicable.
-    </ResponseField>
-    <ResponseField name="last_sell_amount" type="number">
-      Last sale amount when the wager was sold. Always positive when set.
-    </ResponseField>
-    <ResponseField name="last_purchase" type="string" required>
-      ISO 8601 datetime of the most recent purchase.
-    </ResponseField>
-    <ResponseField name="last_update" type="string" required>
-      ISO 8601 datetime of the most recent wager update.
-    </ResponseField>
-    <ResponseField name="last_action">
-      Serialized data about the most recent `WagerAction` on this wager.
-    </ResponseField>
-    <ResponseField name="actions_count" type="integer">
-      Number of user-triggered actions (purchases, sales) on this wager.
-    </ResponseField>
   </Expandable>
 </ResponseField>
 
 ## Example
 
-<CodeGroup>
-
 ```bash cURL
 curl --request GET \
-  --url "https://api.futuur.com/v2.0/wagers/?active=true&currency_mode=real_money&limit=2" \
-  --header "Key: pk_live_abc123def456" \
-  --header "Timestamp: 1712534400" \
-  --header "HMAC: 3a9f2c1b...sha512signature"
+  --url "https://api.futuur.com/v2.0/wagers/?active=true&currency_mode=play_money" \
+  --header "Key: YOUR_PUBLIC_KEY" \
+  --header "Timestamp: 1712500000" \
+  --header "HMAC: YOUR_HMAC_SIGNATURE"
 ```
-
-</CodeGroup>
 
 ```json Sample response
 {
-  "pagination": {
-    "total": 12,
-    "next": "https://api.futuur.com/v2.0/wagers/?active=true&currency_mode=real_money&limit=2&offset=2",
-    "previous": null,
-    "page_size": 2,
-    "offset": 0
-  },
+  "count": 2,
+  "next": null,
+  "previous": null,
   "results": [
     {
-      "id": 88201,
+      "id": 12345,
       "status": "purchased",
-      "status_display": "Purchased",
-      "user": "https://api.futuur.com/v2.0/users/5042/",
-      "event": "https://api.futuur.com/v2.0/events/901/",
-      "market": "https://api.futuur.com/v2.0/markets/3801/",
+      "status_display": "Active",
+      "user": "/v2.0/users/1001/",
+      "event": "/v2.0/events/5678/",
+      "market": "/v2.0/markets/9012/",
       "position": "long",
-      "position_display": "Long",
-      "currency": "USDC",
-      "shares": 100.0,
-      "shares_in_canonical": 100.0,
-      "total_amount": "65.00",
-      "purchases_amount": 65.0,
-      "active_purchases_amount": "65.00",
-      "roi": "10.00",
-      "earnings": "6.50",
-      "amount_on_win": "100.00",
-      "amount_on_sell": "71.50",
-      "last_profit": null,
-      "last_sell_amount": null,
-      "last_purchase": "2026-04-05T14:22:10Z",
-      "last_update": "2026-04-07T08:15:44Z",
-      "last_action": null,
-      "actions_count": 1
+      "position_display": "Yes",
+      "currency": "OOM",
+      "shares": 100.0
+    },
+    {
+      "id": 12346,
+      "status": "purchased",
+      "status_display": "Active",
+      "user": "/v2.0/users/1001/",
+      "event": "/v2.0/events/5679/",
+      "market": "/v2.0/markets/9013/",
+      "position": "short",
+      "position_display": "No",
+      "currency": "OOM",
+      "shares": 50.0
     }
   ]
 }
