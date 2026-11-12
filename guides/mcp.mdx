@@ -11,7 +11,7 @@ The [Model Context Protocol](https://modelcontextprotocol.io) (MCP) lets Claude 
 
 **You can say things like:**
 - *"Show me the top 10 markets by volume"*
-- *"Simulate buying 200 OOM on the Yes outcome of event #1234"*
+- *"Simulate spending 200 OOM on Yes in the Bitcoin market"*
 - *"What are my open positions and how are they performing?"*
 - *"Sell 50 shares of my wager on the US election market"*
 
@@ -20,7 +20,7 @@ The [Model Context Protocol](https://modelcontextprotocol.io) (MCP) lets Claude 
 ## Prerequisites
 
 <Steps>
-  <Step title="Node.js 18 or higher">
+  <Step title="Node.js 20 or higher">
     Download from [nodejs.org](https://nodejs.org). Verify with `node --version`.
   </Step>
   <Step title="Claude Code CLI">
@@ -76,15 +76,17 @@ Paste your Futuur API keys below, then copy and run the generated command in you
 
 ## Available tools
 
+Market data tools work without API keys. Account and trading tools need them.
+
 <CardGroup cols={2}>
   <Card title="Market discovery" icon="search">
-    `get_markets` · `get_market_details` · `get_price_history` · `get_categories`
+    `get_markets` · `get_market_details` · `get_price_history` · `get_order_book` · `get_categories` · `get_category_details`
   </Card>
   <Card title="Account" icon="user">
-    `get_user_profile` · `get_user_ranking`
+    `get_user_profile` · `get_balances` · `get_user_ranking`
   </Card>
   <Card title="Trading" icon="arrow-left-right">
-    `get_bet_simulation` · `place_bet` · `list_orders` · `cancel_order`
+    `get_bet_simulation` · `place_bet` · `list_orders` · `cancel_order` · `cancel_all_orders`
   </Card>
   <Card title="Positions" icon="chart-line">
     `get_user_bets` · `get_wager_details` · `get_partial_sell_amount` · `sell_bet`
@@ -93,20 +95,25 @@ Paste your Futuur API keys below, then copy and run the generated command in you
 
 | Tool | What it does |
 |------|-------------|
-| `get_markets` | List and search events with filters — category, tag, status, ordering |
+| `get_markets` | List and search events with filters: category, tag, status, close date, ordering |
 | `get_market_details` | Full details for one event including all outcome markets |
 | `get_price_history` | Historical prices for an event (`day` / `week` / `month` / `year` / `all_time`) |
-| `get_categories` | List available market categories |
-| `get_user_profile` | Your account profile and wallet balances (see also [`GET /me/balances/`](/api-reference/me/balances)) |
+| `get_order_book` | Bids and asks for one market |
+| `get_categories` · `get_category_details` | Browse market categories |
+| `get_exchange_rates` · `convert_to_usd` · `convert_from_usd` | Currency rates and indicative conversions |
+| `get_user_profile` | Your account profile |
+| `get_balances` | Your balance per currency (see also [`GET /me/balances/`](/api-reference/me/balances)) |
 | `get_user_ranking` | Your leaderboard position |
-| `get_bet_simulation` | Preview a buy order — cost and shares — without placing it |
-| `place_bet` | Execute a limit order from a confirmed simulation |
+| `get_bet_simulation` | Preview a buy or sell against the live order book, without placing it |
+| `place_bet` | Place a limit or market order |
 | `list_orders` | List your open, filled, or cancelled orders |
-| `cancel_order` | Cancel an open order by ID |
+| `cancel_order` · `cancel_all_orders` | Cancel one open order, or all of them on a market or event |
 | `get_user_bets` | List your wager positions with filters |
 | `get_wager_details` | Full details for one wager |
-| `get_partial_sell_amount` | Simulate how much you'd receive for selling N shares |
+| `get_partial_sell_amount` | Estimate what a position would sell for |
 | `sell_bet` | Sell all or part of a wager position |
+
+Tools that move your balance (`place_bet`, `sell_bet`, `cancel_order`, `cancel_all_orders`) are marked as such, so Claude asks before running them.
 
 ---
 
@@ -124,20 +131,20 @@ Claude: [calls get_market_details for the event]
         The "Trump wins 2026" market is currently priced at 62% (0.62).
         Market ID: 8821, Event ID: 4401.
 
-You:    Simulate buying 100 OOM on the Yes outcome
+You:    Simulate spending 100 OOM on the Yes outcome
 
-Claude: [calls get_bet_simulation with event_id=4401, market=8821, amount=100, currency=OOM]
-        You'd receive approximately 161 shares at 0.62 each. Total cost: 100 OOM.
+Claude: [calls get_bet_simulation with market=8821, side=bid, position=long, currency=OOM, amount=100]
+        That buys about 161 shares at an average price of 0.62, for 100 OOM.
         Shall I place the order?
 
 You:    Yes, go ahead
 
-Claude: [calls place_bet with confirmed payload]
+Claude: [calls place_bet with market=8821, side=bid, position=long, currency=OOM, shares=161]
         Order placed. ID: 99231, status: filled.
 ```
 
 <Tip>
-  Use `currency_mode: "play_money"` to practice with OOM (play money) before trading real funds.
+  Trade with `currency: "OOM"` (play money) to practice before using real funds.
 </Tip>
 
 ---
