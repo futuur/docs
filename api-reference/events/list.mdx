@@ -1,9 +1,9 @@
 ---
-title: "List events"
-description: "Retrieve a paginated list of prediction market events with optional filters."
+title: 'List events'
+description: 'Retrieve a paginated list of prediction market events with optional filters.'
 ---
 
-Retrieve a list of prediction market events. Filter by category, tag, search term, currency mode, date range, and status. Results are paginated.
+Retrieve a list of prediction market events. You can filter by category, tag, search term, currency mode, status, and date range. This endpoint does not require authentication.
 
 ## Endpoint
 
@@ -23,6 +23,10 @@ GET https://api.futuur.com/v2.0/events/
   Case-insensitive search across the event title, market names, categories, and tags. Maximum 100 characters.
 </ParamField>
 
+<ParamField query="currency_mode" type="string" default="play_money">
+  Filter by currency mode: `play_money` or `real_money`. Defaults to `play_money`.
+</ParamField>
+
 <ParamField query="categories" type="string">
   Comma-separated category IDs. A root category includes its descendants. An event matches any listed category.
 </ParamField>
@@ -33,18 +37,6 @@ GET https://api.futuur.com/v2.0/events/
 
 <ParamField query="tag" type="string">
   Comma-separated tag slug or name, up to 10. An event matches if it has any listed tag. Matching is case-insensitive.
-</ParamField>
-
-<ParamField query="currency_mode" type="string" default="play_money">
-  Filter by currency mode: `play_money` or `real_money`. Defaults to `play_money`.
-</ParamField>
-
-<ParamField query="bet_end_date_after" type="string">
-  Inclusive lower bound for `bet_end_date`, ISO 8601 with timezone (e.g., `2026-11-01T00:00:00Z`). Events without `bet_end_date` are excluded. Combines with the list status window: open and pending resolution, unless `live`, `resolved_only`, or `pending_resolution` is set.
-</ParamField>
-
-<ParamField query="bet_end_date_before" type="string">
-  Inclusive upper bound for `bet_end_date`, ISO 8601 with timezone (e.g., `2026-11-01T00:00:00Z`). Events without `bet_end_date` are excluded. Combines with the list status window: open and pending resolution, unless `live`, `resolved_only`, or `pending_resolution` is set.
 </ParamField>
 
 <ParamField query="live" type="boolean" default="false">
@@ -59,12 +51,20 @@ GET https://api.futuur.com/v2.0/events/
   When `true`, return unresolved events whose close time has passed.
 </ParamField>
 
+<ParamField query="bet_end_date_after" type="string">
+  Inclusive lower bound for `bet_end_date`, ISO 8601 with a timezone (for example `2026-11-01T00:00:00Z`). Events without `bet_end_date` are excluded. Combines with the list status window: open and pending resolution, unless `live`, `resolved_only`, or `pending_resolution` is set.
+</ParamField>
+
+<ParamField query="bet_end_date_before" type="string">
+  Inclusive upper bound for `bet_end_date`, ISO 8601 with a timezone (for example `2026-11-01T00:00:00Z`). Events without `bet_end_date` are excluded. Combines with the list status window: open and pending resolution, unless `live`, `resolved_only`, or `pending_resolution` is set.
+</ParamField>
+
 <ParamField query="hide_my_bets" type="boolean" default="false">
   Authenticated only. Omit events the user has already bet on.
 </ParamField>
 
 <ParamField query="only_markets_i_follow" type="boolean" default="false">
-  Authenticated only. Return only events the user follows.
+  Authenticated only. Return events the user follows.
 </ParamField>
 
 <ParamField query="ordering" type="string">
@@ -76,7 +76,7 @@ GET https://api.futuur.com/v2.0/events/
 </ParamField>
 
 <ParamField query="offset" type="integer">
-  The initial index from which to return results (for pagination).
+  The initial index from which to return the results.
 </ParamField>
 
 ## Response
@@ -88,35 +88,37 @@ Returns a paginated list of event objects.
 </ResponseField>
 
 <ResponseField name="next" type="string">
-  URL for the next page of results, or `null` if there are no more pages.
+  URL to the next page of results, or `null` if there are no more pages.
 </ResponseField>
 
 <ResponseField name="previous" type="string">
-  URL for the previous page of results, or `null` if on the first page.
+  URL to the previous page of results, or `null` if on the first page.
 </ResponseField>
 
 <ResponseField name="results" type="array" required>
   Array of event objects.
-  <Expandable title="Event object properties">
-    <ResponseField name="id" type="integer" required>
-      Unique event identifier.
-    </ResponseField>
-    <ResponseField name="title" type="string" required>
-      The event title or question.
-    </ResponseField>
-    <ResponseField name="markets" type="array" required>
-      Array of market (outcome) objects for this event.
-    </ResponseField>
-    <ResponseField name="bet_end_date" type="string">
-      ISO 8601 timestamp when betting closes, or `null` if not set.
-    </ResponseField>
-    <ResponseField name="categories" type="array">
-      Array of category objects the event belongs to.
-    </ResponseField>
-    <ResponseField name="tags" type="array">
-      Array of tag objects associated with the event.
-    </ResponseField>
-  </Expandable>
+</ResponseField>
+
+### Event object
+
+<ResponseField name="id" type="integer" required>
+  Unique event ID.
+</ResponseField>
+
+<ResponseField name="title" type="string" required>
+  The event title or question.
+</ResponseField>
+
+<ResponseField name="markets" type="array" required>
+  Array of market objects representing possible outcomes for this event.
+</ResponseField>
+
+<ResponseField name="bet_end_date" type="string">
+  ISO 8601 timestamp when betting closes, or `null` if not set.
+</ResponseField>
+
+<ResponseField name="created_on" type="string">
+  ISO 8601 timestamp when the event was created.
 </ResponseField>
 
 ## Example
@@ -131,13 +133,12 @@ response = requests.get(
     params={
         "search": "US election",
         "currency_mode": "play_money",
-        "ordering": "-volume",
-        "limit": 10,
+        "limit": 5,
     },
 )
 
-data = response.json()
-for event in data["results"]:
+events = response.json()["results"]
+for event in events:
     print(event["id"], event["title"])
 ```
 
@@ -145,8 +146,7 @@ for event in data["results"]:
 curl -G "https://api.futuur.com/v2.0/events/" \
   --data-urlencode "search=US election" \
   --data-urlencode "currency_mode=play_money" \
-  --data-urlencode "ordering=-volume" \
-  --data-urlencode "limit=10"
+  --data-urlencode "limit=5"
 ```
 
 </CodeGroup>
@@ -154,31 +154,26 @@ curl -G "https://api.futuur.com/v2.0/events/" \
 ```json Sample response
 {
   "count": 42,
-  "next": "https://api.futuur.com/v2.0/events/?limit=10&offset=10",
+  "next": "https://api.futuur.com/v2.0/events/?limit=5&offset=5",
   "previous": null,
   "results": [
     {
       "id": 12345,
       "title": "Who will win the 2024 US Presidential Election?",
-      "bet_end_date": "2024-11-05T00:00:00Z",
       "markets": [
         {
           "id": 67890,
           "name": "Candidate A",
-          "price": 0.52
+          "price": 0.55
         },
         {
           "id": 67891,
           "name": "Candidate B",
-          "price": 0.48
+          "price": 0.42
         }
       ],
-      "categories": [
-        {"id": 1, "name": "Politics", "slug": "politics"}
-      ],
-      "tags": [
-        {"slug": "us-election", "name": "US Election"}
-      ]
+      "bet_end_date": "2024-11-05T00:00:00Z",
+      "created_on": "2024-01-15T12:00:00Z"
     }
   ]
 }
