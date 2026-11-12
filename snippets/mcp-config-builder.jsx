@@ -12,7 +12,7 @@ export const McpConfigBuilder = () => {
       ? `"${value.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`
       : value;
 
-  const command = `claude mcp add futuur -- npx -y @futuur/futuur-mcp -e FUTUUR_PUBLIC_KEY=${quoteEnv(pk)} -e FUTUUR_PRIVATE_KEY=${quoteEnv(sk)}`;
+  const command = `claude mcp add futuur -e FUTUUR_PUBLIC_KEY=${quoteEnv(pk)} -e FUTUUR_PRIVATE_KEY=${quoteEnv(sk)} -- npx -y @futuur/futuur-mcp`;
 
   const copy = () => {
     navigator.clipboard.writeText(command).then(() => {
