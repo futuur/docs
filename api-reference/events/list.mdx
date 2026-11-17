@@ -3,7 +3,7 @@ title: 'List events'
 description: 'Retrieve a paginated list of prediction market events with optional filters.'
 ---
 
-Retrieve a list of prediction market events. You can filter by category, tag, search term, currency mode, status, and date range. This endpoint does not require authentication.
+Retrieve a list of prediction market events. You can filter by category, tag, search term, currency mode, resolution status, and more. This endpoint does not require authentication.
 
 ## Endpoint
 
@@ -68,7 +68,7 @@ GET https://api.futuur.com/v2.0/events/
 </ParamField>
 
 <ParamField query="ordering" type="string">
-  Field to order results by. Allowed values: `relevance`, `-relevance`, `created_on`, `-created_on`, `bet_end_date`, `-bet_end_date`, `wagers_count`, `-wagers_count`, `volume`, `-volume`, `open_date`, `-open_date`, `resolve_date`, `-resolve_date`. Prefix with `-` for descending order.
+  Which field to use when ordering the results. Allowed values: `relevance`, `-relevance`, `created_on`, `-created_on`, `bet_end_date`, `-bet_end_date`, `wagers_count`, `-wagers_count`, `volume`, `-volume`, `open_date`, `-open_date`, `resolve_date`, `-resolve_date`. Prefix with `-` for descending order.
 </ParamField>
 
 <ParamField query="limit" type="integer">
@@ -99,7 +99,7 @@ Returns a paginated list of event objects.
   Array of event objects.
 </ResponseField>
 
-### Event object
+### Event object fields
 
 <ResponseField name="id" type="integer" required>
   Unique event ID.
@@ -169,7 +169,7 @@ curl -G "https://api.futuur.com/v2.0/events/" \
         {
           "id": 67891,
           "name": "Candidate B",
-          "price": 0.42
+          "price": 0.45
         }
       ],
       "bet_end_date": "2024-11-05T00:00:00Z",
