@@ -5,7 +5,7 @@ tag: "Coming soon"
 ---
 
 <Note>
-  Session keys are coming soon and are **not live** on `https://api.futuur.com`. They are available on Futuur's staging environment only. The preview host described in [Environment](/environment) does not offer them. All paths below are relative to the API base URL of that environment, for example `/v2.0/me/session-delegations/prepare/`. Where session keys are off, every endpoint on this page returns `404`.
+  Session keys are coming soon and are **not live** on `https://api.futuur.com`. All paths below are relative to the API base URL, for example `/v2.0/me/session-delegations/prepare/`. Where session keys are off, every endpoint on this page returns `404`.
 </Note>
 
 A session key lets a client sign orders without asking the owner wallet each time. You sign one delegation with the owner wallet. After that, a throwaway key signs each `LimitOrderIntent`. For what a session key is and which limits apply, read [Session keys](/concepts/session-keys) first.
@@ -301,7 +301,7 @@ This script registers a session key, places one order signed by the session key,
 
 ```bash
 pip install requests eth-account
-export FUTUUR_API_BASE=https://...      # API base URL of the staging environment, ending in /v2.0
+export FUTUUR_API_BASE=https://...      # API base URL, ending in /v2.0
 export FUTUUR_HMAC_PUBLIC_KEY=...
 export FUTUUR_HMAC_PRIVATE_KEY=...
 export FUTUUR_OWNER_KEY=0x...           # owner EOA private key. Never commit it

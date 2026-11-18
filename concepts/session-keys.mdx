@@ -5,7 +5,7 @@ tag: "Coming soon"
 ---
 
 <Note>
-  Session keys are coming soon. They are not available on `https://api.futuur.com`, where settlement is still HMAC-only and ledger-based. They run on Futuur's staging environment only. The preview host described in [Environment](/environment) does not offer them. This page explains the model so you can prepare. The endpoints are documented only in the [developer guide](/guides/session-keys), and they are not live on `https://api.futuur.com`.
+  Session keys are coming soon. They are not available on `https://api.futuur.com`, where settlement is still HMAC-only and ledger-based. This page explains the model so you can prepare. The endpoints are documented only in the [developer guide](/guides/session-keys), and they are not live on `https://api.futuur.com`.
 </Note>
 
 A **session key** is a separate, throwaway signing key that your owner wallet authorizes once. After that, the session key signs your Web3 orders and your owner wallet is not needed for each one.
@@ -128,7 +128,7 @@ Each browser or device can hold its own session. A Safe can have several live se
 
 ## How the Futuur website uses session keys
 
-On the staging build of the Futuur website, this is automatic and has no extra screens:
+On the Futuur website, this will be automatic, with no extra screens:
 
 - The first Web3 bet asks your wallet for one signature. That is the delegation.
 - Later bets are signed in the browser with the session key. Your wallet is not involved.
