@@ -1,0 +1,20 @@
+---
+title: "Formador de Mercado Automatizado (Automated Market Maker, ou AMM)"
+description: "O que é um Formador de Mercado Automatizado (AMM) e como funciona o AMM da Futuur."
+---
+
+Uma das características mais distintas da Futuur é o uso de um Formador de Mercado Automatizado (AMM) para determinar preços. Leia mais para entender melhor o que ele é e como funciona em nossos mercados.
+
+## O que é um Formador de Mercado Automatizado (AMM)?
+
+Um **Formador de Preços Automatizado** (Automated Market Maker, ou AMM) é um algoritmo que nos permite oferecer um preço de compra ou venda para qualquer resultado a qualquer momento, mesmo quando o [Livro de Ordens](/pt-br/help/order-book) de um mercado está vazio.
+
+Adotar uma abordagem híbrida **Livro de Ordens / AMM** traz a vantagem de liquidez instantânea e contínua para todos os nossos mercados, ao mesmo tempo que preserva os benefícios de uma precificação dinâmica típica de bolsas e corretoras. Isso garante que as negociações sejam sempre possíveis, mesmo nos mercados em que o livro de ordens, sozinho, não oferece liquidez suficiente.
+
+## Como funciona o AMM?
+
+A Futuur usa o [LS-LMSR](https://www.cs.cmu.edu/~sandholm/liquidity-sensitive%20automated%20market%20maker.teac.pdf) (Regra de Pontuação Logarítmica Sensível à Liquidez), um formador de mercado que se baseia na fundação do algoritmo LMSR original, amplamente utilizado em aplicações de mercados de previsão. As características do LS-LMSR incluem a capacidade de definir uma perda limitada e de definir uma comissão sobre as negociações. Além disso, por ser "sensível à liquidez", à medida que a liquidez aumenta, haverá menos movimento de preço (slippage) com cada negociação incremental. Ou seja, mercados com maior volume mostrarão menos desvio de preço.
+
+Todos os mercados são iniciados com uma quantidade de shares distribuídas entre cada um dos resultados, o que fornece a liquidez inicial. O preço de um resultado é determinado por uma função de custo calculada com base na distribuição de shares. Para calcular o preço de compra, a função de custo anterior é subtraída da nova.
+
+Para calcular o preço de venda, a Futuur usa a abordagem Always Moving Forward (Sempre Avançando), o que significa que, em vez de diminuir as ações no resultado vendido, as ações nos outros resultados são aumentadas por um valor equivalente. Isso é aplicado quando há atividade no mercado entre a compra original e o evento de venda; não é aplicado a uma venda pelo mesmo usuário que ocorre imediatamente após uma compra.

@@ -1,6 +1,6 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "name": "Futuur API",
+  "name": "Futuur Docs",
   "theme": "maple",
   "colors": {
     "primary": "#0027CC",
@@ -23,118 +23,217 @@
       },
       {
         "label": "Help Center",
-        "href": "https://docs.futuur.com/"
+        "href": "/help"
       }
     ]
   },
   "navigation": {
-    "tabs": [
+    "languages": [
       {
-        "tab": "Documentation",
-        "groups": [
+        "language": "en",
+        "tabs": [
           {
-            "group": "Get Started",
-            "pages": [
-              "introduction",
-              "environment",
-              "guides/get-api-keys",
-              "authentication",
-              "rate-limits",
-              "errors",
-              "guides/mcp"
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "introduction",
+                  "environment",
+                  "guides/get-api-keys",
+                  "authentication",
+                  "rate-limits",
+                  "errors",
+                  "guides/mcp"
+                ]
+              },
+              {
+                "group": "Core Concepts",
+                "pages": [
+                  "concepts/events-and-markets",
+                  "concepts/orders",
+                  "concepts/wagers",
+                  "concepts/currencies"
+                ]
+              },
+              {
+                "group": "On-chain trading",
+                "pages": [
+                  "concepts/on-chain-trading",
+                  "concepts/conditional-tokens",
+                  "concepts/session-keys",
+                  "guides/on-chain-first-order",
+                  "guides/on-chain-bot-example",
+                  "guides/session-keys"
+                ]
+              },
+              {
+                "group": "Guides",
+                "pages": [
+                  "guides/mcp",
+                  "guides/get-api-keys",
+                  "guides/placing-a-bet",
+                  "guides/selling-a-position",
+                  "guides/merge-complete-set",
+                  "guides/split-before-quoting",
+                  "guides/reading-the-order-book"
+                ]
+              }
             ]
           },
           {
-            "group": "Core Concepts",
-            "pages": [
-              "concepts/events-and-markets",
-              "concepts/orders",
-              "concepts/wagers",
-              "concepts/currencies"
+            "tab": "API Reference",
+            "groups": [
+              {
+                "group": "Events",
+                "pages": [
+                  "api-reference/events/list",
+                  "api-reference/events/retrieve",
+                  "api-reference/events/actions",
+                  "api-reference/events/get-tax",
+                  "api-reference/events/price-history",
+                  "api-reference/events/related-events",
+                  "api-reference/events/wagers"
+                ]
+              },
+              {
+                "group": "Markets",
+                "pages": [
+                  "api-reference/markets/order-book"
+                ]
+              },
+              {
+                "group": "Orders",
+                "pages": [
+                  "api-reference/orders/list",
+                  "api-reference/orders/create",
+                  "api-reference/orders/batch-create",
+                  "api-reference/orders/batch-update",
+                  "api-reference/orders/cancel",
+                  "api-reference/orders/batch-cancel",
+                  "api-reference/orders/cancel-all"
+                ]
+              },
+              {
+                "group": "Wagers",
+                "pages": [
+                  "api-reference/wagers/list",
+                  "api-reference/wagers/retrieve",
+                  "api-reference/wagers/rebates"
+                ]
+              },
+              {
+                "group": "Account",
+                "pages": [
+                  "api-reference/me/information",
+                  "api-reference/me/balances",
+                  "api-reference/me/ranking",
+                  "api-reference/me/safe"
+                ]
+              },
+              {
+                "group": "Realtime (websockets)",
+                "pages": [
+                  "api-reference/websocket/overview",
+                  "api-reference/websocket/authorization",
+                  "api-reference/websocket/channels-and-events"
+                ]
+              }
             ]
           },
           {
-            "group": "On-chain trading",
-            "pages": [
-              "concepts/on-chain-trading",
-              "concepts/conditional-tokens",
-              "concepts/session-keys",
-              "guides/on-chain-first-order",
-              "guides/on-chain-bot-example",
-              "guides/session-keys"
-            ]
-          },
-          {
-            "group": "Guides",
-            "pages": [
-              "guides/mcp",
-              "guides/get-api-keys",
-              "guides/placing-a-bet",
-              "guides/selling-a-position",
-              "guides/merge-complete-set",
-              "guides/split-before-quoting",
-              "guides/reading-the-order-book"
+            "tab": "Help Center",
+            "groups": [
+              {
+                "group": "Help Center",
+                "pages": [
+                  "help"
+                ]
+              },
+              {
+                "group": "Getting started",
+                "pages": [
+                  "help/understanding-currencies",
+                  "help/create-your-account",
+                  "help/deposits-and-withdrawals",
+                  "help/betting-and-trading",
+                  "help/api",
+                  "help/coupon-codes",
+                  "help/midterms-trading-competition"
+                ]
+              },
+              {
+                "group": "Foundations",
+                "pages": [
+                  "help/prediction-markets-basics",
+                  "help/rules-and-resolutions",
+                  "help/order-book",
+                  "help/automated-market-maker",
+                  "help/license-and-jurisdiction"
+                ]
+              },
+              {
+                "group": "Market makers",
+                "pages": [
+                  "help/market-maker-guide",
+                  "help/rebates"
+                ]
+              },
+              {
+                "group": "Legal",
+                "pages": [
+                  "legal/terms-of-service",
+                  "legal/privacy-policy"
+                ]
+              }
             ]
           }
         ]
       },
       {
-        "tab": "API Reference",
-        "groups": [
+        "language": "pt-BR",
+        "tabs": [
           {
-            "group": "Events",
-            "pages": [
-              "api-reference/events/list",
-              "api-reference/events/retrieve",
-              "api-reference/events/actions",
-              "api-reference/events/get-tax",
-              "api-reference/events/price-history",
-              "api-reference/events/related-events",
-              "api-reference/events/wagers"
+            "tab": "Central de Ajuda",
+            "groups": [
+              {
+                "group": "Central de Ajuda",
+                "pages": [
+                  "pt-br/help"
+                ]
+              },
+              {
+                "group": "Primeiros passos",
+                "pages": [
+                  "pt-br/help/understanding-currencies",
+                  "pt-br/help/create-your-account",
+                  "pt-br/help/deposits-and-withdrawals",
+                  "pt-br/help/betting-and-trading",
+                  "pt-br/help/api",
+                  "pt-br/help/coupon-codes"
+                ]
+              },
+              {
+                "group": "Fundamentos",
+                "pages": [
+                  "pt-br/help/prediction-markets-basics",
+                  "pt-br/help/rules-and-resolutions",
+                  "pt-br/help/order-book",
+                  "pt-br/help/automated-market-maker",
+                  "pt-br/help/license-and-jurisdiction"
+                ]
+              },
+              {
+                "group": "Market makers",
+                "pages": [
+                  "pt-br/help/rebates"
+                ]
+              }
             ]
           },
           {
-            "group": "Markets",
-            "pages": [
-              "api-reference/markets/order-book"
-            ]
-          },
-          {
-            "group": "Orders",
-            "pages": [
-              "api-reference/orders/list",
-              "api-reference/orders/create",
-              "api-reference/orders/batch-create",
-              "api-reference/orders/batch-update",
-              "api-reference/orders/cancel",
-              "api-reference/orders/batch-cancel",
-              "api-reference/orders/cancel-all"
-            ]
-          },
-          {
-            "group": "Wagers",
-            "pages": [
-              "api-reference/wagers/list",
-              "api-reference/wagers/retrieve",
-              "api-reference/wagers/rebates"
-            ]
-          },
-          {
-            "group": "Account",
-            "pages": [
-              "api-reference/me/information",
-              "api-reference/me/balances",
-              "api-reference/me/ranking",
-              "api-reference/me/safe"
-            ]
-          },
-          {
-            "group": "Realtime (websockets)",
-            "pages": [
-              "api-reference/websocket/overview",
-              "api-reference/websocket/authorization",
-              "api-reference/websocket/channels-and-events"
-            ]
+            "tab": "API (em inglês)",
+            "href": "https://docs.futuur.com/introduction"
           }
         ]
       }
@@ -160,7 +259,7 @@
   "search": {
     "prompt": "Search..."
   },
-  "description": "Events • Markets • Trading",
+  "description": "Help center and API documentation for Futuur prediction markets.",
   "favicon": {
     "light": "/images/favi.svg",
     "dark": "/images/favi-dark.svg"
@@ -168,5 +267,255 @@
   "logo": {
     "light": "/images/light-M.svg",
     "dark": "/images/dark-M.svg"
-  }
+  },
+  "redirects": [
+    {
+      "source": "/3a0c98b71bf643f58c8cbefc067491d7",
+      "destination": "/help"
+    },
+    {
+      "source": "/Futuur-FAQs-3a0c98b71bf643f58c8cbefc067491d7",
+      "destination": "/help"
+    },
+    {
+      "source": "/3ab88d28324b8021809fd5ba7c0f0e46",
+      "destination": "/help/api"
+    },
+    {
+      "source": "/API-3ab88d28324b8021809fd5ba7c0f0e46",
+      "destination": "/help/api"
+    },
+    {
+      "source": "/Automated-Market-Maker-e9e850e50d794d85985bbb3cbfa0fd89",
+      "destination": "/help/automated-market-maker"
+    },
+    {
+      "source": "/e9e850e50d794d85985bbb3cbfa0fd89",
+      "destination": "/help/automated-market-maker"
+    },
+    {
+      "source": "/0d1314d8e167497db270ad2da93f838a",
+      "destination": "/help/betting-and-trading"
+    },
+    {
+      "source": "/Betting-and-Trading-0d1314d8e167497db270ad2da93f838a",
+      "destination": "/help/betting-and-trading"
+    },
+    {
+      "source": "/2ff88d28324b802e8290c5b70b7606ed",
+      "destination": "/help/coupon-codes"
+    },
+    {
+      "source": "/Coupon-Codes-2ff88d28324b802e8290c5b70b7606ed",
+      "destination": "/help/coupon-codes"
+    },
+    {
+      "source": "/1b9ed72b6796425c8d330d37cfb184df",
+      "destination": "/help/create-your-account"
+    },
+    {
+      "source": "/Create-your-account-1b9ed72b6796425c8d330d37cfb184df",
+      "destination": "/help/create-your-account"
+    },
+    {
+      "source": "/66b4b9a53014493e9bb3416d2eaa28c1",
+      "destination": "/help/deposits-and-withdrawals"
+    },
+    {
+      "source": "/Deposits-and-Withdrawals-66b4b9a53014493e9bb3416d2eaa28c1",
+      "destination": "/help/deposits-and-withdrawals"
+    },
+    {
+      "source": "/License-and-Jurisdiction-ba2e17d76f4b46c5baf9078ece0c55a0",
+      "destination": "/help/license-and-jurisdiction"
+    },
+    {
+      "source": "/ba2e17d76f4b46c5baf9078ece0c55a0",
+      "destination": "/help/license-and-jurisdiction"
+    },
+    {
+      "source": "/3ea88d28324b816f85e3d173352c6dd9",
+      "destination": "/help/market-maker-guide"
+    },
+    {
+      "source": "/Market-Maker-Guide-3ea88d28324b816f85e3d173352c6dd9",
+      "destination": "/help/market-maker-guide"
+    },
+    {
+      "source": "/3f188d28324b80c5ad87d9a950c4c8c5",
+      "destination": "/help/midterms-trading-competition"
+    },
+    {
+      "source": "/Midterms-Trading-Competition-3f188d28324b80c5ad87d9a950c4c8c5",
+      "destination": "/help/midterms-trading-competition"
+    },
+    {
+      "source": "/20b88d28324b8067bb36c68f5c9dcb8b",
+      "destination": "/help/order-book"
+    },
+    {
+      "source": "/Order-Book-20b88d28324b8067bb36c68f5c9dcb8b",
+      "destination": "/help/order-book"
+    },
+    {
+      "source": "/740cafdb38424343ad7c88acc5a5e30c",
+      "destination": "/help/prediction-markets-basics"
+    },
+    {
+      "source": "/Prediction-Markets-Basics-740cafdb38424343ad7c88acc5a5e30c",
+      "destination": "/help/prediction-markets-basics"
+    },
+    {
+      "source": "/34f88d28324b80fba735f87ba4d1a32c",
+      "destination": "/help/rebates"
+    },
+    {
+      "source": "/Market-Maker-Rebate-34f88d28324b80fba735f87ba4d1a32c",
+      "destination": "/help/rebates"
+    },
+    {
+      "source": "/Rebates-34f88d28324b80fba735f87ba4d1a32c",
+      "destination": "/help/rebates"
+    },
+    {
+      "source": "/36f88d28324b80b3a177d976ad655de6",
+      "destination": "/help/rules-and-resolutions"
+    },
+    {
+      "source": "/Rules-and-resolutions-36f88d28324b80b3a177d976ad655de6",
+      "destination": "/help/rules-and-resolutions"
+    },
+    {
+      "source": "/471bd65c55c0432a842f5fe6e9565d22",
+      "destination": "/help/understanding-currencies"
+    },
+    {
+      "source": "/Understanding-currencies-471bd65c55c0432a842f5fe6e9565d22",
+      "destination": "/help/understanding-currencies"
+    },
+    {
+      "source": "/Privacy-Policy-fbd0af05edba4027b62780f8a21a8ae6",
+      "destination": "/legal/privacy-policy"
+    },
+    {
+      "source": "/fbd0af05edba4027b62780f8a21a8ae6",
+      "destination": "/legal/privacy-policy"
+    },
+    {
+      "source": "/Terms-of-Service-a2f757178971446cba1402b3cdc9a799",
+      "destination": "/legal/terms-of-service"
+    },
+    {
+      "source": "/a2f757178971446cba1402b3cdc9a799",
+      "destination": "/legal/terms-of-service"
+    },
+    {
+      "source": "/1c9755229e6f466e839b6f932d328766",
+      "destination": "/pt-br/help"
+    },
+    {
+      "source": "/Futuur-FAQ-PT-BR-1c9755229e6f466e839b6f932d328766",
+      "destination": "/pt-br/help"
+    },
+    {
+      "source": "/5daab54340174a26baec61c1a03f97a0",
+      "destination": "/pt-br/help/api"
+    },
+    {
+      "source": "/API-5daab54340174a26baec61c1a03f97a0",
+      "destination": "/pt-br/help/api"
+    },
+    {
+      "source": "/0840550a5a224c07a23892d1ddf9d638",
+      "destination": "/pt-br/help/automated-market-maker"
+    },
+    {
+      "source": "/Formador-de-Mercado-Automatizado-Automated-Market-Maker-ou-AMM-0840550a5a224c07a23892d1ddf9d638",
+      "destination": "/pt-br/help/automated-market-maker"
+    },
+    {
+      "source": "/Apostas-e-vendas-ad5e614698b644169c0e11ecbd32fe78",
+      "destination": "/pt-br/help/betting-and-trading"
+    },
+    {
+      "source": "/ad5e614698b644169c0e11ecbd32fe78",
+      "destination": "/pt-br/help/betting-and-trading"
+    },
+    {
+      "source": "/2ff88d28324b80d089b6dae6e2e3d8e6",
+      "destination": "/pt-br/help/coupon-codes"
+    },
+    {
+      "source": "/C-digos-de-Cupom-2ff88d28324b80d089b6dae6e2e3d8e6",
+      "destination": "/pt-br/help/coupon-codes"
+    },
+    {
+      "source": "/76dbccd4bab14b6e83214c2b9f6425c1",
+      "destination": "/pt-br/help/create-your-account"
+    },
+    {
+      "source": "/Crie-sua-conta-76dbccd4bab14b6e83214c2b9f6425c1",
+      "destination": "/pt-br/help/create-your-account"
+    },
+    {
+      "source": "/217234e0f16a4537b537f64e961c40cf",
+      "destination": "/pt-br/help/deposits-and-withdrawals"
+    },
+    {
+      "source": "/Dep-sitos-e-Saques-217234e0f16a4537b537f64e961c40cf",
+      "destination": "/pt-br/help/deposits-and-withdrawals"
+    },
+    {
+      "source": "/19388d28324b80babd69d1f784745afc",
+      "destination": "/pt-br/help/license-and-jurisdiction"
+    },
+    {
+      "source": "/Licen-a-e-Jurisdi-o-19388d28324b80babd69d1f784745afc",
+      "destination": "/pt-br/help/license-and-jurisdiction"
+    },
+    {
+      "source": "/20d88d28324b8053990cdd457e69d591",
+      "destination": "/pt-br/help/order-book"
+    },
+    {
+      "source": "/Livro-de-Ordens-Order-Book-20d88d28324b8053990cdd457e69d591",
+      "destination": "/pt-br/help/order-book"
+    },
+    {
+      "source": "/Princ-pios-dos-Mercados-de-Previs-o-c54a5bc1222a4885896f5da7e6f6bca5",
+      "destination": "/pt-br/help/prediction-markets-basics"
+    },
+    {
+      "source": "/c54a5bc1222a4885896f5da7e6f6bca5",
+      "destination": "/pt-br/help/prediction-markets-basics"
+    },
+    {
+      "source": "/34f88d28324b80df88e8e4ab8340d1e4",
+      "destination": "/pt-br/help/rebates"
+    },
+    {
+      "source": "/Programa-de-Restitui-o-para-Market-Maker-34f88d28324b80df88e8e4ab8340d1e4",
+      "destination": "/pt-br/help/rebates"
+    },
+    {
+      "source": "/programa-de-marker-rebate",
+      "destination": "/pt-br/help/rebates"
+    },
+    {
+      "source": "/36f88d28324b80739f40cbaefa5ef062",
+      "destination": "/pt-br/help/rules-and-resolutions"
+    },
+    {
+      "source": "/Regras-e-Resolu-es-36f88d28324b80739f40cbaefa5ef062",
+      "destination": "/pt-br/help/rules-and-resolutions"
+    },
+    {
+      "source": "/Multi-Moedas-na-Futuur-b4e3b022a5f24141a606378708ac49df",
+      "destination": "/pt-br/help/understanding-currencies"
+    },
+    {
+      "source": "/b4e3b022a5f24141a606378708ac49df",
+      "destination": "/pt-br/help/understanding-currencies"
+    }
+  ]
 }
