@@ -144,6 +144,32 @@ On-chain errors without a code entry:
   After any failed create, fetch a new signing context before you sign again. Do not reuse the previous nonce or `maxUsdcRaw`.
 </Tip>
 
+## Session key errors
+
+Session keys are coming soon and are not live on `https://api.futuur.com`. See [Session keys](/concepts/session-keys) and the [developer guide](/guides/session-keys). All codes are `400` in the [two-entry form](#on-chain-order-errors-look-different). Where session keys are off, the `/me/session-delegations/` endpoints return `404`.
+
+Returned by `POST /orders/` when an order is signed by a session key:
+
+| Code | Cause | What to do |
+|---|---|---|
+| `session_revoked` | The session was revoked | Register a new session, or sign with the owner wallet |
+| `session_expired` | The session has passed its `expiry` | Register a new session, or sign with the owner wallet |
+| `session_scope_exceeded` | The order is over the per-order cap, or its currency or chain is not the one the session covers | Sign this order with the owner wallet |
+| `session_price_guard` | The limit price is too far from the market price | Move the price, or sign with the owner wallet |
+| `session_budget_exceeded` | The session used up its rolling budget | Sign this order with the owner wallet, or wait for the window to restart |
+
+Returned by `POST /me/session-delegations/prepare/` and `POST /me/session-delegations/`:
+
+| Code | Cause | What to do |
+|---|---|---|
+| `session_wallet_invalid` | No deployed Safe on that chain, or no owner wallet on the account | Register and deploy the Safe |
+| `session_currency_invalid` | `currency` is not an on-chain currency | Use `OOM` or `USDC` |
+| `session_key_invalid` | `session_key` is not a valid address, is the zero address, is your Safe or owner address, or was used before | Generate a new key |
+| `session_expiry_invalid` | `expiry` is in the past or too far ahead | Prepare again and send the returned `expiry` |
+| `session_cap_invalid` | `max_maker_amount` is zero or above the per-order cap | Send the `maxMakerAmount` from prepare |
+| `session_nonce_invalid` | `nonce` is not higher than every nonce used for this Safe, or the nonce or key is already registered | Prepare again |
+| `session_signature_invalid` | `owner_signature` is malformed, or does not recover to the Safe owner address | Sign the `eip712` from prepare, as returned, with the owner key |
+
 ## Cancel
 
 | Status | Code | Cause | What to do |
