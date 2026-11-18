@@ -43,6 +43,6 @@
 ## Content boundaries
 
 - Do not invent production request fields (for example `order_intent_signature` on live `POST /orders/`)
-- Do not document Polymarket-only products we do not have (Perps, Bridge, Combos, Builder Program, session keys, official SDKs)
+- Do not document Polymarket-only products we do not have (Perps, Bridge, Combos, Builder Program, official SDKs)
 - Do not document internal admin, Django flags, or preview-only hosts as if they were production
 - After Django/API changes, use the **sync-futuur-api-docs** skill — OpenAPI remains the source of truth for live endpoints

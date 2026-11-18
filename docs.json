@@ -58,8 +58,10 @@
             "pages": [
               "concepts/on-chain-trading",
               "concepts/conditional-tokens",
+              "concepts/session-keys",
               "guides/on-chain-first-order",
-              "guides/on-chain-bot-example"
+              "guides/on-chain-bot-example",
+              "guides/session-keys"
             ]
           },
           {

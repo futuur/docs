@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-11-18 — Session keys (coming soon)
+
+Documented session keys: the Safe owner signs one delegation, then a throwaway key signs Web3 orders. They run on Futuur's staging environment only and are not on `https://api.futuur.com`, so the endpoints are documented in a guide and not in API Reference. Both new pages are tagged Coming soon.
+
+### Added
+
+- `concepts/session-keys.mdx` — what a session key is, what it can and cannot do, lifetime, limits (per-order cap, rolling budget, price guard), revoking, security notes, and how the website uses it. Tagged Coming soon.
+- `guides/session-keys.mdx` — `POST /me/session-delegations/prepare/`, `POST /me/session-delegations/`, `GET /me/session-delegations/active/`, `DELETE /me/session-delegations/{id}/`, signing orders with the session key, and a Python example. Tagged Coming soon.
+- `errors.mdx` — Session key errors: the five `session_*` order codes and the codes returned while creating a session.
+
+### Changed
+
+- `concepts/on-chain-trading.mdx`, `guides/on-chain-first-order.mdx` — link to the session key pages.
+- `docs.json`: On-chain trading group includes `concepts/session-keys` and `guides/session-keys`.
+- `AGENTS.md` — session keys are no longer listed under Polymarket-only products we do not have.
+
 ## 2026-11-03 — Phase-one accuracy pass
 
 Brought the docs in line with production, and the coming-soon on-chain pages in line with the phase-one build. On-chain trading stays tagged Coming soon.
