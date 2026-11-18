@@ -2,7 +2,7 @@
 
 ## 2026-11-18 — Session keys (coming soon)
 
-Documented session keys: the Safe owner signs one delegation, then a throwaway key signs Web3 orders. They run on Futuur's staging environment only and are not on `https://api.futuur.com`, so the endpoints are documented in a guide and not in API Reference. Both new pages are tagged Coming soon.
+Documented session keys: the Safe owner signs one delegation, then a throwaway key signs Web3 orders. They are coming soon and are not on `https://api.futuur.com`, so the endpoints are documented in a guide and not in API Reference. Both new pages are tagged Coming soon.
 
 ### Added
 
