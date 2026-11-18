@@ -10,7 +10,7 @@ The Futuur API enforces rate limits per authenticated user to ensure fair access
 ### All HMAC requests
 
 | Window | Limit | Counted |
-|--------|-------|---------|
+|--------|-------|--------|
 | Per minute | 2,000 requests | Per account, fixed UTC minute |
 | Per day | 1,000,000 requests | Per account, fixed UTC day |
 
@@ -37,61 +37,20 @@ The per-endpoint limits use a rolling 60-second window. The account-wide limits 
 
 ## What happens when you exceed a limit
 
-When you exceed a rate limit, the API returns HTTP `429 Too Many Requests` with code `throttled` and a `Retry-After` header giving the seconds to wait. Back off until the indicated time.
+When you exceed a rate limit, the API returns HTTP **429 Too Many Requests** with a `Retry-After` header indicating when you can retry. Back off until the indicated time.
 
-```json 429 Too Many Requests
-{
-  "type": "client_error",
-  "errors": [
-    {
-      "code": "throttled",
-      "detail": "Request was throttled. Expected available in 12 seconds.",
-      "attr": null
-    }
-  ]
-}
-```
+Requests carrying HMAC headers that fail authentication are also limited per IP, and sustained abuse is rate-limited at the network edge.
 
-<Warning>
-  Requests carrying HMAC headers that fail authentication are also limited per IP. After 300 failures in a minute, further HMAC requests from that address get `429` until the minute ends.
-</Warning>
+## Duplicate request protection
 
-## Retrying a POST
+Any attempt to submit the same POST request within less than 1 second will result in a `wager_action_duplicated` error code.
 
-`POST /orders/`, `POST /orders/batch/`, and `POST /orders/batch-update/` accept an optional `Idempotency-Key` header. If you repeat the same `POST` with the same key and the same body after a successful response, the API returns the stored response and does not create another order. A repeat sent while the first request is still running returns `409` with code `idempotency_key_in_progress`. A different body is a different request, so requoting at a new price is not blocked.
+## Tips for high-frequency clients
 
-<Note>
-  On the phase-one preview host a signed order can only be accepted once: the first create consumes its nonce. A retry after a timeout returns `order_intent_nonce_stale` when the first attempt went through. List your orders before you sign again.
-</Note>
+- **Use caching to your advantage.** Order book and event detail reads are served from cache. By default they return the public payload; pass `include_mine=1` only on the calls where you actually need your own orders or wagers embedded, so the rest of your polling stays on the fast path.
+- **Prefer polling intervals of 1 second or more per resource.** Responses are cached for a few seconds server-side, so faster polling returns the same data while consuming your quota.
+- **Batch operations when possible.** Use batch endpoints for creating, updating, or canceling multiple orders in a single request.
 
-## Best practices
+## Need higher limits?
 
-**Use the `include_mine` parameter wisely.** Order book and event detail reads are served from cache. By default they return the public payload; pass `include_mine=1` only on the calls where you actually need your own orders or wagers embedded, so the rest of your polling stays on the fast path.
-
-**Prefer polling intervals of 1 second or more.** Responses are cached for a few seconds server-side, so faster polling returns the same data while consuming your quota.
-
-**Cache responses where possible.** Market data like event listings and price history does not change every second. Cache responses and serve them from memory rather than re-fetching on every operation.
-
-**Use exponential backoff on 429 responses.** If you receive a `429`, wait before retrying. Start with a short delay (e.g., 1 second) and double it on each successive failure, up to a maximum wait time.
-
-```python python
-import time
-import requests
-
-def request_with_backoff(url, headers, max_retries=5):
-    delay = 1
-    for attempt in range(max_retries):
-        response = requests.get(url, headers=headers)
-        if response.status_code == 429:
-            retry_after = response.headers.get('Retry-After')
-            wait_time = int(retry_after) if retry_after else delay
-            time.sleep(wait_time)
-            delay = min(delay * 2, 60)  # cap at 60 seconds
-            continue
-        return response
-    return response
-```
-
-<Note>
-  HMAC headers carry a timestamp, so build fresh headers for every retry instead of reusing the ones from the first attempt.
-</Note>
+For more detailed information about the various available endpoints, the expected input parameters, the response format, error codes to anticipate, and more, please refer to our detailed API documentation or contact our support team at support@futuur.com.
