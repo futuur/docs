@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-11-18 — WebSocket gateway, Pusher deprecated
+
+The realtime docs now lead with Futuur's WebSocket gateway at `wss://realtime.futuur.com/v1`. Pusher is deprecated and keeps working until 2027-03-18, after which only the gateway delivers realtime data to API users.
+
+### Changed
+
+- `api-reference/websocket/overview.mdx` — the gateway: connect, frames, message envelope, snapshot, `since`, `reset`, gaps, errors, close codes, limits, Python and JavaScript examples, and a "Migrating from Pusher" section. Pusher client setup is kept as deprecated.
+- `api-reference/websocket/authorization.mdx` — private channel tokens from `POST /realtime/auth/` with HMAC signing (Python and Node.js), a private channel example, and the Pusher authorization marked deprecated.
+- `api-reference/websocket/channels-and-events.mdx` — `price-change`, `new-market`, `live-data-update`, and `new-comment` are also published on `event-{event_id}`. Pusher-only snippets removed.
+- `errors.mdx`, `introduction.mdx`, `guides/reading-the-order-book.mdx` — point at the gateway.
+- `snippets/constants.mdx` — adds `realtimeUrl` and `realtimeAuthUrl`.
+- `WS-CHANGELOG.md` — gateway and deprecation entry.
+
 ## 2026-11-18 — Session keys (coming soon)
 
 Documented session keys: the Safe owner signs one delegation, then a throwaway key signs Web3 orders. They are coming soon and are not on `https://api.futuur.com`, so the endpoints are documented in a guide and not in API Reference. Both new pages are tagged Coming soon.

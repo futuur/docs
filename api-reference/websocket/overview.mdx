@@ -1,21 +1,406 @@
 ---
 title: "Overview"
-description: "Subscribe to realtime market, order, and account updates over Pusher WebSockets."
+description: "Subscribe to realtime market, order, and account updates over the Futuur WebSocket gateway."
 ---
 
-Futuur uses [Pusher](https://pusher.com/docs/channels/using_channels/client-api-overview/) to deliver realtime data to clients over WebSocket connections. Use the global `event` channel for market-wide feeds, `event-{event_id}` for per-event BBO and order-book updates, and private channels for account-specific order and position updates.
+Futuur delivers realtime data over its own WebSocket gateway: prices, order books, market status, comments, and your own balance, orders, and positions. Connect to:
 
-Terminology: **event** = a question; **market** = an outcome.
+```
+wss://realtime.futuur.com/v1
+```
+
+The gateway speaks plain WebSocket with JSON text frames. You need no client library beyond a standard WebSocket client. Every message carries a **sequence number**, so you know when you missed an update and can resume after a reconnect. When you subscribe, you get a **snapshot** of the latest state, then updates.
+
+<Warning>
+  **Pusher is deprecated.** Pusher keeps working unchanged until **2027-03-18**. On that date Futuur stops delivering realtime data to API users through Pusher. After 2027-03-18 only the gateway delivers realtime data. If you use Pusher today, see [Migrating from Pusher](#migrating-from-pusher) and move to the gateway before that date.
+</Warning>
 
 <Note>
-  Examples below use `https://api.futuur.com/v2.0`. Private channel authorization calls `POST https://api.futuur.com/v2.0/pusher/auth/`. See [Authentication](/authentication) for HMAC signing and [Authorization](/api-reference/websocket/authorization) for private channel setup.
+  The gateway serves production (`https://api.futuur.com`). Channels and events are listed in [Channels and events](/api-reference/websocket/channels-and-events). Private channels need a token: see [Authorization](/api-reference/websocket/authorization).
 </Note>
+
+## Connect
+
+Open a WebSocket connection to `wss://realtime.futuur.com/v1`. Public channels need no key and no headers. All frames in both directions are **text frames carrying one JSON object**. A binary frame, a frame that is not valid JSON, or a frame that is not a JSON object closes the connection with code `4000`.
+
+The server sends a WebSocket ping every 25 seconds and closes a connection that has not answered with a pong for 60 seconds. Standard WebSocket clients, including the browser `WebSocket`, Python `websockets`, and Node.js, answer pings automatically. You can also send the application-level `{"op":"ping"}` and get a `pong` back.
+
+## Client to server
+
+```json
+{"op":"subscribe","channel":"event-123","since":41,"auth":"<token>","id":"c1"}
+{"op":"unsubscribe","channel":"event-123","id":"c2"}
+{"op":"ping","id":"c3"}
+```
+
+| Field | Description |
+|-------|-------------|
+| `op` | `subscribe`, `unsubscribe`, or `ping` |
+| `channel` | Channel name: `event`, `event-{event_id}`, or `private-user-{user_id}` |
+| `since` | *(Optional, `subscribe`)* The last `seq` you processed on this channel, a non-negative integer. Omit it on a fresh subscribe |
+| `auth` | *(`subscribe` to `private-*` channels)* The token from `POST /realtime/auth/`. See [Authorization](/api-reference/websocket/authorization) |
+| `id` | *(Optional)* A short string or integer (up to 64 characters). It is echoed back in the reply |
+
+## Server to client
+
+```json
+{"type":"subscribed","channel":"event-123","seq":57,"id":"c1"}
+{"type":"snapshot","channel":"event-123","seq":57,"messages":[{"channel":"event-123","event":"order-book-update","seq":55,"ts":1763470000000,"data":{}}]}
+{"type":"message","channel":"event-123","event":"order-book-update","seq":58,"ts":1763470000123,"data":{}}
+{"type":"reset","channel":"event-123","seq":57}
+{"type":"unsubscribed","channel":"event-123","id":"c2"}
+{"type":"pong","id":"c3"}
+{"type":"error","code":"forbidden","message":"channel not allowed","channel":"nope","id":"c1"}
+```
+
+`data` is shortened to `{}` here. It carries the full payload of the event.
+
+| `type` | Meaning |
+|--------|---------|
+| `subscribed` | The subscription is active. `seq` is the latest sequence number on the channel at that moment |
+| `snapshot` | The latest state of the channel (fresh subscribe only). `messages` holds one message per state key |
+| `message` | One published message |
+| `reset` | The server cannot replay what you missed. Refetch the state over REST (see below) |
+| `unsubscribed` | The subscription is gone. You also get this reply when you were not subscribed |
+| `pong` | Reply to an application-level ping |
+| `error` | A request failed. `channel` and `id` are included when they apply |
+
+A message has the same fields in a `message` frame and inside a snapshot:
+
+| Field | Description |
+|-------|-------------|
+| `channel` | The channel the message was published on |
+| `event` | The event name, for example `price-change` |
+| `seq` | Sequence number, **per channel**. It starts at 1 and grows by 1 with every message on that channel |
+| `ts` | Publish time in epoch milliseconds |
+| `data` | The payload described for that event in [Channels and events](/api-reference/websocket/channels-and-events) |
 
 <Note>
-  The Pusher key and cluster in these examples belong to production. The phase-one preview host uses its own Pusher app. See [Environment](/environment).
+  Sequence numbers are per channel. The same update published on `event` and on `event-{event_id}` has a different `seq` on each channel. Track one `seq` per channel.
 </Note>
 
-## Client setup
+## Snapshot on subscribe
+
+A fresh subscribe (no `since`) answers with `subscribed`, then a `snapshot`, then live `message` frames. The snapshot holds the latest message of each **state event**, each with its own `seq`:
+
+| State event | One message in the snapshot per |
+|-------------|---------------------------------|
+| `order-book-update` | market and currency mode |
+| `best-prices-change` | market and currency mode |
+| `market-status-change` | market (or the event itself for event-level changes) |
+| `price-change` | event |
+| `live-data-update` | event |
+| `balance-change` | user (`private-user-{user_id}` channel) |
+
+Apply the snapshot messages like normal messages. The other events (`new-comment`, `new-market`, `order-update`, `position-update`, `deposit-success`) are never in a snapshot: you only get them live. The `event` channel always has an empty snapshot.
+
+The snapshot is a convenience, not a guarantee. It holds what was published in the last 24 hours and can be empty or partial, for example on a quiet event. For the authoritative state, use the REST API.
+
+## Resume with `since`
+
+After a reconnect, subscribe to each channel again with `since` set to the last `seq` you processed on it.
+
+- If the server still holds every message after `since`, you get `subscribed`, then the missed messages as `message` frames, then live messages.
+- If it does not, you get `subscribed` followed by `reset`.
+- If `since` is equal to the latest `seq`, you get `subscribed` and nothing to replay.
+
+The server keeps the most recent 500 messages of a channel for about 15 minutes. If you missed more than that, or `since` is higher than the channel's latest `seq`, you get `reset`.
+
+## Reset: refetch over REST
+
+`reset` means you may have missed messages that cannot be replayed. Reload the current state of that channel over the REST API (for example [`GET /events/{id}/`](/api-reference/events/retrieve) or [`GET /markets/{id}/book/`](/api-reference/markets/order-book)), set your last `seq` for the channel to the `seq` in the `reset`, and continue with the messages that follow.
+
+`reset` also arrives without a request from you, for example when the gateway lost its own connection to the data source for a moment. Handle it at any time, not only after a subscribe.
+
+## Gaps
+
+Keep the last `seq` per channel. If a `message` arrives with a `seq` other than your last `seq` + 1, you missed something. Subscribe to the channel again with `since` set to your last `seq`: you get the missed messages, or a `reset` if they are no longer available. Ignore a message whose `seq` is not higher than the last one you processed.
+
+A gap can also be real. If Futuur could not publish a message, the next message skips one number. Subscribing again with `since` then gives you a `reset`.
+
+Subscribing again to a channel you are already subscribed to is allowed and counts as one subscription. You do not need a new token for a private channel on the same connection.
+
+## Unsubscribe and ping
+
+```json
+{"op":"unsubscribe","channel":"event-123","id":"c2"}
+{"op":"ping","id":"c3"}
+```
+
+The replies are `unsubscribed` and `pong`, with the same `id` if you sent one.
+
+## Errors
+
+An `error` frame has a `code` and a human-readable `message`. The connection stays open.
+
+| `code` | Meaning |
+|--------|---------|
+| `bad_request` | A required field is missing or a field has the wrong type (for example a negative `since`) |
+| `unknown_op` | `op` is not `subscribe`, `unsubscribe`, or `ping` |
+| `forbidden` | Unknown channel name, or a private channel with a missing, invalid, or expired token |
+| `too_many_subscriptions` | You reached the limit of subscriptions on this connection |
+| `rate_limited` | You sent operations too fast. The operation was ignored |
+| `internal` | The gateway could not complete a subscribe. Retry after a moment |
+
+## Close codes
+
+| Code | Meaning |
+|------|---------|
+| `1001` | The server is restarting (for example a deploy). Reconnect and resume with `since` |
+| `1009` | You sent a frame larger than 64 KiB |
+| `1011` | Internal error. Reconnect |
+| `4000` | Protocol error: binary frame, invalid JSON, or a frame that is not a JSON object. Fix the client |
+| `4008` | Slow consumer: your connection could not keep up and its send queue overflowed. See [Limits](#limits) |
+| `4029` | Too many connections from your IP address |
+
+Reconnect after a close or a network error with a jittered back-off, starting at 0.5 seconds and growing to 30 seconds, then resume with `since`. Reset the back-off once a subscribe succeeds.
+
+## Limits
+
+| Limit | Value |
+|-------|-------|
+| Subscriptions per connection | 500 |
+| Operations per connection | 50 per second, with bursts of up to 100 (a reconnect can resubscribe many channels) |
+| Inbound frame size | 64 KiB |
+| Outbound queue per connection | 1,000 frames. A client that stops reading is closed with `4008` |
+| Connections per IP address | 200 |
+| Replay buffer | The last 500 messages per channel, for about 15 minutes |
+
+The limits can change. Handle the error codes and close codes above instead of relying on the numbers. If you are closed with `4008`, read faster or subscribe to fewer channels: prefer `event-{event_id}` for the events you trade over the global `event` channel, which carries the activity of every event.
+
+## Examples
+
+The examples are complete scripts. They resume after a reconnect with `since`, detect gaps, and handle `reset`. For a private channel, see the example in [Authorization](/api-reference/websocket/authorization).
+
+<CodeGroup>
+
+```python Python
+import asyncio
+import json
+import random
+import sys
+import urllib.request
+
+import websockets
+
+GATEWAY_URL = "wss://realtime.futuur.com/v1"
+API = "https://api.futuur.com/v2.0"
+USER_AGENT = "MyBot/1.0"  # identify your client
+
+last_seq = {}  # channel -> last seq processed; survives reconnects
+backoff = 0.5  # seconds; grows to 30 on repeated failures
+
+
+def handle(channel, event, data):
+    """Your logic. `data` is the same payload Pusher delivered."""
+    print(channel, event, json.dumps(data)[:100])
+
+
+def fetch_event(event_id):
+    request = urllib.request.Request(f"{API}/events/{event_id}/", headers={"User-Agent": USER_AGENT})
+    with urllib.request.urlopen(request, timeout=10) as response:
+        return json.load(response)
+
+
+async def refetch(channel):
+    """After a `reset`: reload the channel's state over REST."""
+    if channel.startswith("event-"):
+        event = await asyncio.to_thread(fetch_event, channel.removeprefix("event-"))
+        print("refetched", channel, event["title"])
+
+
+async def session(channels):
+    global backoff
+    async with websockets.connect(GATEWAY_URL, user_agent_header=USER_AGENT) as ws:
+
+        async def subscribe(channel):
+            frame = {"op": "subscribe", "channel": channel}
+            if channel in last_seq:
+                frame["since"] = last_seq[channel]  # resume where we stopped
+            await ws.send(json.dumps(frame))
+
+        waiting = set(channels)  # channels with a subscribe not yet answered
+        for channel in channels:
+            await subscribe(channel)
+
+        async for raw in ws:
+            frame = json.loads(raw)
+            kind, channel = frame["type"], frame.get("channel")
+            if kind == "subscribed":
+                waiting.discard(channel)
+                backoff = 0.5
+            elif kind == "snapshot":
+                for message in frame["messages"]:
+                    handle(channel, message["event"], message["data"])
+                last_seq[channel] = frame["seq"]
+            elif kind == "reset":
+                last_seq[channel] = frame["seq"]
+                await refetch(channel)
+            elif kind == "message":
+                last = last_seq.get(channel)
+                if channel in waiting or (last is not None and frame["seq"] <= last):
+                    continue  # stale frame from before a resubscribe, or a duplicate
+                if last is not None and frame["seq"] != last + 1:
+                    waiting.add(channel)  # gap: ask for the messages we missed
+                    await subscribe(channel)
+                    continue
+                last_seq[channel] = frame["seq"]
+                handle(channel, frame["event"], frame["data"])
+            elif kind == "error":
+                print("error:", frame["code"], frame["message"])
+
+
+async def main(channels):
+    global backoff
+    while True:
+        try:
+            await session(channels)
+        except (websockets.WebSocketException, OSError) as exc:
+            print("disconnected:", exc)
+        await asyncio.sleep(backoff * random.uniform(0.5, 1.0))  # jitter
+        backoff = min(backoff * 2, 30)
+
+
+if __name__ == "__main__":
+    asyncio.run(main(sys.argv[1:] or ["event"]))
+```
+
+```javascript JavaScript
+const GATEWAY_URL = "wss://realtime.futuur.com/v1";
+const CHANNELS = ["event"]; // or e.g. ["event-123", "event-456"]
+
+const lastSeq = new Map(); // channel -> last seq processed; survives reconnects
+let backoff = 500; // ms; grows to 30 000 on repeated failures
+
+function handle(channel, event, data) {
+  // Your logic. `data` is the same payload Pusher delivered.
+  console.log(channel, event, JSON.stringify(data).slice(0, 100));
+}
+
+async function refetch(channel) {
+  // After a `reset`: reload the channel's state over REST.
+  if (channel.startsWith("event-")) {
+    const response = await fetch(`https://api.futuur.com/v2.0/events/${channel.slice(6)}/`);
+    console.log("refetched", channel, (await response.json()).title);
+  }
+}
+
+function connect() {
+  const ws = new WebSocket(GATEWAY_URL);
+  const waiting = new Set(CHANNELS); // channels with a subscribe not yet answered
+
+  function subscribe(channel) {
+    const frame = { op: "subscribe", channel };
+    if (lastSeq.has(channel)) frame.since = lastSeq.get(channel); // resume where we stopped
+    ws.send(JSON.stringify(frame));
+  }
+
+  ws.onopen = () => CHANNELS.forEach(subscribe);
+
+  ws.onmessage = (event) => {
+    const frame = JSON.parse(event.data);
+    const channel = frame.channel;
+    if (frame.type === "subscribed") {
+      waiting.delete(channel);
+      backoff = 500;
+    } else if (frame.type === "snapshot") {
+      frame.messages.forEach((m) => handle(channel, m.event, m.data));
+      lastSeq.set(channel, frame.seq);
+    } else if (frame.type === "reset") {
+      lastSeq.set(channel, frame.seq);
+      refetch(channel);
+    } else if (frame.type === "message") {
+      const last = lastSeq.get(channel);
+      if (waiting.has(channel) || (last !== undefined && frame.seq <= last)) return; // stale or duplicate
+      if (last !== undefined && frame.seq !== last + 1) {
+        waiting.add(channel); // gap: ask for the messages we missed
+        subscribe(channel);
+        return;
+      }
+      lastSeq.set(channel, frame.seq);
+      handle(channel, frame.event, frame.data);
+    } else if (frame.type === "error") {
+      console.error("error:", frame.code, frame.message);
+    }
+  };
+
+  ws.onclose = () => {
+    console.log("disconnected");
+    setTimeout(connect, backoff * (0.5 + Math.random() / 2)); // jitter
+    backoff = Math.min(backoff * 2, 30000);
+  };
+}
+
+connect();
+```
+
+</CodeGroup>
+
+The Python example uses the [`websockets`](https://websockets.readthedocs.io/) library, version 14 or later (`pip install websockets`). Run it with channel names as arguments, for example `python futuur_realtime.py event-123`. Without arguments it subscribes to `event`.
+
+The JavaScript example runs in a browser and in Node.js 22 or later, which both have a global `WebSocket`. Do not put your private key in a browser: use it for public channels there, and request private-channel tokens from your own server.
+
+## Migrating from Pusher
+
+<Warning>
+  **Pusher is deprecated.** Futuur stops delivering realtime data to API users through Pusher on **2027-03-18**. Until then Pusher keeps working unchanged, so you can move at your own pace and run both side by side. After 2027-03-18 only the gateway delivers realtime data.
+</Warning>
+
+### What stays the same
+
+- **Channel names:** `event`, `event-{event_id}`, and `private-user-{user_id}`.
+- **Event names:** `best-prices-change`, `price-change`, `new-market`, `live-data-update`, `market-status-change`, `new-comment`, `order-book-update`, `balance-change`, `deposit-success`, `order-update`, and `position-update`.
+- **Payloads:** the `data` of a gateway message is the payload Pusher delivered, field for field.
+- **Who can subscribe to what:** public channels need no authentication, and you can only subscribe to your own `private-user-{user_id}` channel.
+
+### What changes
+
+| | Pusher | Gateway |
+|---|--------|---------|
+| Connect | Pusher client library with an app key and cluster | Plain WebSocket to `wss://realtime.futuur.com/v1`. No library, key, or cluster |
+| Messages | `channel.bind("price-change", callback)` | JSON text frames. Read `frame.event` and `frame.data` |
+| Message shape | The library gives you the payload only | `{"type":"message","channel","event","seq","ts","data"}` with `data` as a JSON object |
+| Subscribe | `pusher.subscribe("event-123")` | Send `{"op":"subscribe","channel":"event-123"}` |
+| Sequence numbers | None | `seq` on every message, per channel |
+| Latest state on subscribe | None | A `snapshot` of the latest state events |
+| After a disconnect | The library reconnects. You cannot tell what you missed | You reconnect and resume with `since`, or get a `reset` |
+| Private channel authorization | `POST /v2.0/pusher/auth/` with `socket_id` and `channel_name`. Returns `{"auth": ...}` | `POST /v2.0/realtime/auth/` with `channel` only. Returns `{"token": ...}`, which you send as `auth` in `subscribe` |
+| HMAC signed string | `Key`, `Timestamp`, `channel_name`, `socket_id` | `Key`, `Timestamp`, `channel` |
+| Heartbeat | Handled by the library | WebSocket pings, answered by any standard client |
+
+### Steps
+
+<Steps>
+  <Step title="Connect with a WebSocket">
+    Replace the Pusher client with a WebSocket connection to `wss://realtime.futuur.com/v1`.
+  </Step>
+  <Step title="Subscribe to your channels">
+    Send a `subscribe` operation for each channel you used with `pusher.subscribe(...)`.
+  </Step>
+  <Step title="Replace the event bindings">
+    Replace each `channel.bind(eventName, callback)` with a check on `frame.event` and a call with `frame.data`.
+  </Step>
+  <Step title="Move private channels to tokens">
+    Request a token from `POST /v2.0/realtime/auth/` and send it as `auth` in `subscribe`. Keep signing on your server. See [Authorization](/api-reference/websocket/authorization).
+  </Step>
+  <Step title="Track sequence numbers">
+    Track the last `seq` per channel. On a gap, resubscribe with `since`. On `reset`, refetch the state over REST. After a reconnect, resubscribe with `since`.
+  </Step>
+  <Step title="Follow only the events you need">
+    Subscribe to `event-{event_id}` for the events you follow instead of the global `event` channel. `price-change`, `new-market`, `live-data-update`, and `new-comment` are now also published there.
+  </Step>
+  <Step title="Remove Pusher">
+    Remove the Pusher client before 2027-03-18.
+  </Step>
+</Steps>
+
+## Pusher (deprecated)
+
+<Warning>
+  Pusher delivery to API users ends on **2027-03-18**. Use the gateway described above.
+</Warning>
+
+Until 2027-03-18, Pusher keeps delivering the same channels, events, and payloads. This section is kept for integrations that have not moved yet. For private channels, see the deprecated Pusher authorization in [Authorization](/api-reference/websocket/authorization#pusher-authorization-deprecated).
 
 Include the Pusher JS client:
 
@@ -40,9 +425,11 @@ Initialize Pusher and subscribe to a channel:
 </script>
 ```
 
+The Pusher key and cluster above belong to production. The phase-one preview host uses its own Pusher app. See [Environment](/environment).
+
 ## Next steps
 
-- [Authorization](/api-reference/websocket/authorization) — authorize private user channels with HMAC
+- [Authorization](/api-reference/websocket/authorization) — get a token for your private user channel
 - [Channels and events](/api-reference/websocket/channels-and-events) — full channel and event catalog with payloads
 
 ## Related

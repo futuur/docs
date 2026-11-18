@@ -1,31 +1,37 @@
 ---
 title: "Channels and events"
-description: "Catalog of Pusher channels and realtime events for markets, order books, and account updates."
+description: "Catalog of realtime channels and events for markets, order books, and account updates."
 ---
 
-This is the complete catalog of realtime channels and the events published on each. Terminology: **event** = a question; **market** = an outcome.
+This is the complete catalog of realtime channels and the events published on each. The WebSocket gateway and Pusher use the same channel names, event names, and payloads.
 
-For client setup, see [Overview](/api-reference/websocket/overview). Private channels require [Authorization](/api-reference/websocket/authorization).
+For connecting and subscribing, see [Overview](/api-reference/websocket/overview). Private channels require a token: see [Authorization](/api-reference/websocket/authorization).
+
+<Warning>
+  **Pusher is deprecated.** Pusher delivery to API users ends on **2027-03-18**. Use the gateway at `wss://realtime.futuur.com/v1`. See [Migrating from Pusher](/api-reference/websocket/overview#migrating-from-pusher).
+</Warning>
 
 ## Channels
 
 | Channel | Type | Auth | Purpose |
 |---------|------|------|---------|
 | `event` | public | none | Global feed of event and market activity |
-| `event-{event_id}` | public | none | Per-event BBO, order-book, and status updates |
-| `private-user-{user_id}` | private | `POST https://api.futuur.com/v2.0/pusher/auth/` | Per-user balance, deposit, order, and position updates |
+| `event-{event_id}` | public | none | Per-event BBO, order-book, status, price, new-market, live-data, and comment updates |
+| `private-user-{user_id}` | private | Token from `POST https://api.futuur.com/v2.0/realtime/auth/` | Per-user balance, deposit, order, and position updates |
 | `test-channel` | public | none | Connectivity testing (`test-event` only) |
+
+The `event` channel carries the activity of every event, so it is a high-volume feed. If you follow specific events, subscribe to `event-{event_id}` for each of them instead.
 
 ## Events at a glance
 
 | Event | Channel | Emitted when |
 |-------|---------|--------------|
 | `best-prices-change` | `event`, `event-{event_id}` | A wagerable market's best bid/ask changes |
-| `price-change` | `event` | An event's price or volume state changes |
-| `new-market` | `event` | A new market is added to an event |
-| `live-data-update` | `event` | Live data, status, or resolution changes |
+| `price-change` | `event`, `event-{event_id}` | An event's price or volume state changes |
+| `new-market` | `event`, `event-{event_id}` | A new market is added to an event |
+| `live-data-update` | `event`, `event-{event_id}` | Live data, status, or resolution changes |
 | `market-status-change` | `event`, `event-{event_id}` | Tradability fields change (status, bet window, disabled) |
-| `new-comment` | `event` | A user posts a comment on an event |
+| `new-comment` | `event`, `event-{event_id}` | A user posts a comment on an event |
 | `order-book-update` | `event-{event_id}` | Absolute top-N bid/ask levels for a changed market |
 | `balance-change` | `private-user-{user_id}` | The user's balance changes |
 | `deposit-success` | `private-user-{user_id}` | A deposit completes |
@@ -33,24 +39,24 @@ For client setup, see [Overview](/api-reference/websocket/overview). Private cha
 | `position-update` | `private-user-{user_id}` | The user's wager shares change |
 
 <Note>
-  Full-depth `order-book-snapshot` pushes are **not** emitted (Pusher message size limits). `order-book-update` carries top-N levels per market. For depth beyond top-N, call the REST [order book](/api-reference/markets/order-book) API.
+  `price-change`, `new-market`, `live-data-update`, and `new-comment` are also published on `event-{event_id}`, with the same payload as on `event`. Before this change they were only on `event`. The global `event` channel is unchanged.
+</Note>
+
+<Note>
+  Full-depth `order-book-snapshot` pushes are **not** emitted. `order-book-update` carries top-N levels per market. For depth beyond top-N, call the REST [order book](/api-reference/markets/order-book) API.
 </Note>
 
 ## Event channel (public)
 
-Global public feed on channel `event`. Subscribe with `pusher.subscribe("event")`; no authentication required.
+Global public feed on channel `event`. No authentication is required. Every event below is published here, and also on the per-event channel `event-{event_id}` with the same payload.
 
 ### best-prices-change
 
-Emitted when the best bid/ask of a **wagerable** market changes. Non-wagerable markets are skipped to stay within Pusher limits.
+Emitted when the best bid/ask of a **wagerable** market changes. Non-wagerable markets are skipped.
 
-Also published on `event-{event_id}` with the same payload, so quoting bots can avoid the global `event` fanout:
+Also published on `event-{event_id}` with the same payload, so quoting bots can avoid the global `event` fanout.
 
-```javascript
-pusher.subscribe("event-" + eventId).bind("best-prices-change", ...);
-```
-
-<ResponseField name="market_id" type="integer">Market (outcome) ID.</ResponseField>
+<ResponseField name="market_id" type="integer">Market ID.</ResponseField>
 <ResponseField name="event_id" type="integer">Event ID.</ResponseField>
 <ResponseField name="currency_mode" type="string">`play_money` or `real_money`.</ResponseField>
 <ResponseField name="best_ask" type="number | null">Best ask price.</ResponseField>
@@ -59,7 +65,7 @@ pusher.subscribe("event-" + eventId).bind("best-prices-change", ...);
 
 ### price-change
 
-Emitted when an event's price or volume state changes. `currency_mode` controls the ordering of `markets` in the payload.
+Emitted when an event's price or volume state changes. `currency_mode` controls the ordering of `markets` in the payload. Published on both `event` and `event-{event_id}`.
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -89,7 +95,7 @@ Each element of `markets`:
 
 ### new-market
 
-Emitted when a new market is added to an event.
+Emitted when a new market is added to an event. Published on both `event` and `event-{event_id}`.
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -105,7 +111,7 @@ Emitted when a new market is added to an event.
 
 ### live-data-update
 
-Emitted when an event's live data changes.
+Emitted when an event's live data changes. Published on both `event` and `event-{event_id}`.
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -124,7 +130,7 @@ Emitted on `event` and `event-{event_id}` when tradability fields change (`statu
 
 ### new-comment
 
-Emitted when a user posts a comment. Sent with a ~5s delay so replicas can catch up before clients refetch.
+Emitted when a user posts a comment. Sent with a ~5s delay so replicas can catch up before clients refetch. Published on both `event` and `event-{event_id}`.
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -136,9 +142,9 @@ Emitted when a user posts a comment. Sent with a ~5s delay so replicas can catch
 
 ## Per-event channel (public)
 
-Channel name pattern: `event-{event_id}` (e.g. `event-1234`). Subscribe with `pusher.subscribe("event-" + eventId)`; no authentication required.
+Channel name pattern: `event-{event_id}` (e.g. `event-1234`). No authentication is required.
 
-Events on this channel: `order-book-update`, `best-prices-change`, and `market-status-change`.
+Events on this channel: `order-book-update`, `best-prices-change`, `price-change`, `new-market`, `live-data-update`, `market-status-change`, and `new-comment`. Apart from `order-book-update`, which is only here, they have the same payloads as on `event`.
 
 ### order-book-update
 
@@ -148,7 +154,7 @@ For depth beyond top-N, call [GET /markets/{id}/book/](/api-reference/markets/or
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `market_id` | number | Market (outcome) ID |
+| `market_id` | number | Market ID |
 | `event_id` | number | Event ID |
 | `currency` | string | Currency code (e.g. `USDC`) |
 | `currency_mode` | string | `play_money` or `real_money` |
@@ -157,19 +163,9 @@ For depth beyond top-N, call [GET /markets/{id}/book/](/api-reference/markets/or
 | `bid` | array | Bid levels: `{ price, total_shares, total_amount }` |
 | `timestamp` | string | Emission timestamp |
 
-```html
-<script>
-    var pusher = new Pusher("9011f7eac38e825792d5", { cluster: "us2" });
-    var channel = pusher.subscribe("event-" + eventId);
-    channel.bind("order-book-update", function (data) {
-        applyTopOfBook(data.market_id, data.bid, data.ask);
-    });
-</script>
-```
-
 ## Private user channel
 
-Channel name pattern: `private-user-{user_id}`. Requires authorization via `POST https://api.futuur.com/v2.0/pusher/auth/`. Subscribe with `pusher.subscribe("private-user-" + userId)`.
+Channel name pattern: `private-user-{user_id}`. Requires a token from `POST https://api.futuur.com/v2.0/realtime/auth/`. You can only subscribe to your own channel. See [Authorization](/api-reference/websocket/authorization).
 
 ### balance-change
 
@@ -223,31 +219,13 @@ The `status` values here are not the REST [order statuses](/concepts/orders#orde
 | `expired_at` | string | Optional — ISO 8601 |
 | `is_system_initiated` | boolean | Optional |
 
-```html
-<script>
-    var pusher = new Pusher("9011f7eac38e825792d5", { cluster: "us2" });
-    var privateChannel = pusher.subscribe("private-user-" + userId);
-    privateChannel.bind("order-update", function (data) {
-        if (data.status === "pending" || data.status === "open") {
-            // create / open ack — sync resting order
-        }
-        if (data.status === "filled" || data.status === "partial_filled") {
-            // handle fill
-        }
-        if (data.status === "canceled" || data.status === "expired") {
-            // remove from local open-orders model
-        }
-    });
-</script>
-```
-
 ### position-update
 
 Emitted when a user's wager shares change. Use for inventory sync.
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `market_id` | number | Market (outcome) ID |
+| `market_id` | number | Market ID |
 | `event_id` | number | Event ID |
 | `position` | string | `long` or `short` |
 | `currency` | string | Currency code |
@@ -258,7 +236,7 @@ Emitted when a user's wager shares change. Use for inventory sync.
 
 ## Related
 
-- [Overview](/api-reference/websocket/overview) — Pusher client setup
-- [Authorization](/api-reference/websocket/authorization) — private channel HMAC auth
+- [Overview](/api-reference/websocket/overview) — connect, subscribe, snapshots, and resume
+- [Authorization](/api-reference/websocket/authorization) — token for the private channel
 - [Order book](/api-reference/markets/order-book) — REST endpoint for full depth beyond top-N
 - [Reading the order book](/guides/reading-the-order-book) — interpret bid/ask depth

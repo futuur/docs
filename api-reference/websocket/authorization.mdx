@@ -1,7 +1,234 @@
 ---
 title: "Authorization"
-description: "Authorize private Pusher channels with HMAC-signed requests to the Futuur auth endpoint."
+description: "Get a token for your private user channel with an HMAC-signed request to the Futuur API."
 ---
+
+A private channel carries your own data: `private-user-{user_id}`. You can only subscribe to your own channel. Your user ID is the `id` in [`GET /me/`](/api-reference/me/information). Public channels (`event` and `event-{event_id}`) do not require authorization.
+
+Subscribing to a private channel needs a short-lived token. Request it from the Futuur API:
+
+```
+POST https://api.futuur.com/v2.0/realtime/auth/
+```
+
+`POST https://api.futuur.com/v1.5/realtime/auth/` works the same way. The endpoint uses the same authentication as the rest of the API: HMAC headers (`Key`, `Timestamp`, `HMAC`) for API users, or a session or JWT for the website. See [Authentication](/authentication) for key setup and the required `User-Agent` header.
+
+<Warning>
+  **Pusher is deprecated.** The Pusher authorization endpoints at the end of this page keep working until **2027-03-18**. New integrations should use the gateway and this token endpoint.
+</Warning>
+
+## Request a token with HMAC
+
+Send the `channel` as a form field and sign it with your HMAC key, like any other request. The string to sign is every parameter — `Key`, `Timestamp`, and `channel` — sorted by name in **case-sensitive code-point order**, so the capitalized `Key` and `Timestamp` come first, then hashed with HMAC-SHA512 using your private key. For `private-user-9` the signed string is exactly:
+
+```
+Key={{your_public_key}}&Timestamp={{current_timestamp}}&channel=private-user-9
+```
+
+<Warning>
+  Do not sort with `localeCompare`. It is case-insensitive and puts `channel` before `Key`, which gives a signature the server rejects with `401 authentication_failed`. Encode the values the way Python `urlencode` does. See [Authentication](/authentication#signing-process) for the exact rules.
+</Warning>
+
+<Warning>
+  Keep the private key on your server. Never ship it to a browser. A browser app asks your own backend for a token.
+</Warning>
+
+<CodeGroup>
+
+```python Python
+import hashlib
+import hmac
+import time
+from urllib.parse import urlencode
+
+import requests
+
+PUBLIC_KEY = "your_public_key"
+PRIVATE_KEY = "your_private_key"
+USER_AGENT = "MyBot/1.0"
+API = "https://api.futuur.com/v2.0"
+
+
+def get_token(channel):
+    """Ask the API for a short-lived token for your own private channel."""
+    timestamp = str(int(time.time()))
+    # Sign Key, Timestamp and the body field(s), sorted by key (case-sensitive), with HMAC-SHA512.
+    to_sign = urlencode(sorted({"Key": PUBLIC_KEY, "Timestamp": timestamp, "channel": channel}.items()))
+    signature = hmac.new(PRIVATE_KEY.encode(), to_sign.encode(), hashlib.sha512).hexdigest()
+    response = requests.post(
+        f"{API}/realtime/auth/",
+        headers={"Key": PUBLIC_KEY, "Timestamp": timestamp, "HMAC": signature, "User-Agent": USER_AGENT},
+        data={"channel": channel},
+        timeout=20,
+    )
+    response.raise_for_status()
+    return response.json()["token"]
+```
+
+```javascript Node.js
+const crypto = require("crypto");
+
+const API_PUBLIC_KEY = "your_public_key";
+const API_PRIVATE_KEY = "your_private_key";
+
+// Python quote_plus: space becomes "+", and ! ' ( ) * are escaped.
+const quotePlus = (text) =>
+  encodeURIComponent(text)
+    .replace(/[!'()*]/g, (c) => "%" + c.charCodeAt(0).toString(16).toUpperCase())
+    .replace(/%20/g, "+");
+
+async function getRealtimeToken(channel) {
+  const timestamp = String(Math.floor(Date.now() / 1000));
+  const params = { Key: API_PUBLIC_KEY, Timestamp: timestamp, channel };
+  const message = Object.keys(params)
+    .sort() // code-unit order: "Key", "Timestamp", "channel"
+    .map((k) => `${quotePlus(k)}=${quotePlus(params[k])}`)
+    .join("&");
+  const signature = crypto.createHmac("sha512", API_PRIVATE_KEY).update(message).digest("hex");
+
+  const response = await fetch("https://api.futuur.com/v2.0/realtime/auth/", {
+    method: "POST",
+    headers: {
+      Key: API_PUBLIC_KEY,
+      Timestamp: timestamp,
+      HMAC: signature,
+      "User-Agent": "MyBot/1.0",
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({ channel }),
+  });
+  if (!response.ok) throw new Error(`Token request failed: ${response.status}`);
+  return (await response.json()).token;
+}
+```
+
+</CodeGroup>
+
+A JSON body `{"channel":"private-user-9"}` works for session and JWT clients.
+
+The response is:
+
+```json
+{"token":"<payload>.<signature>"}
+```
+
+Treat the token as opaque. These errors are plain `{"detail": "..."}` bodies:
+
+| Status | Meaning |
+|--------|---------|
+| `200` | Token issued |
+| `400` | `channel` is missing |
+| `401` | Not authenticated |
+| `403` | Not your `private-user-{id}` channel, or any other channel |
+| `429` | Throttled (30 requests per minute per user) |
+
+## Use the token
+
+Send the token as `auth` in the `subscribe` operation:
+
+```json
+{"op":"subscribe","channel":"private-user-9","auth":"<token>"}
+```
+
+The token is valid for 5 minutes and is only checked when you subscribe. An open subscription stays open after the token expires. Request a new token before each new connection. Subscribing again to a channel on the same connection needs no new token.
+
+If the token is missing, invalid, or expired, the gateway answers with an `error` frame with code `forbidden`. See [Overview](/api-reference/websocket/overview#errors).
+
+## Example: private channel in Python
+
+This script subscribes to your own `private-user-{id}` channel. It signs the token request with HMAC and asks for a fresh token on every connection. It resumes with `since` after a reconnect, and reconnects on a gap. It needs `pip install websockets requests`. Set `PUBLIC_KEY`, `PRIVATE_KEY`, and `USER_ID` first.
+
+```python Python
+import asyncio
+import hashlib
+import hmac
+import json
+import random
+import time
+from urllib.parse import urlencode
+
+import requests
+import websockets
+
+PUBLIC_KEY = "your_public_key"
+PRIVATE_KEY = "your_private_key"
+USER_ID = 123  # the `id` field of GET /v2.0/me/
+USER_AGENT = "MyBot/1.0"
+API = "https://api.futuur.com/v2.0"
+GATEWAY_URL = "wss://realtime.futuur.com/v1"
+
+
+def get_token(channel):
+    """Ask the API for a short-lived token for your own private channel."""
+    timestamp = str(int(time.time()))
+    # Sign Key, Timestamp and the body field(s), sorted by key (case-sensitive), with HMAC-SHA512.
+    to_sign = urlencode(sorted({"Key": PUBLIC_KEY, "Timestamp": timestamp, "channel": channel}.items()))
+    signature = hmac.new(PRIVATE_KEY.encode(), to_sign.encode(), hashlib.sha512).hexdigest()
+    response = requests.post(
+        f"{API}/realtime/auth/",
+        headers={"Key": PUBLIC_KEY, "Timestamp": timestamp, "HMAC": signature, "User-Agent": USER_AGENT},
+        data={"channel": channel},
+        timeout=20,
+    )
+    response.raise_for_status()
+    return response.json()["token"]
+
+
+def handle(event, data):
+    print(event, json.dumps(data)[:100])  # balance-change, order-update, position-update, ...
+
+
+async def session(channel, state):
+    # The token is only checked when you subscribe, so fetch a fresh one for every connection.
+    token = await asyncio.to_thread(get_token, channel)
+    async with websockets.connect(GATEWAY_URL, user_agent_header=USER_AGENT) as ws:
+        request = {"op": "subscribe", "channel": channel, "auth": token}
+        if state["seq"] is not None:
+            request["since"] = state["seq"]  # resume where we stopped
+        await ws.send(json.dumps(request))
+
+        async for raw in ws:
+            frame = json.loads(raw)
+            if frame["type"] == "subscribed":
+                state["delay"] = 0.5
+            elif frame["type"] == "snapshot":
+                for message in frame["messages"]:
+                    handle(message["event"], message["data"])
+                state["seq"] = frame["seq"]
+            elif frame["type"] == "reset":
+                state["seq"] = frame["seq"]
+                print("reset: reload your balance, open orders and positions over REST")
+            elif frame["type"] == "message":
+                if frame["seq"] <= state["seq"]:
+                    continue  # duplicate
+                if frame["seq"] != state["seq"] + 1:
+                    return  # gap: reconnect, which resumes from state["seq"]
+                state["seq"] = frame["seq"]
+                handle(frame["event"], frame["data"])
+            elif frame["type"] == "error":
+                print("error:", frame["code"], frame["message"])
+
+
+async def main():
+    channel = f"private-user-{USER_ID}"
+    state = {"seq": None, "delay": 0.5}
+    while True:
+        try:
+            await session(channel, state)
+        except (requests.RequestException, websockets.WebSocketException, OSError) as exc:
+            print("disconnected:", exc)
+        await asyncio.sleep(state["delay"] * random.uniform(0.5, 1.0))  # jitter
+        state["delay"] = min(state["delay"] * 2, 30)
+
+
+asyncio.run(main())
+```
+
+## Pusher authorization (deprecated)
+
+<Warning>
+  **Deprecated.** Pusher delivery to API users ends on **2027-03-18**. Until then these endpoints keep working unchanged. Use the token endpoint above for the gateway.
+</Warning>
 
 Pusher requires an authorization token before a client can subscribe to a private channel. When subscribing, the Pusher client sends `socket_id` and `channel_name` to your authorization endpoint.
 
@@ -101,6 +328,6 @@ The endpoint returns `{"auth": "..."}` on success. Its errors are plain `{"detai
 
 ## Related
 
-- [Overview](/api-reference/websocket/overview) — Pusher client setup
+- [Overview](/api-reference/websocket/overview) — the WebSocket gateway
 - [Channels and events](/api-reference/websocket/channels-and-events) — private user channel events
 - [Authentication](/authentication) — HMAC signing details

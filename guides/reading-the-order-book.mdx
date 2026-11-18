@@ -212,6 +212,6 @@ print("Best bid for short shares:", best_short_bid)
 
 ## Realtime order-book updates
 
-Subscribe to the per-event Pusher channel `event-{event_id}` and listen for `order-book-update`. That event carries absolute top-N bid/ask levels for the affected market — apply them directly for top-of-book quoting.
+Subscribe to the per-event channel `event-{event_id}` on the [WebSocket gateway](/api-reference/websocket/overview) and listen for `order-book-update`. That event carries absolute top-N bid/ask levels for the affected market — apply them directly for top-of-book quoting.
 
-Full-depth snapshots are not streamed over Pusher. When you need depth beyond top-N, call the REST [order book](/api-reference/markets/order-book) endpoint. See [Channels and events](/api-reference/websocket/channels-and-events) for the payload.
+Full-depth snapshots are not streamed. When you need depth beyond top-N, call the REST [order book](/api-reference/markets/order-book) endpoint. See [Channels and events](/api-reference/websocket/channels-and-events) for the payload.
