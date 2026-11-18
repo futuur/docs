@@ -187,7 +187,9 @@ Batch cancel and cancel-all report per-order results in a `200` response instead
 
 ## Websocket authorization
 
-`POST /pusher/auth/` answers with a plain `{"detail": "..."}` body, not the format above: `400` when `channel_name` or `socket_id` is missing, `401` without valid credentials, and `403` for a private channel that is not your own `private-user-{user_id}`.
+`POST /realtime/auth/` answers with a plain `{"detail": "..."}` body, not the format above: `400` when `channel` is missing, `401` without valid credentials, `403` for a channel that is not your own `private-user-{user_id}`, and `429` when you request tokens too often (30 per minute per user). The gateway reports its own errors in `error` frames. See [Errors](/api-reference/websocket/overview#errors) in the WebSocket overview.
+
+The deprecated `POST /pusher/auth/` (Pusher delivery ends on 2027-03-18) answers the same way: `400` when `channel_name` or `socket_id` is missing, `401` without valid credentials, and `403` for a private channel that is not your own `private-user-{user_id}`.
 
 ## Server errors
 

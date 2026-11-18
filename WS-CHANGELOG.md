@@ -1,12 +1,31 @@
-# Websocket (Pusher) Changelog
+# Websocket Changelog
 
-This changelog tracks changes to the realtime (Pusher) **contract**: channel  
+This changelog tracks changes to the realtime (WebSocket gateway and Pusher) **contract**: channel  
 names, event names, and payload shapes. If you consume our realtime feed, read  
 the **Action required** items below and update your integration.
 
 Terminology: **event** = a `Question`, **market** = an `Outcome`.
 
 ## Unreleased
+
+### Native WebSocket gateway and Pusher deprecation (action required before 2027-03-18)
+
+2026-11-18.
+
+- **Pusher is deprecated.** Pusher keeps working unchanged until **2027-03-18**. On that date Futuur
+  stops delivering realtime data to API users through Pusher. After that date only the gateway delivers
+  realtime data.
+- Futuur's own WebSocket gateway is live at `wss://realtime.futuur.com/v1`. It carries the same channels,
+  event names and payloads as Pusher, plus a per-channel sequence number on every message, a snapshot of
+  the latest state when you subscribe, and resume after a reconnect with `since`. See the WebSocket
+  overview, including "Migrating from Pusher".
+- New endpoint `POST /v2.0/realtime/auth/` (also `/v1.5/realtime/auth/`) returns a token, valid for 5
+  minutes, for the caller's own `private-user-{id}` channel on the gateway. It replaces
+  `POST /pusher/auth/` for the gateway.
+- `price-change`, `new-market`, `live-data-update` and `new-comment` are now **also** sent to
+  `event-{event_id}`, with the same payload as on `event`. The global `event` channel keeps everything
+  it had. Clients can subscribe to just the events they show.
+- Payloads and event names are unchanged.
 
 ### Market-maker / quoting support
 
