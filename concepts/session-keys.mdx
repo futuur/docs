@@ -134,7 +134,7 @@ Use one when your program cannot sign with the owner wallet key. This is the cas
 
 An API trading key has the same limits as a browser session: any market, no withdrawals, the per-order cap, the rolling 24-hour budget, and the price guard. It returns the same `session_*` order error codes. You can give a key a `label` of up to 64 characters to tell keys apart.
 
-You create a key in the web app, under **Settings** → **API** → **Trading keys**. The browser generates the key, your wallet signs once, and the private key is shown once. Futuur never stores it. The web app allows one key per currency. You can also register a key through the API, but it still needs the owner wallet's signature. See [Session keys for developers](/guides/session-keys#api-trading-keys).
+You create a key in the web app, under **Settings** → **API** → **Trading keys**. The browser generates the key, your wallet signs once, and the private key is shown once. Futuur never stores it. Each key trades in one currency (USDC or OOM), which you pick when you create it. You can also register a key through the API, but it still needs the owner wallet's signature. See [Session keys for developers](/guides/session-keys#api-trading-keys).
 
 A bot cannot call `POST /api-keys/derive/` with a trading key, because derive needs the owner signature. It uses the HMAC pair from **Settings** → **API keys** instead. See [Get your API keys](/guides/get-api-keys).
 
