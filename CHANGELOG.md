@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-11-19 — API trading keys (coming soon)
+
+Documented API trading keys: a session key made for a bot. Users who cannot export their wallet key (email or Magic login), or who do not want the owner key on a server, sign one delegation and run a bot with the trading key. They are coming soon and are not on `https://api.futuur.com`, so they are documented in the existing session key pages and not in API Reference.
+
+### Added
+
+- `concepts/session-keys.mdx` — API trading keys section: `purpose: "api"`, who holds the key, 180-day default lifetime, up to 5 live keys per Safe counted apart from browser sessions, and never evicted by browser sessions.
+- `guides/session-keys.mdx` — `purpose` and `label` on prepare and create, `GET /me/session-delegations/` to list live keys, revoking an API trading key, and the new `purpose`, `label`, and `created_at` response fields.
+- `guides/get-api-keys.mdx`, `concepts/on-chain-trading.mdx` — "Trade from a bot without your wallet key" path.
+- `errors.mdx` — `api_trading_key_limit`, `session_purpose_invalid`, and `session_label_invalid`.
+
 ## 2026-11-18 — WebSocket gateway, Pusher deprecated
 
 The realtime docs now lead with Futuur's WebSocket gateway at `wss://realtime.futuur.com/v1`. Pusher is deprecated and keeps working until 2027-03-18, after which only the gateway delivers realtime data to API users.

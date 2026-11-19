@@ -11,7 +11,7 @@ tag: "Coming soon"
 A session key lets a client sign orders without asking the owner wallet each time. You sign one delegation with the owner wallet. After that, a throwaway key signs each `LimitOrderIntent`. For what a session key is and which limits apply, read [Session keys](/concepts/session-keys) first.
 
 <Warning>
-  **Most API traders do not need this.** If your program already signs every order with your own owner key, a session key gains you nothing. You need the owner key to sign the delegation, and your program already holds it. Use session keys in clients where the owner wallet is interactive: a browser wallet, a hardware wallet, or a mobile wallet where a person approves each signature.
+  **Most API traders do not need this.** If your program already signs every order with your own owner key, a session key gains you nothing. You need the owner key to sign the delegation, and your program already holds it. Use session keys in clients where the owner wallet is interactive: a browser wallet, a hardware wallet, or a mobile wallet where a person approves each signature. The exception is a bot that cannot hold the owner key. See [API trading keys](#api-trading-keys).
 </Warning>
 
 ## Prerequisites
@@ -79,6 +79,7 @@ Writes nothing. The server picks the cap, the expiry, and the nonce, and returns
 | `chain_id` | Yes | Chain of your Safe |
 | `currency` | Yes | An on-chain currency, `OOM` or `USDC` |
 | `session_key` | Yes | Address of the key from step 1 |
+| `purpose` | No | `browser` (default) or `api`. See [API trading keys](#api-trading-keys) |
 
 The response is `200`. The values below are illustrative:
 
@@ -137,7 +138,7 @@ The response is `200`. The values below are illustrative:
 | `delegation.allMarkets` | `true`. The session covers every market |
 | `delegation.tokenSetHash` | 32 zero bytes. It is how the typed data says "all markets" |
 | `delegation.maxMakerAmount` | The per-order cap, as a string in raw token units. Divide by `10 ^ decimals` for currency units |
-| `delegation.expiry` | Unix seconds when the session ends |
+| `delegation.expiry` | Unix seconds when the session ends. For `purpose: "api"` it is 180 days ahead by default |
 | `delegation.nonce` | Delegation nonce for your Safe. It is separate from the order nonce |
 | `delegation.decimals` | Decimals of the settlement token. Display only |
 | `eip712` | The typed data to sign: `domain`, `types`, `primaryType`, `message` |
@@ -199,6 +200,8 @@ POST /v2.0/me/session-delegations/
 | `expiry` | Yes | `delegation.expiry` from prepare |
 | `nonce` | Yes | `delegation.nonce` from prepare |
 | `owner_signature` | Yes | EIP-712 signature from step 3 |
+| `purpose` | No | `browser` (default) or `api`. Same as in prepare |
+| `label` | No | Name for an API trading key, up to 64 characters. Surrounding spaces are removed |
 
 The response is `201`:
 
@@ -206,6 +209,9 @@ The response is `201`:
 {
   "id": 42,
   "session_key": "0xYourSessionKeyAddress",
+  "purpose": "browser",
+  "label": "",
+  "created_at": "2026-11-19T10:15:00Z",
   "all_markets": true,
   "max_maker_amount": "5000000000",
   "expiry": 1797552000,
@@ -218,13 +224,16 @@ The response is `201`:
 |---|---|
 | `id` | Session ID. You need it to revoke |
 | `session_key` | Address of the session key |
+| `purpose` | `browser` or `api` |
+| `label` | Name of an API trading key. Empty for browser sessions |
+| `created_at` | When the session was registered, ISO 8601 |
 | `all_markets` | `true` |
 | `max_maker_amount` | Per-order cap, raw token units, as a string |
 | `expiry` | Unix seconds when the session ends |
 | `decimals` | Decimals of the settlement token. Display only |
 | `status` | `active`, `expired`, or `revoked` |
 
-If you register past the limit of live sessions for your Safe, the oldest live session is revoked. Its orders stay on the book.
+If you register a browser session past the limit of live browser sessions for your Safe, the oldest one is revoked. Its orders stay on the book. API trading keys are never revoked this way. See [API trading keys](#api-trading-keys).
 
 To check a session later, or to find out if a stored key is still live:
 
@@ -294,6 +303,36 @@ DELETE /v2.0/me/session-delegations/{id}/?cancel_orders=1
 The response is `204` with no body. No wallet signature is needed. Revoking is idempotent. An unknown ID, or one that is not yours, returns `404`.
 
 By default, revoking leaves the session's resting orders on the book. Revoke when the user signs out, or when the key may be exposed. Delete the private key from the client at the same time.
+
+## API trading keys
+
+An API trading key is a session delegation with `purpose` set to `api`. It lets a bot trade without the owner wallet key, for example when you log in with email or Magic and cannot export the wallet key. For the model, see [Session keys](/concepts/session-keys#api-trading-keys).
+
+Most users create a key in the web app, under **Settings** → **API** → **Trading keys**. You can also register one yourself with steps 1 to 4 above, with these changes:
+
+- Send `"purpose": "api"` in both prepare and create.
+- Optionally send `label` in create, up to 64 characters.
+- The owner wallet still signs the `SessionDelegation`. There is no way around that signature.
+
+The expiry is 180 days ahead by default. A Safe can hold up to 5 live API trading keys. They are counted apart from browser sessions, and browser sessions never revoke them. Registering a sixth fails with `api_trading_key_limit`. Revoke one first.
+
+The bot authenticates with its normal HMAC pair from **Settings** → **API keys**. Do not call `POST /api-keys/derive/` with a trading key, because derive needs the owner signature. For each order, the bot calls signing-context and signs the returned `eip712` unchanged with the trading key, as in step 5. The `safeAddress` in that typed data stays your Safe. Do not put the session address in it.
+
+List your live API trading keys:
+
+```http
+GET /v2.0/me/session-delegations/?purpose=api&chain_id=84532&currency=OOM
+```
+
+| Query parameter | Notes |
+|---|---|
+| `currency` | Required |
+| `purpose` | `browser` or `api`. Defaults to `api` |
+| `chain_id` | Optional. Defaults to the active chain |
+
+It returns `200` with an array of the session object from step 4, newest first. It lists only keys that are not revoked and not expired. Use `label` and `created_at` to tell keys apart.
+
+Revoke a key with `DELETE /v2.0/me/session-delegations/{id}/`, as in [step 6](#step-6--revoke-the-session). Add `?cancel_orders=1` to cancel its open orders as well. After a revoke, the next order the key signs fails with `session_revoked`. The limits and rejection codes are the same as for browser sessions.
 
 ## Example script
 

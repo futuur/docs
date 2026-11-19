@@ -169,6 +169,9 @@ Returned by `POST /me/session-delegations/prepare/` and `POST /me/session-delega
 | `session_cap_invalid` | `max_maker_amount` is zero or above the per-order cap | Send the `maxMakerAmount` from prepare |
 | `session_nonce_invalid` | `nonce` is not higher than every nonce used for this Safe, or the nonce or key is already registered | Prepare again |
 | `session_signature_invalid` | `owner_signature` is malformed, or does not recover to the Safe owner address | Sign the `eip712` from prepare, as returned, with the owner key |
+| `session_purpose_invalid` | `purpose` is not `browser` or `api` | Send `browser` or `api` |
+| `session_label_invalid` | `label` is longer than 64 characters | Shorten the label |
+| `api_trading_key_limit` | `POST /me/session-delegations/` with `purpose: "api"`, and your Safe already has 5 live API trading keys | Revoke a key, then register again |
 
 ## Cancel
 

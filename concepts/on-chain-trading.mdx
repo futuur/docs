@@ -116,6 +116,10 @@ HMAC never replaces the wallet signature. Get both credentials from [Get your AP
 
 Coming soon: [session keys](/concepts/session-keys) let an interactive client sign orders with a throwaway key that the owner wallet authorizes once.
 
+### Trading from a bot without your wallet key
+
+Coming soon: if you log in with email or Magic, you cannot export the owner wallet key. Get an HMAC pair in **Settings** → **API keys**, create an [API trading key](/concepts/session-keys#api-trading-keys) in **Settings** → **API** → **Trading keys**, and sign orders with that key. The wallet signs once, when you create it. Setup is in [Get your API keys](/guides/get-api-keys#trade-from-a-bot-without-your-wallet-key).
+
 ## What stays the same
 
 - Events, markets, and the existing [order](/concepts/orders) and [wager](/concepts/wagers) resources
