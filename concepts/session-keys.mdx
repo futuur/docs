@@ -117,6 +117,27 @@ See [Session keys for developers](/guides/session-keys) for the request.
 
 Each browser or device can hold its own session. A Safe can have several live sessions at once. When you register a session past the limit, the backend revokes the oldest live sessions. It leaves their orders on the book.
 
+## API trading keys
+
+An **API trading key** is a session key made for a bot. It is the same delegation, with `purpose` set to `api`. The Futuur website calls it a trading key.
+
+Use one when your program cannot sign with the owner wallet key. This is the case for email and Magic logins, where the wallet key cannot be exported. It also suits anyone who does not want the owner key on a server. You sign one `SessionDelegation` with the owner wallet. The bot then keeps the trading key's private key and signs each `LimitOrderIntent` with it. The bot still authenticates its HTTP requests with its normal HMAC pair.
+
+| | Browser session | API trading key |
+|---|---|---|
+| `purpose` | `browser` (the default) | `api` |
+| Who holds the key | The user's browser | Your bot |
+| Lifetime | About 30 days | 180 days by default. The `expiry` field is authoritative |
+| Live keys per Safe | Several | Up to 5, counted separately from browser sessions |
+| Past the limit | The oldest browser session is revoked | Registering a sixth fails with `api_trading_key_limit`. Revoke one first |
+| Revoked by new browser sessions | Yes, the oldest | Never |
+
+An API trading key has the same limits as a browser session: any market, no withdrawals, the per-order cap, the rolling 24-hour budget, and the price guard. It returns the same `session_*` order error codes. You can give a key a `label` of up to 64 characters to tell keys apart.
+
+You create a key in the web app, under **Settings** → **API** → **Trading keys**. The browser generates the key, your wallet signs once, and the private key is shown once. Futuur never stores it. Each key trades in one currency (USDC or OOM), which you pick when you create it. You can also register a key through the API, but it still needs the owner wallet's signature. See [Session keys for developers](/guides/session-keys#api-trading-keys).
+
+A bot cannot call `POST /api-keys/derive/` with a trading key, because derive needs the owner signature. It uses the HMAC pair from **Settings** → **API keys** instead. See [Get your API keys](/guides/get-api-keys).
+
 ## Security notes
 
 - **Keep the private key secret.** Do not log it, commit it, or send it to any server, including Futuur's. Futuur never needs it. It only sees the signatures.
@@ -143,9 +164,12 @@ Use them when the owner wallet is interactive and a person must approve each sig
 
 If you trade through the API and already sign each order with your own key, a session key gains you nothing. Your program already holds the owner key, and it needs that key to sign the delegation anyway.
 
+The exception is a bot that cannot hold the owner key, or should not. Give it an [API trading key](#api-trading-keys).
+
 ## Related
 
 - [Session keys for developers](/guides/session-keys): the request flow, step by step
+- [Get your API keys](/guides/get-api-keys): the HMAC pair a bot needs next to a trading key
 - [On-chain trading](/concepts/on-chain-trading): matching, settlement, and the two layers of auth
 - [Place an on-chain order](/guides/on-chain-first-order): signing a `LimitOrderIntent` with the owner wallet
 - [Errors](/errors#session-key-errors): every session error code

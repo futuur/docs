@@ -272,6 +272,20 @@ If you already know Polymarket's CLOB client, do not copy their headers or hash:
 
 See [Authentication](/authentication) for the HMAC signing process, and [Place an on-chain order](/guides/on-chain-first-order) for the signed create flow.
 
+## Trade from a bot without your wallet key
+
+<Note>
+  API trading keys are coming soon and are not live on `https://api.futuur.com`.
+</Note>
+
+If you log in with email or Magic, you cannot export the owner wallet key, so a bot cannot sign orders with it. Use an API trading key instead:
+
+1. Get the HMAC pair in **Settings** → **API keys**, as in [From the website](#from-the-website). The bot uses it to authenticate requests. `POST /api-keys/derive/` does not work here, because derive needs the owner signature.
+2. Create a trading key in **Settings** → **API** → **Trading keys**. Your wallet signs once, and the private key is shown once.
+3. Give the bot the trading key and sign each order with it in place of the owner key.
+
+See [Session keys](/concepts/session-keys#api-trading-keys) and [Session keys for developers](/guides/session-keys#api-trading-keys).
+
 <Warning>
   Never log or commit the HMAC private key or the owner wallet key. Store them in environment variables or a secret manager.
 </Warning>
