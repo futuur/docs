@@ -51,83 +51,82 @@ An event defines the question, the resolution criteria, and the timeframe. Key f
 
 ## Markets
 
-A **market** represents a possible outcome within an event. For a binary event like "Will X happen?", there are two markets: Yes and No. For a multi-outcome event like "Who will win?", each candidate is a separate market.
+Each market represents one possible outcome within an event. Markets have their own prices, order books, and liquidity.
 
-Key fields on a market object include:
+### Markets correlation
+
+The relationship between markets in an event is defined by **markets correlation**:
+
+| Correlation | Description |
+|---|---|
+| **Linked prices** | Markets are correlated. The sum of all market prices equals 1, and placing a bet on one market automatically affects the prices of other markets in the same event. This is the default correlation type. |
+| **Independent** | Markets operate independently. Each market's price is calculated separately, and betting on one market does not affect others. |
+
+The correlation type determines how prices are calculated and how bets impact market dynamics within an event.
+
+## Liquidity, depth, and the order book
+
+These are three different measures of size. All three count **shares**, not currency.
 
 | Field | Description |
 |---|---|
-| `id` | Unique identifier |
-| `name` | The outcome name (e.g., "Yes", "Candidate A") |
-| `price` | Current market price (probability) between 0 and 1 |
-| `liquidity_play_money` | Total shares resting in open orders at every price (play money) |
-| `liquidity_real_money` | Total shares resting in open orders at every price (real money) |
-| `depth_play_money` | Shares in open orders priced from 0.45 to 0.55 (play money) |
-| `depth_real_money` | Shares in open orders priced from 0.45 to 0.55 (real money) |
+| `liquidity_play_money` / `liquidity_real_money` | Sum of shares resting in open orders at every price. The suffix selects the currency mode. |
+| `depth_play_money` / `depth_real_money` | Same sum, but restricted to orders priced from 0.45 to 0.55. |
 
-## Markets correlation
+The order book lists each price on its own. `GET /v2.0/markets/{id}/book/` returns:
 
-The `markets_correlation` field on an event determines how prices are calculated and how bets impact market dynamics:
+| Field | Description |
+|---|---|
+| `total_shares` | Size resting at that price |
+| `cumulative_shares` | Running total in execution order: asks from the lowest price, bids from the highest |
+| `last_price` | Price of the latest trade |
+| `last_trade_at` | Timestamp of the latest trade |
+| `last_trade_taker_side` | Side of the taker in the latest trade |
+| `volume_24h` | Rolling 24-hour volume |
+| `trades_24h` | Rolling 24-hour trade count |
 
-<AccordionGroup>
-  <Accordion title="Linked prices (default)">
-    Markets are correlated. The sum of all market prices equals 1, and placing a bet on one market automatically affects the prices of other markets in the same event. This is the default correlation type for most events.
-  </Accordion>
-  <Accordion title="Independent">
-    Markets operate independently. Each market's price is calculated separately, and betting on one market does not affect others. Use this for events where outcomes are not mutually exclusive.
-  </Accordion>
-</AccordionGroup>
+<Tip>
+  For live updates, use the WebSocket gateway. `best-prices-change` pushes the best bid and ask. `order-book-update` pushes the top 5 levels of one market, with `total_shares` at each price.
+</Tip>
 
-## Long and short positions
+## Positions: long and short
 
-When you trade a market, you take either a **long** or **short** position:
+When you trade a market, you take a **position**:
 
-- **Long** — You believe this outcome will happen. You profit if the market resolves Yes.
-- **Short** — You believe this outcome will not happen. You profit if the market resolves No.
+- **Long** — you believe this outcome will happen. You profit if the market price rises or the outcome resolves as correct.
+- **Short** — you believe this outcome will not happen. You profit if the market price falls or the outcome resolves as incorrect.
 
-For binary events, going long on Yes is equivalent to going short on No.
+## Fetching events
 
-## Listing events
-
-Use `GET /v2.0/events/` to list available prediction markets. The endpoint supports filtering by:
+Use `GET /v2.0/events/` to list events. You can filter by:
 
 | Parameter | Description |
 |---|---|
-| `categories` | Comma-separated category IDs. A root category includes its descendants. |
-| `category_slug` | Comma-separated category slugs as an alternative to IDs. |
-| `search` | Case-insensitive search across title, market names, categories, and tags. |
-| `tag` | Comma-separated tag slugs or names (up to 10). |
-| `currency_mode` | `play_money` or `real_money`. Defaults to `play_money`. |
-| `live` | When true, return events that are live now or start within 12 hours. |
-| `resolved_only` | When true, return only resolved events. |
-| `pending_resolution` | When true, return unresolved events whose close time has passed. |
-| `bet_end_date_after` | Inclusive lower bound for `bet_end_date` (ISO 8601 with timezone). |
-| `bet_end_date_before` | Inclusive upper bound for `bet_end_date` (ISO 8601 with timezone). |
-| `hide_my_bets` | Authenticated only. Omit events the user has already bet on. |
-| `only_markets_i_follow` | Authenticated only. Return events the user follows. |
+| `search` | Case-insensitive search across title, market names, categories, and tags |
+| `categories` | Comma-separated category IDs. A root category includes its descendants |
+| `category_slug` | Comma-separated category slugs as an alternative to `categories` |
+| `tag` | Comma-separated tag slugs or names (up to 10) |
+| `currency_mode` | `play_money` or `real_money` (defaults to `play_money`) |
+| `live` | When true, return events that are live now or start within 12 hours |
+| `resolved_only` | When true, return only resolved events |
+| `pending_resolution` | When true, return unresolved events whose close time has passed |
+| `bet_end_date_after` | Inclusive lower bound for `bet_end_date` (ISO 8601 with timezone) |
+| `bet_end_date_before` | Inclusive upper bound for `bet_end_date` (ISO 8601 with timezone) |
+| `hide_my_bets` | Authenticated only. Omit events the user has already bet on |
+| `only_markets_i_follow` | Authenticated only. Return events the user follows |
 
-### Ordering
+### Ordering results
 
-Use the `ordering` parameter to sort results. Allowed values:
+Use the `ordering` parameter to sort events:
 
-- `relevance`, `-relevance`
-- `created_on`, `-created_on`
-- `bet_end_date`, `-bet_end_date`
-- `wagers_count`, `-wagers_count`
-- `volume`, `-volume`
-- `open_date`, `-open_date`
-- `resolve_date`, `-resolve_date`
+| Value | Description |
+|---|---|
+| `relevance` / `-relevance` | Sort by relevance (default for search) |
+| `created_on` / `-created_on` | Sort by creation date |
+| `bet_end_date` / `-bet_end_date` | Sort by betting end date |
+| `wagers_count` / `-wagers_count` | Sort by number of wagers |
+| `volume` / `-volume` | Sort by trading volume |
+| `open_date` / `-open_date` | Sort by open date |
+| `resolve_date` / `-resolve_date` | Sort by resolution date |
 
 Prefix with `-` for descending order.
-
-## Example: Fetching events
-
-```bash
-curl -G "https://api.futuur.com/v2.0/events/" \
-  --data-urlencode "search=election" \
-  --data-urlencode "currency_mode=play_money" \
-  --data-urlencode "limit=10" \
-  --data-urlencode "ordering=-volume"
-```
-
-This returns up to 10 play-money events matching "election", ordered by highest volume first.
