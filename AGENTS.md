@@ -29,6 +29,16 @@
 - Document derive / signing-context / enable-trading only in guides, marked as not live on `api.futuur.com`
 - Live HMAC pages stay untagged; they may link to coming-soon pages
 
+## Help center
+
+- User-facing help lives in `help/` (English) and `pt-br/help/` (Brazilian Portuguese); `help.mdx` and `pt-br/help.mdx` are the home pages. Terms and Privacy are in `legal/`
+- Keep the same file names in both languages. When you change an English help page, update its Portuguese twin in the same pull request
+- One topic per page, each question as an `##` heading so it gets its own anchor and search entry. Do not hide answers in accordions
+- Escape dollar amounts as `\$` in help pages. LaTeX is on, so a bare `$` starts a formula
+- Give every image alt text. Help images live in `images/help/<page>/`
+- The `redirects` in `docs.json` map the old Notion help URLs to these pages. Do not remove them
+- The API terminology and "Coming soon" rules below apply to the API docs, not to help pages
+
 ## Style preferences
 
 {/* Add any project-specific style rules below */}

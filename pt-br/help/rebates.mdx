@@ -1,0 +1,59 @@
+---
+title: "Programa de Restituição para Market Maker"
+description: "Como funciona o programa de restituição de taxas para market makers da Futuur."
+---
+
+> 💡 A Futuur recompensa quem oferece liquidez em todos os mercados, de forma automática e instantânea. Quando um taker executa sua ordem em aberto, 80% da taxa volta para você como rebate de maker.
+
+## Resumo
+
+| Feature | Details |
+| --- | --- |
+| % de restituição | **80% da taxa do taker** |
+| Momento do pagamento | **Instantâneo** — no momento em que o match acontece |
+| Makers de compra | Aplicado como desconto na compra |
+| Makers de venda | Adicionado como valor ao saldo da conta |
+| Ativo de liquidação | USDC (dinheiro real) · Ooms (dinheiro de jogo) |
+| Exibição no portfólio | Unificado em **USD** (dinheiro real) · **Ooms** (dinheiro de jogo) |
+| Exibição por transação | Ativo real utilizado — USDC ou Ooms |
+| Quem pode participar | Todos — sem inscrição, sem volume mínimo |
+
+## Por que restituições para makers?
+
+Mais liquidez beneficia todo mundo: spreads menores, menor impacto no preço, execuções mais confiáveis e resiliência em momentos de volatilidade. As restituições de maker incentivam cotações consistentes e competitivas, tornando o mercado melhor para todos.
+
+## Como funciona
+
+Quando um taker executa sua ordem em aberto, 80% da taxa do taker é creditada para você instantaneamente — sem espera, sem acúmulo, sem inscrição.
+
+### O fluxo do match
+
+```mermaid
+flowchart LR
+    A[Maker coloca ordem limite] --> B[Ordem aberta no book]
+    B --> C{Taker executa?}
+    C --> D["Taxa = 0,05 × C × P × (1−P)"]
+    D --> E[80% vai ao maker]
+    E --> F{Lado do maker?}
+    F -- Compra --> G[Desconto na compra]
+    F -- Venda --> H[Crédito no saldo]
+    G --> M{Tipo de mercado?}
+    H --> M
+    M -- Real --> I[Liquidado em USDC]
+    M -- Play --> O[Liquidado em Ooms]
+```
+
+## Onde acompanhar os valores
+
+| Onde encontrar | Detalhes | Moeda exibida |
+| --- | --- | --- |
+| Minhas Posições → aba Transações | Por mercado · vinculado à operação original | Ativo real — USDC ou Ooms |
+| **Portfolio** | Resumo agregado de todos os mercados | USD (dinheiro real) · Ooms (dinheiro de jogo) |
+| Carteira | Extrato geral da conta · cada rebate como entrada própria | Ativo real — USDC ou Ooms |
+
+> ℹ️ Regra prática: o Portfólio unifica o dinheiro real em USD para uma visão única; nos demais lugares, o ativo real é exibido.
+
+## Elegibilidade
+
+- ✅ Todos os mercados — políticos, esportes, cripto ou qualquer outra categoria
+- ✅ Todos os usuários — sem volume mínimo, sem inscrição, sem whitelist

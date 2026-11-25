@@ -1,0 +1,59 @@
+---
+title: "Rebates"
+description: "How Futuur's maker rebates work, where you can see them, and who is eligible."
+---
+
+> 💡 **Futuur rewards liquidity providers on every market — instantly and automatically.** When a taker fills your resting order, **80% of the taker fee** is returned to you as a maker rebate.
+
+## At a Glance
+
+| Feature | Details |
+| --- | --- |
+| Rebate share | **80% of the taker fee** |
+| Payment timing | **Instant** — at the moment the match happens |
+| Buy makers | Applied as a **discount on the purchase** |
+| Sell makers | Added as **value to the account balance** |
+| Settlement asset | **USDC** (real money) · **Ooms** (play money) |
+| Portfolio display | Unified in **USD** (real money) · **Ooms** (play money) |
+| Per-transaction display | Actual asset used — **USDC** or **Ooms** |
+| Who is eligible | Everyone — no application, no volume threshold |
+
+## Why Maker Rebates?
+
+Deeper liquidity benefits everyone: **tighter spreads**, **lower price impact**, **more reliable fills**, and **resilience during volatility**. Maker rebates incentivize consistent, competitive quoting so the whole market gets better.
+
+## How It Works
+
+When a taker fills your resting order, **80% of the taker fee** is credited to you instantly — no waiting, no batch, no application.
+
+### The Match Flow
+
+```mermaid
+flowchart LR
+    A[Maker places limit order] --> B[Order rests in book]
+    B --> C{Taker fills order}
+    C --> D[Taker fee = 0.05 × C × P × 1−P]
+    D --> E[80 percent routed to maker]
+    E --> F{Maker side?}
+    F -- Buying --> G[Applied as<br/>purchase discount]
+    F -- Selling --> H[Added to<br/>account balance]
+    G --> M{Market type?}
+    H --> M
+    M -- Real money --> I[Settled in USDC]
+    M -- Play money --> O[Settled in Ooms]
+```
+
+## Where You Can See Your Rebates
+
+| Surface | Scope | Currency display |
+| --- | --- | --- |
+| **My Positions** → Transactions tab | Per-market · attached to the originating trade | Actual asset — **USDC** or **Ooms** |
+| **Portfolio** | Aggregated summary across all markets | **USD** (real money) · **Ooms** (play money) |
+| **Wallet** | Account-wide ledger · each rebate as its own entry | Actual asset — **USDC** or **Ooms** |
+
+> ℹ️ **Rule of thumb:** the Portfolio unifies real money under **USD** for a single summary view; everywhere else, the actual asset is shown.
+
+## Eligibility
+
+- ✅ **All markets** — political, sports, crypto, or any other category
+- ✅ **Everyone** — no volume thresholds, no application, no whitelisting

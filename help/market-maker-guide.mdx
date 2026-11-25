@@ -1,0 +1,46 @@
+---
+title: "Market Maker Guide"
+description: "Everything you need to quote on Futuur through the API: getting started, the API at a glance, rate limits, fees, and rebates."
+---
+
+Everything you need to quote on Futuur through the API. Start in play money, go live when you're ready.
+
+## 1. Get started
+
+1. **Create an account** and generate your API keys under **Settings → API keys**: [futuur.com/a/settings](https://futuur.com/a/settings)
+2. **Test in play money.** Add `currency_mode=play_money` to your queries and use the `OOM` currency when placing orders. It runs on the same endpoints as real money, at no cost. Ooms can't be withdrawn, so play money proves your integration, not your P&L.
+3. **Fund a real-money account** if you're in an eligible jurisdiction (see section 6).
+4. **Go live** with `currency_mode=real_money` and `USDC`.
+
+## 2. API at a glance
+
+Full documentation: [docs.futuur.com](/introduction) · Base URL: `https://api.futuur.com/v2.0`
+
+| What | How |
+| --- | --- |
+| Authentication | HMAC-SHA512. Send `Key`, `Timestamp` and `HMAC` headers. [Authentication guide](/authentication) |
+| Browse events and order books | `GET /events/`, and the order book endpoint per market |
+| Place an order | `POST /orders/`. Limit order with `price` between 0 and 1, or market order with `price: null` |
+| Order size | Minimum bet in real money is 1 USD; no minimum in Ooms. Maximum varies by market. |
+| Batch operations | Create, update or cancel **up to 20 orders per request** |
+| Cancel | Cancel one order, a batch, or **all orders** (optionally scoped to one event or market) |
+| Your rebates | `GET /wagers/rebates/` |
+
+Useful order options: `expired_at` auto-cancels the unfilled part of an order at a set time; `cancel_conflicting_orders` cancels your conflicting open orders on the same market before placing the new one.
+
+**Real-time data.** Futuur uses Pusher WebSockets: the global `event` channel for market-wide feeds, `event-{event_id}` for best-bid/offer and order-book updates, and HMAC-authorized private channels for your orders and account. [WebSocket docs](/api-reference/websocket/overview)
+
+## 3. Rate limits
+
+- **2,000 requests per minute** and **30,000 per day**, per account.
+- **Higher limits are available to market makers on request.** Write to [makers@futuur.com.](mailto:makers@futuur.com)
+- Use WebSockets for market data rather than polling, and batch endpoints for order changes.
+- Identical POST requests within 1 second are rejected as duplicates, so wait at least 1 second before retrying.
+
+[Rate limits docs](/rate-limits)
+
+## 4. Fees and rebates
+
+The taker pays a fee; **80% of it goes back to the maker** whose resting order was filled, instantly and on every market. No application or volume threshold. There’s zero fees for makers.
+
+[Rebates](/help/rebates): how it works, with an example
