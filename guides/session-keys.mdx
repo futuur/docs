@@ -68,7 +68,7 @@ Writes nothing. The server picks the cap, the expiry, and the nonce, and returns
 
 ```json
 {
-  "chain_id": "84532",
+  "chain_id": "<active chain ID>",
   "currency": "OOM",
   "session_key": "0xYourSessionKeyAddress"
 }
@@ -98,7 +98,7 @@ The response is `200`. The values below are illustrative:
     "domain": {
       "name": "Futuur Session Delegation",
       "version": "1",
-      "chainId": 84532,
+      "chainId": "<active chain ID>",
       "verifyingContract": "0xVerifyingContractFromTheResponse"
     },
     "types": {
@@ -180,7 +180,7 @@ POST /v2.0/me/session-delegations/
 
 ```json
 {
-  "chain_id": "84532",
+  "chain_id": "<active chain ID>",
   "currency": "OOM",
   "session_key": "0xYourSessionKeyAddress",
   "max_maker_amount": "5000000000",
@@ -306,6 +306,7 @@ export FUTUUR_HMAC_PUBLIC_KEY=...
 export FUTUUR_HMAC_PRIVATE_KEY=...
 export FUTUUR_OWNER_KEY=0x...           # owner EOA private key. Never commit it
 export FUTUUR_MARKET_ID=3801
+export FUTUUR_CHAIN_ID=...             # the active chain ID, published when on-chain trading launches
 export FUTUUR_PRICE=0.45                # close to the market: the price guard rejects far prices
 python session_demo.py
 ```
@@ -326,7 +327,7 @@ from eth_account.messages import encode_typed_data
 BASE = os.environ["FUTUUR_API_BASE"]
 PUBLIC_KEY = os.environ["FUTUUR_HMAC_PUBLIC_KEY"]
 PRIVATE_KEY = os.environ["FUTUUR_HMAC_PRIVATE_KEY"]
-CHAIN_ID = "84532"
+CHAIN_ID = os.environ["FUTUUR_CHAIN_ID"]  # the active chain ID
 CURRENCY = "OOM"
 
 owner = Account.from_key(os.environ["FUTUUR_OWNER_KEY"])

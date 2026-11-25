@@ -84,7 +84,7 @@ Returns a `WagerDetail` object. Fields match `WagerList` with the addition of `a
 </ResponseField>
 
 <ResponseField name="active_purchases">
-  Purchases from the last outcome bought in this event.
+  Purchases from the last outcome bought in this event. This endpoint returns every active purchase. [List wagers](/api-reference/wagers/list#active-purchases-are-capped) returns only the 20 newest per wager.
 </ResponseField>
 
 <ResponseField name="roi" type="string" required>

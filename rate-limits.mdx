@@ -24,9 +24,9 @@ These apply on top of the account-wide limits.
 |-----------|-------|-------|
 | `POST /orders/`, `POST /orders/batch/`, `POST /orders/batch-update/` | **30 requests per minute**, shared by the three endpoints | Per account |
 | `PATCH /orders/{id}/cancel/`, `POST /orders/batch-cancel/`, `POST /orders/cancel-all/` | 2,000 requests per minute | Per account |
-| `POST /api-keys/derive/` | 30 requests per minute | Per IP address |
-| `POST /me/safe/` | 20 requests per minute | Per account |
-| `POST /me/safe/sponsor-user-operation/`, `/me/safe/submit-user-operation/`, `/me/safe/enable-trading/`, `/me/safe/pimlico-rpc/` | 60 requests per minute, shared | Per account |
+| `POST /api-keys/derive/` (coming soon) | 30 requests per minute | Per IP address |
+| `POST /me/safe/` (coming soon) | 20 requests per minute | Per account |
+| `POST /me/safe/sponsor-user-operation/`, `/me/safe/submit-user-operation/`, `/me/safe/enable-trading/`, `/me/safe/pimlico-rpc/` (coming soon) | 60 requests per minute, shared | Per account |
 | Failed HMAC authentication | 300 failures per minute | Per IP address |
 
 <Warning>

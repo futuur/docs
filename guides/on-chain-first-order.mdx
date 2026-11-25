@@ -1,11 +1,11 @@
 ---
 title: "Place an on-chain order"
-description: "Enable trading, fetch a signing context, sign LimitOrderIntent, and POST a limit order on the phase-one preview host."
-tag: "Preview"
+description: "Enable trading, fetch a signing context, sign LimitOrderIntent, and POST a limit order. Coming soon."
+tag: "Coming soon"
 ---
 
 <Note>
-  This flow is live on the phase-one **preview host** on Base Sepolia (chain ID `84532`). All paths below are relative to `https://web3-phase-01-preview.staging.cloud.futuur.com`. See [Environment](/environment) for addresses and test funds. The endpoints are **not live** on `https://api.futuur.com`.
+  **Coming soon.** This flow is not yet available on `https://api.futuur.com`. All paths below are relative to `https://api.futuur.com` and describe how it will work.
 </Note>
 
 Every on-chain create is pre-signed. HMAC authenticates the HTTP request. The Safe **owner EOA** signs EIP-712 `LimitOrderIntent`. HMAC keys alone cannot create OOM or USDC orders.
@@ -18,7 +18,7 @@ If you do not have credentials yet, start with [Get your API keys](/guides/get-a
 2. A registered, deployed Safe that is a 1-of-1 Safe owned by that wallet. An API key cannot register a Safe: sign in to the web app with the wallet once and it registers and deploys the Safe for you. Check with `GET /v2.0/me/safe-wallet/` — `deploy_status` must be `deployed`. See [Safe wallet](/api-reference/me/safe).
 3. HMAC public and private keys for L2 request signing.
 4. The owner EOA private key — the same key that owns the Safe.
-5. The Safe funded with OOM and/or USDC. See [Get test funds](/environment#get-test-funds).
+5. The Safe funded with OOM and/or USDC.
 6. Trading enabled once per collateral token (step 1).
 7. For `USDC` with an API key: **Real money trading** turned on for the key.
 
@@ -127,7 +127,7 @@ Sign `eip712` with the **owner EOA**, not the Safe contract address. Domain: `Fu
   "domain": {
     "name": "FutuurLimitOrder",
     "version": "1",
-    "chainId": 84532,
+    "chainId": "<active chain ID>",
     "verifyingContract": "0x0000000000000000000000000000000000000000"
   },
   "types": {
@@ -148,7 +148,7 @@ Sign `eip712` with the **owner EOA**, not the Safe contract address. Domain: `Fu
   "primaryType": "LimitOrderIntent",
   "message": {
     "orderId": 0,
-    "chainId": 84532,
+    "chainId": "<active chain ID>",
     "safeAddress": "0xYourSafe",
     "marketId": 3801,
     "side": "bid",
@@ -165,7 +165,7 @@ Sign `eip712` with the **owner EOA**, not the Safe contract address. Domain: `Fu
 | Message field | How it is built |
 |---|---|
 | `orderId` | Always `0` |
-| `chainId` | `84532` |
+| `chainId` | The active chain ID from the signing context |
 | `safeAddress` | Your Safe, checksummed |
 | `marketId` | The `market` ID |
 | `side`, `position` | The strings you sent: `bid` / `ask`, `long` / `short` |
@@ -248,7 +248,7 @@ Send the usual order fields plus:
   "shares": "3",
   "currency": "USDC",
   "time_in_force": "ioc",
-  "chain_id": "84532",
+  "chain_id": "<active chain ID>",
   "order_intent_signature": "0x...",
   "order_intent_expiry": "1715126400",
   "order_intent_nonce": "17",

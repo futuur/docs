@@ -72,7 +72,10 @@ def onchain_code(response_json):
 | 404 | `not_found` | The object does not exist, is not yours, or is not in a state the endpoint acts on | See the endpoint page |
 | 409 | `idempotency_key_in_progress` | The same `Idempotency-Key` request is still running | Wait for the first response |
 | 429 | `throttled` | A [rate limit](/rate-limits) was exceeded | Wait `Retry-After` seconds |
+| 403 | `WithdrawalPromoCodeLocked` | `POST /withdrawals/request/` asks for promo code credit that is still locked. The `detail` reads `<amount> of your balance is promo code credit. You need <n> more resolved bets before you can withdraw it.` | Withdraw only the unlocked part of the balance, or wait until you have placed the bets the message asks for |
 | 503 | `trading_halted` | Trading is paused for everyone | Poll `GET /trading-status/` and retry when `trading_halted` is `false` |
+| 503 | `site_maintenance` | Futuur is in maintenance and the whole API is paused. A few routes stay up, for example `GET /trading-status/`. The response has a `Retry-After: 30` header and `attr: null`. The `detail` is the maintenance message, or `Futuur is down for maintenance.` | Wait the number of seconds in `Retry-After`, then retry. Do not retry in a tight loop |
+| 503 | `RealMoneyGeoUnavailable` | A real-money action that checks your country, such as a deposit or a real-money bet, could not be checked because Futuur cannot determine your country right now. `detail`: `We could not verify your location right now. Please try again in a minute.` Play money is not affected | Retry in a minute |
 
 ## Wallet-derived API keys
 
@@ -104,7 +107,7 @@ Returned by `POST /orders/` before any signature check. In batch endpoints the s
 | 403 | `OutcomeDisabled` | — | The market is disabled, awaiting resolution | Stop quoting |
 | 403 | `InvalidPrice` | `price` | The price rounds to `0.00` or `1.00` | Use `0.01` to `0.99` |
 | 403 | `OrderBookMinAmountNotAllowed` | `amount` | The order is worth less than `0.01` | Increase shares or price |
-| 403 | `UserNotEnoughBalance` | `amount` | No account for the currency, or for `OOM` the Safe is not deployed or holds no OOM | Fund the Safe. See [Environment](/environment) |
+| 403 | `UserNotEnoughBalance` | `amount` | No account for the currency, or for `OOM` the Safe is not deployed or holds no OOM | Fund the Safe |
 | 403 | `RealMoneyBetNotAllowed` | — | The event does not allow real money, or **Real money trading** is off for the API key | Turn it on in **Settings** → **API keys** |
 | 403 | `UserBlockedBets` | — | The account is blocked from trading | Contact Futuur |
 | 403 | `OrderBookNotWagerForAsk` | `shares` | An ask without an open position on that market and side | Check `GET /wagers/` |
@@ -116,7 +119,11 @@ Returned by `POST /orders/` before any signature check. In batch endpoints the s
 
 ## On-chain order errors
 
-Returned by `POST /orders/` on the phase-one preview host, in the [two-entry form](#on-chain-order-errors-look-different). All are `400`.
+<Note>
+  **Coming soon.** On-chain trading is not yet available on `https://api.futuur.com`. These errors describe how it will work.
+</Note>
+
+Returned by `POST /orders/` with on-chain trading, in the [two-entry form](#on-chain-order-errors-look-different). All are `400`.
 
 | Code | Cause | What to do |
 |---|---|---|
@@ -194,3 +201,5 @@ The deprecated `POST /pusher/auth/` (Pusher delivery ends on 2027-03-18) answers
 ## Server errors
 
 A `5xx` with `type: "server_error"` means the request did not complete. For an order create, list your orders before retrying: the order may exist.
+
+A `503` with code `site_maintenance` or `RealMoneyGeoUnavailable` is temporary. Wait, then retry. See the [table above](#authentication-and-limits).

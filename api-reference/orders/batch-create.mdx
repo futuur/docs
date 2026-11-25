@@ -6,7 +6,7 @@ description: "Submit between 1 and 20 limit orders in a single request."
 Create multiple limit orders in a single API call. Each item in the `orders` array is validated and matched independently — partial failures do not block successful orders in the same batch.
 
 <Warning>
-  **On-chain currencies (`OOM`, `USDC`) on the phase-one preview host.** An on-chain order is only accepted with its own signed `LimitOrderIntent`, and the per-Safe nonce allows one order per signature. An item without a valid intent fails. Hosts that do not read the intent fields on batch items reject every on-chain item. The supported way to quote is a loop over [`POST /orders/`](/api-reference/orders/create): signing context → sign → create, one order at a time. See [Quote with a per-order loop](#quote-with-a-per-order-loop).
+  **Coming soon: on-chain currencies (`OOM`, `USDC`).** When on-chain trading launches, an on-chain order will only be accepted with its own signed `LimitOrderIntent`, and the per-Safe nonce allows one order per signature. An item without a valid intent will fail. The supported way to quote will be a loop over [`POST /orders/`](/api-reference/orders/create): signing context → sign → create, one order at a time. This is not yet available on `https://api.futuur.com`. See [Quote with a per-order loop](#quote-with-a-per-order-loop).
 </Warning>
 
 <Warning>
@@ -49,7 +49,7 @@ POST https://api.futuur.com/v2.0/orders/batch/
       Position direction: `long` (in favor of the outcome) or `short` (against).
     </ResponseField>
     <ResponseField name="price" type="number">
-      Limit price from `0.01` to `0.99`, with at most two decimals. `null` makes a market order, which is rejected for `OOM` and `USDC` on the preview host.
+      Limit price from `0.01` to `0.99`, with at most two decimals. `null` makes a market order, which will be rejected for `OOM` and `USDC` once on-chain trading launches (coming soon).
     </ResponseField>
     <ResponseField name="shares" type="number" required>
       Number of shares to buy or sell, greater than `0.02`. Submitted as a decimal string. On an ask, `"max"` sells your sellable shares (optionally capped by `max_shares`).
@@ -160,9 +160,9 @@ curl --request POST \
         "time_in_force": "gtc",
         "average_price": null,
         "proceeds": null,
-        "settlement_mode": "onchain",
-        "settlement_status": "ready",
-        "chain_id": 84532
+        "settlement_mode": "ledger",
+        "settlement_status": "none",
+        "chain_id": null
       }
     },
     {
@@ -179,7 +179,7 @@ curl --request POST \
 
 ## Quote with a per-order loop
 
-For `OOM` and `USDC` on the preview host, place each quote with its own signed create. The nonce is sequential per Safe, so do not run these in parallel for one Safe.
+Coming soon: with on-chain trading, place each `OOM` and `USDC` quote with its own signed create. The nonce is sequential per Safe, so do not run these in parallel for one Safe.
 
 ```python python
 # sign(), signing_context(), and sign_intent() are defined in the end-to-end example.

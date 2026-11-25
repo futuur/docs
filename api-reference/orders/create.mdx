@@ -18,7 +18,7 @@ POST https://api.futuur.com/v2.0/orders/
 </Note>
 
 <Warning>
-  On the phase-one preview host ([Environment](/environment)), every order in `OOM` or `USDC` must also carry a signed `LimitOrderIntent`: send the [signed intent fields](#signed-intent-fields-phase-one) below. HMAC alone returns `400`. Production (`https://api.futuur.com`) does not accept those fields yet.
+  Coming soon: with on-chain trading, every order in `OOM` or `USDC` will also need to carry a signed `LimitOrderIntent`. See the [signed intent fields](#signed-intent-fields-coming-soon) below. They are not yet available on `https://api.futuur.com`, which does not accept them.
 </Warning>
 
 ## Headers
@@ -44,9 +44,9 @@ Send decimals as strings (`"0.42"`). It keeps the HMAC signature simple and avoi
 </ParamField>
 
 <ParamField body="shares" type="decimal | string" required>
-  Number of shares to buy or sell. Must be greater than `0.02`. For `OOM` and `USDC` on the preview host, use at most two decimals: the signed intent counts shares in units of `0.01`.
+  Number of shares to buy or sell. Must be greater than `0.02`. With on-chain trading (coming soon), use at most two decimals for `OOM` and `USDC`: the signed intent counts shares in units of `0.01`.
 
-  On an ask, the string `"max"` sells the shares you hold minus the shares reserved by your open asks. The resolved quantity is returned in `shares_requested`. `"max"` requires a `price`, is rejected on a bid (`InvalidSharesMax`), and returns `NoSellableShares` when there is nothing to sell. For `OOM` and `USDC` on the preview host, **send an explicit share count**: the signed `sharesRaw` must equal the quantity `"max"` resolves to, which you cannot know for certain when you sign. A mismatch fails the signature check.
+  On an ask, the string `"max"` sells the shares you hold minus the shares reserved by your open asks. The resolved quantity is returned in `shares_requested`. `"max"` requires a `price`, is rejected on a bid (`InvalidSharesMax`), and returns `NoSellableShares` when there is nothing to sell. With on-chain trading (coming soon), for `OOM` and `USDC` **send an explicit share count**: the signed `sharesRaw` must equal the quantity `"max"` resolves to, which you cannot know for certain when you sign. A mismatch fails the signature check.
 
   A create without `shares` is rejected with `InvalidShares`.
 </ParamField>
@@ -58,7 +58,7 @@ Send decimals as strings (`"0.42"`). It keeps the HMAC signature simple and avoi
 <ParamField body="price" type="decimal">
   Limit price as a probability, from `0.01` to `0.99`, in steps of `0.01`. A price with more than two decimals is rejected.
 
-  `null` or omitted makes a market order. Market orders are rejected for `OOM` and `USDC` on the preview host with `price_required`: send a price with `time_in_force: "ioc"`.
+  `null` or omitted makes a market order. Coming soon: with on-chain trading, market orders will be rejected for `OOM` and `USDC` with `price_required`. Send a price with `time_in_force: "ioc"` instead.
 </ParamField>
 
 <ParamField body="position" type="string" default="long">
@@ -81,9 +81,13 @@ Send decimals as strings (`"0.42"`). It keeps the HMAC signature simple and avoi
   Optional. Your expected total, used only as a cross-check. It does not size the order. Leave it out unless you want the create to fail when the book moved.
 </ParamField>
 
-### Signed intent fields (phase one)
+### Signed intent fields (coming soon)
 
-Required for `OOM` and `USDC` on the preview host. Take the values from [`POST /orders/signing-context/`](/guides/on-chain-first-order) and the signature you made over its `eip712` payload.
+<Note>
+  **Coming soon.** These fields are not yet available on `https://api.futuur.com`. Do not send them to the live endpoint.
+</Note>
+
+They will be required for `OOM` and `USDC` with on-chain trading. Take the values from [`POST /orders/signing-context/`](/guides/on-chain-first-order) and the signature you made over its `eip712` payload.
 
 <ParamField body="order_intent_signature" type="string" required>
   Hex EIP-712 signature of the `LimitOrderIntent`, made by the Safe owner EOA.
@@ -102,7 +106,7 @@ Required for `OOM` and `USDC` on the preview host. Take the values from [`POST /
 </ParamField>
 
 <ParamField body="chain_id" type="integer">
-  Optional. Defaults to the active chain (`84532` on the preview host).
+  Optional. Defaults to the active chain.
 </ParamField>
 
 The intent covers `market`, `side`, `position`, `price`, `shares`, the nonce, the expiry, and `maxUsdcRaw`. The order you send must match what you signed in every one of them, or the signature does not verify.
@@ -219,20 +223,21 @@ Errors use the format in [Errors](/errors), which lists every code with its HTTP
 | 429 | `throttled` | More than 30 creates in a minute. See [Rate limits](/rate-limits). |
 | 503 | `IOCUnavailable` | The `ioc` match could not finish. The order was canceled. |
 | 503 | `trading_halted` | Trading is paused. |
+| 503 | `site_maintenance` | Futuur is in maintenance. Wait the seconds in the `Retry-After` header, then retry. See [Errors](/errors#authentication-and-limits). |
 
 <Note>
-  On-chain codes arrive in a `400` as the `detail` of the entry whose `attr` is `"code"`. See [On-chain order errors look different](/errors#on-chain-order-errors-look-different).
+  The `order_intent_*`, `max_usdc_raw`, and `insufficient_onchain_available` codes belong to on-chain trading, which is coming soon. They arrive in a `400` as the `detail` of the entry whose `attr` is `"code"`. See [On-chain order errors look different](/errors#on-chain-order-errors-look-different).
 </Note>
 
 ## Example
 
-A signed `ioc` bid on the preview host. The body uses string values, so the HMAC string is built from exactly these strings.
+A `gtc` bid. The body uses string values, so the HMAC string is built from exactly these strings.
 
 <CodeGroup>
 
 ```bash cURL
 curl --request POST \
-  --url "https://web3-phase-01-preview.staging.cloud.futuur.com/v2.0/orders/" \
+  --url "https://api.futuur.com/v2.0/orders/" \
   --header "Key: YOUR_PUBLIC_KEY" \
   --header "Timestamp: 1712534400" \
   --header "HMAC: YOUR_HMAC_SIGNATURE" \
@@ -244,12 +249,7 @@ curl --request POST \
     "currency": "OOM",
     "price": "0.42",
     "shares": "3",
-    "time_in_force": "ioc",
-    "chain_id": "84532",
-    "order_intent_signature": "0x...",
-    "order_intent_expiry": "1715126400",
-    "order_intent_nonce": "17",
-    "max_usdc_raw": "1296540"
+    "time_in_force": "gtc"
   }'
 ```
 
@@ -283,13 +283,13 @@ curl --request POST \
   "expired_at": "2024-05-08T00:00:00Z",
   "status": "processing",
   "created": "2024-04-08T00:00:00Z",
-  "time_in_force": "ioc",
+  "time_in_force": "gtc",
   "average_price": null,
   "proceeds": null,
-  "settlement_mode": "onchain",
-  "settlement_status": "ready",
-  "chain_id": 84532
+  "settlement_mode": "ledger",
+  "settlement_status": "none",
+  "chain_id": null
 }
 ```
 
-For the full flow in runnable Python, see [End-to-end Python bot](/guides/on-chain-bot-example).
+Coming soon: for the signed on-chain flow in runnable Python, see [End-to-end Python bot](/guides/on-chain-bot-example).

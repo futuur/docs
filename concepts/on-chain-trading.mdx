@@ -1,14 +1,14 @@
 ---
 title: "On-chain trading"
-description: "How Futuur's CLOB matches orders off-chain and moves collateral on-chain in phase one."
-tag: "Preview"
+description: "How Futuur's CLOB will match orders off-chain and move collateral on-chain."
+tag: "Coming soon"
 ---
 
 <Note>
-  Phase one of on-chain trading is live on the **preview host** on Base Sepolia (chain ID `84532`). See [Environment](/environment) for the host, token, and pool addresses. Production (`https://api.futuur.com`) still uses HMAC-only ledger settlement and does not accept the fields on this page.
+  **Coming soon.** On-chain trading is not yet available on `https://api.futuur.com`. Production still uses HMAC-only ledger settlement and does not accept the fields on this page. This page describes how on-chain trading will work.
 </Note>
 
-Futuur settles collateral on-chain. The book still matches off-chain. Collateral (OOM or USDC) moves on-chain at match. HMAC authenticates HTTP. A wallet signature authorizes every create.
+Futuur will settle collateral on-chain. The book still matches off-chain. Collateral (OOM or USDC) moves on-chain at match. HMAC authenticates HTTP. A wallet signature authorizes every create.
 
 ## How a bot trade works
 
@@ -56,9 +56,9 @@ A filled on-chain order without a collateral `Transfer` is a failure. The API do
 
 ## Settlement at match
 
-Phase one moves **collateral** (OOM or USDC) and keeps share balances in the Futuur database. A later cutover mints those positions as ERC-1155 outcome tokens. Matching stays the same CLOB either way.
+The first release moves **collateral** (OOM or USDC) and keeps share balances in the Futuur database. A later cutover mints those positions as ERC-1155 outcome tokens. Matching stays the same CLOB either way.
 
-| Match type | Collateral (phase one) | Outcome tokens (later) |
+| Match type | Collateral (first release) | Outcome tokens (later) |
 |---|---|---|
 | Bid vs ask | Bidder Safe → asker Safe (via the pool) | Transfer the filled ERC-1155 |
 | Bid vs bid (both-buy) | Each user Safe → pool | Split a complete set; each trader receives their side |
@@ -90,9 +90,9 @@ The rates are platform settings and can change. `maxUsdcRaw` in the signing cont
 
 ## Funding, withdrawals, and payouts
 
-| Action | What is available today |
+| Action | How it will work |
 |---|---|
-| **Deposit** | Transfer the token to your Safe address on the active chain. There is no deposit endpoint for Safe balances; `POST /deposits/request/` belongs to the legacy payment-gateway flow. Read the result with `GET /me/safe-wallet/?refresh=1` or [`GET /me/balances/`](/api-reference/me/balances). On the preview host, see [Get test funds](/environment#get-test-funds). |
+| **Deposit** | Transfer the token to your Safe address on the active chain. There is no deposit endpoint for Safe balances; `POST /deposits/request/` belongs to the legacy payment-gateway flow. Read the result with `GET /me/safe-wallet/?refresh=1` or [`GET /me/balances/`](/api-reference/me/balances). |
 | **Withdraw** | `USDC` only. Send a sponsored UserOperation from your Safe whose single call is `transfer(to, amount)` on the USDC token, through the relay: sponsor, sign, submit, then read the receipt. It needs a wallet sign-in session; an API key cannot withdraw. See [Withdraw from the Safe](/api-reference/me/safe#withdraw-from-the-safe). `OOM` cannot be withdrawn. `/withdrawals/` belongs to the legacy payment-gateway flow. |
 | **Resolution payout** | Automatic. When a market resolves, the pool pays each winning share 1 unit of collateral to your Safe. A canceled event refunds what you paid. A losing position pays nothing. There is no claim call. |
 
@@ -124,10 +124,10 @@ Coming soon: [session keys](/concepts/session-keys) let an interactive client si
 
 ## Not in this release
 
-These are not part of the phase-one order flow:
+These are not part of the first release:
 
 - Splitting a complete set. It is [documented only](/guides/split-before-quoting). For merging, see [Merge a complete set](/guides/merge-complete-set) for its own status
 - [Conditional / outcome tokens](/concepts/conditional-tokens) (ERC-1155 Yes/No positions; binaries and exclusive N≥3)
 - A dedicated exchange contract (settlement uses the pool Safe; operator fills come later)
 - An official TypeScript or Python SDK
-- Base mainnet. Phase one runs on Base Sepolia only
+- Chains other than the one Futuur publishes at launch

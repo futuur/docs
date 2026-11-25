@@ -10,7 +10,7 @@ This guide walks you through finding an event, checking the current price, and p
 </Note>
 
 <Note>
-  On the phase-one preview host, orders in `OOM` and `USDC` also need the signed-intent fields (`order_intent_signature`, `order_intent_expiry`, `order_intent_nonce`, `max_usdc_raw`). The bodies below show the order fields only. See [Place an on-chain order](/guides/on-chain-first-order) and [Environment](/environment).
+  Coming soon: with on-chain trading, orders in `OOM` and `USDC` will also need the signed-intent fields (`order_intent_signature`, `order_intent_expiry`, `order_intent_nonce`, `max_usdc_raw`). These are not yet available on `https://api.futuur.com`. The bodies below show the order fields only. See [Place an on-chain order](/guides/on-chain-first-order).
 </Note>
 
 <Steps>
@@ -94,7 +94,7 @@ Note the `id` of the market you want to bet on and its current `price` (implied 
 
 To buy shares right away, send `time_in_force: "ioc"` with the highest `price` you accept. The order fills at that price or better, and any unfilled remainder is canceled.
 
-A market order (`price: null`) cannot be used for `OOM` or `USDC` on the phase-one preview host, because the signed intent contains a price.
+Coming soon: with on-chain trading, a market order (`price: null`) will not be available for `OOM` or `USDC`, because the signed intent contains a price.
 
 <CodeGroup>
 

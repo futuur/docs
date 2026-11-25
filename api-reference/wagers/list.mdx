@@ -100,8 +100,26 @@ Returns a paginated list of wager objects.
     <ResponseField name="shares" type="number" required>
       Consolidated shares held in this wager.
     </ResponseField>
+    <ResponseField name="active_purchases" type="array">
+      The purchases that make up the open position, oldest first. Each entry has `action`, `shares`, `price`, `amount`, `currency`, and `created`. This list is capped. See [Active purchases are capped](#active-purchases-are-capped).
+    </ResponseField>
+    <ResponseField name="active_purchases_amount" type="string">
+      Amount from all active purchases on this wager, not only the ones listed in `active_purchases`.
+    </ResponseField>
+    <ResponseField name="purchases_amount" type="number">
+      Cost basis of the open position. It covers every purchase, not only the ones listed in `active_purchases`.
+    </ResponseField>
   </Expandable>
 </ResponseField>
+
+## Active purchases are capped
+
+In this list, `active_purchases` holds at most 20 entries per wager: the 20 newest purchases, still oldest first. A position built from many small purchases has more than that, and the rest are left out of the list response.
+
+- The cap applies to each wager in `results`, on every request to this endpoint, whatever filters you send.
+- It applies to the `active_purchases` array only. Wagers themselves are not capped, and `limit` and `offset` page through wagers, not through purchases. Paging does not return the older purchases.
+- `shares`, `active_purchases_amount`, and `purchases_amount` still cover every purchase.
+- To read all active purchases of one wager, call [`GET /wagers/{id}/`](/api-reference/wagers/retrieve). It returns the full list.
 
 ## Example
 

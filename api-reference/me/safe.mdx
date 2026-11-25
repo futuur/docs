@@ -1,12 +1,13 @@
 ---
 title: "Safe wallet"
 description: "Register your Safe, read its state, relay UserOperations, and enable trading."
+tag: "Coming soon"
 ---
 
 Your [Safe](https://safe.global) smart account holds the collateral you trade with. This page covers the endpoints that register it, report its state, relay its ERC-4337 UserOperations, and give the pool the standing allowance that bids need.
 
 <Note>
-  These endpoints are part of phase one and run on the preview host only. See [Environment](/environment) for the chain and addresses. They are not live on `https://api.futuur.com`.
+  **Coming soon.** These endpoints are not yet available on `https://api.futuur.com`. This page describes how they will work.
 </Note>
 
 | Endpoint | Purpose | API keys |
@@ -36,7 +37,7 @@ Your [Safe](https://safe.global) smart account holds the collateral you trade wi
 ## Register your Safe
 
 ```
-POST https://web3-phase-01-preview.staging.cloud.futuur.com/v2.0/me/safe/
+POST https://api.futuur.com/v2.0/me/safe/
 ```
 
 Stores the address of your Safe for the active chain. The call is idempotent for the same address. It does not deploy anything.
@@ -82,7 +83,7 @@ Returns `200 OK` with the [Safe wallet object](#safe-wallet-object) plus a `migr
 ## Read your Safe
 
 ```
-GET https://web3-phase-01-preview.staging.cloud.futuur.com/v2.0/me/safe-wallet/
+GET https://api.futuur.com/v2.0/me/safe-wallet/
 ```
 
 <ParamField query="chain_id" type="integer">
@@ -154,11 +155,11 @@ Returns `200 OK` with the Safe wallet object. If you have no Safe on that chain 
 </ResponseField>
 
 <ResponseField name="onchain_settlement_enabled" type="boolean">
-  Whether real-money orders settle on-chain on this host.
+  Whether real-money orders settle on-chain.
 </ResponseField>
 
 <ResponseField name="play_money_onchain_settlement_enabled" type="boolean">
-  Whether `OOM` orders settle on-chain on this host.
+  Whether `OOM` orders settle on-chain.
 </ResponseField>
 
 <ResponseField name="created_at" type="string">
@@ -172,7 +173,7 @@ Returns `200 OK` with the Safe wallet object. If you have no Safe on that chain 
 ## Confirm deployment
 
 ```
-POST https://web3-phase-01-preview.staging.cloud.futuur.com/v2.0/me/safe/deployed/
+POST https://api.futuur.com/v2.0/me/safe/deployed/
 ```
 
 Tells the API that your Safe now has code on-chain so it can update `deploy_status`. All fields are optional.
@@ -194,7 +195,7 @@ Returns `200 OK` with the Safe wallet object.
 ## Trading status
 
 ```
-GET https://web3-phase-01-preview.staging.cloud.futuur.com/v2.0/me/safe/trading-status/
+GET https://api.futuur.com/v2.0/me/safe/trading-status/
 ```
 
 Reports whether the pool has a standing allowance on your Safe for one currency.
@@ -254,13 +255,13 @@ Reports whether the pool has a standing allowance on your Safe for one currency.
 ```json Sample response (200 OK)
 {
   "enabled": false,
-  "chainId": 84532,
+  "chainId": "<active chain ID>",
   "currency": "OOM",
   "safeAddress": "0xYourSafe",
   "ownerAddress": "0xYourOwner",
-  "poolAddress": "0xbC42f13000Da4D895cB5dD9375511846332A5053",
-  "usdcToken": "0x9e89a2c1dA308052EFAF590e71bEfF256AF9F7a4",
-  "collateralToken": "0x9e89a2c1dA308052EFAF590e71bEfF256AF9F7a4",
+  "poolAddress": "0xPoolAddress",
+  "usdcToken": "0xTokenAddress",
+  "collateralToken": "0xTokenAddress",
   "allowanceRaw": "0",
   "approveAmountRaw": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
   "deployed": true,
@@ -271,7 +272,7 @@ Reports whether the pool has a standing allowance on your Safe for one currency.
 ## Enable trading
 
 ```
-POST https://web3-phase-01-preview.staging.cloud.futuur.com/v2.0/me/safe/enable-trading/
+POST https://api.futuur.com/v2.0/me/safe/enable-trading/
 ```
 
 Submits a **signed** ERC-4337 UserOperation in which your Safe calls `approve(poolAddress, amount)` on the collateral token, then waits until the allowance is visible on-chain. Do this once per currency. After it succeeds, bids need no per-order approval.
@@ -334,12 +335,12 @@ The API relays UserOperations for your Safe to its bundler and paymaster so you 
 - **`approve(pool, amount)`** on a collateral token, and
 - a **USDC withdrawal**, `transfer(to, amount)`, for wallet sign-in sessions only. See [Withdraw from the Safe](#withdraw-from-the-safe).
 
-Anything else returns `400` with the message `This UserOperation is not allowed through the relay`. If you send `entry_point`, it must be the EntryPoint in [Environment](/environment).
+Anything else returns `400` with the message `This UserOperation is not allowed through the relay`. If you send `entry_point`, it must be the supported ERC-4337 EntryPoint (v0.7).
 
 ### Sponsor a UserOperation
 
 ```
-POST https://web3-phase-01-preview.staging.cloud.futuur.com/v2.0/me/safe/sponsor-user-operation/
+POST https://api.futuur.com/v2.0/me/safe/sponsor-user-operation/
 ```
 
 <ParamField body="user_operation" type="object" required>
@@ -359,7 +360,7 @@ Returns `200 OK` with the paymaster's `pm_sponsorUserOperation` result, unchange
 ### Submit a UserOperation
 
 ```
-POST https://web3-phase-01-preview.staging.cloud.futuur.com/v2.0/me/safe/submit-user-operation/
+POST https://api.futuur.com/v2.0/me/safe/submit-user-operation/
 ```
 
 Takes the same body with the **signed** UserOperation. Returns:
@@ -373,7 +374,7 @@ Takes the same body with the **signed** UserOperation. Returns:
 ### Read a receipt
 
 ```
-GET https://web3-phase-01-preview.staging.cloud.futuur.com/v2.0/me/safe/user-operation-receipt/?user_operation_hash=0x...
+GET https://api.futuur.com/v2.0/me/safe/user-operation-receipt/?user_operation_hash=0x...
 ```
 
 Returns the bundler's receipt, or `{}` while the UserOperation is not yet included. `hash` is accepted as an alias of `user_operation_hash`. `chain_id` is optional.
@@ -381,7 +382,7 @@ Returns the bundler's receipt, or `{}` while the UserOperation is not yet includ
 ### Bundler JSON-RPC
 
 ```
-POST https://web3-phase-01-preview.staging.cloud.futuur.com/v2.0/me/safe/pimlico-rpc/
+POST https://api.futuur.com/v2.0/me/safe/pimlico-rpc/
 ```
 
 A JSON-RPC pass-through for smart-account client libraries.
@@ -427,6 +428,5 @@ Relay failures return `400` with the message in the entry whose `attr` is `detai
 
 ## Related
 
-- [Environment](/environment) — chain, token, pool, and EntryPoint addresses
 - [Place an on-chain order](/guides/on-chain-first-order) — where these calls fit
 - [Errors](/errors) — error format and codes
