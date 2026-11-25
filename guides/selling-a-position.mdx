@@ -10,7 +10,7 @@ Selling a position means placing an **ask** (sell) order on a market where you a
 </Note>
 
 <Note>
-  On the phase-one preview host, orders in `OOM` and `USDC` also need the signed-intent fields (`order_intent_signature`, `order_intent_expiry`, `order_intent_nonce`, `max_usdc_raw`). The bodies below show the order fields only. See [Place an on-chain order](/guides/on-chain-first-order) and [Environment](/environment).
+  Coming soon: with on-chain trading, orders in `OOM` and `USDC` will also need the signed-intent fields (`order_intent_signature`, `order_intent_expiry`, `order_intent_nonce`, `max_usdc_raw`). These are not yet available on `https://api.futuur.com`. The bodies below show the order fields only. See [Place an on-chain order](/guides/on-chain-first-order).
 </Note>
 
 <Steps>
@@ -89,7 +89,7 @@ To sell, place a `POST /orders/` request with `side="ask"`. Match the `position`
 
 Use `shares` to specify exactly how many shares to sell. Send `time_in_force="ioc"` with the lowest `price` you accept to sell immediately, or leave the default (`gtc`) to rest a limit sell on the book.
 
-A market sell (`price=null`) cannot be used for `OOM` or `USDC` on the phase-one preview host, because the signed intent contains a price. On that host, on-chain positions also cannot be sold with `PATCH /wagers/{id}/`; that call returns `onchain_sell_requires_limit_order`.
+Coming soon: with on-chain trading, a market sell (`price=null`) will not be available for `OOM` or `USDC`, because the signed intent contains a price. On-chain positions also cannot be sold with `PATCH /wagers/{id}/`; that call returns `onchain_sell_requires_limit_order`.
 
 **Immediate sell (`ioc`):**
 

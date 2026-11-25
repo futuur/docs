@@ -11,7 +11,7 @@ API builders use two different secrets. The HMAC pair authenticates every REST r
 | Owner wallet private key | Safe owner EOA | EIP-712 `DeriveApiKey` and `LimitOrderIntent` | Your wallet (MetaMask or an exported embedded wallet). Futuur never returns this. |
 
 <Note>
-  HMAC keys work on production and on the phase-one preview host. Wallet-signed derive and per-order EIP-712 signing are part of [on-chain trading](/concepts/on-chain-trading) and exist only on the preview host. Keys are per host: a pair created on `futuur.com` does not work on the preview host, and the reverse. See [Environment](/environment).
+  HMAC keys from **Settings** work on `https://api.futuur.com` today. Wallet-signed derive and per-order EIP-712 signing are part of [on-chain trading](/concepts/on-chain-trading). They are coming soon and not yet available on `https://api.futuur.com`.
 </Note>
 
 <Tabs>
@@ -45,7 +45,7 @@ API builders use two different secrets. The HMAC pair authenticates every REST r
     ## From your wallet
 
     <Note>
-      `POST /v2.0/api-keys/derive/` is live on the phase-one preview host only. It is not live on `https://api.futuur.com`. This is the Polymarket-shaped bot path: prove you control the owner wallet, then receive HMAC credentials.
+      **Coming soon.** `POST /v2.0/api-keys/derive/` is not yet available on `https://api.futuur.com`. This is the Polymarket-shaped bot path: prove you control the owner wallet, then receive HMAC credentials.
     </Note>
 
     Derive does **not** replace the owner wallet key. You still need that key to sign [on-chain orders](/guides/on-chain-first-order).
@@ -67,14 +67,14 @@ API builders use two different secrets. The HMAC pair authenticates every REST r
 
     ### EIP-712 typed data
 
-    Domain: `FutuurApiAuth` v1. `verifyingContract` is the zero address. `chainId` is the active chain, `84532` on the preview host. Timestamp must be within ±120 seconds of the server clock. Note that `timestamp` is a **string** in the typed data and an integer in the request body.
+    Domain: `FutuurApiAuth` v1. `verifyingContract` is the zero address. `chainId` is the active chain ID. Timestamp must be within ±120 seconds of the server clock. Note that `timestamp` is a **string** in the typed data and an integer in the request body.
 
     ```json
     {
       "domain": {
         "name": "FutuurApiAuth",
         "version": "1",
-        "chainId": 84532,
+        "chainId": "<active chain ID>",
         "verifyingContract": "0x0000000000000000000000000000000000000000"
       },
       "types": {
@@ -131,7 +131,7 @@ API builders use two different secrets. The HMAC pair authenticates every REST r
     from eth_account.messages import encode_typed_data
 
     OWNER_KEY = "0xYOUR_OWNER_PRIVATE_KEY"
-    CHAIN_ID = 84532
+    CHAIN_ID = 0  # Replace with the active chain ID
 
     account = Account.from_key(OWNER_KEY)
     timestamp = int(time.time())
@@ -173,7 +173,7 @@ API builders use two different secrets. The HMAC pair authenticates every REST r
         signature = f"0x{signature}"
 
     response = requests.post(
-        "https://web3-phase-01-preview.staging.cloud.futuur.com/v2.0/api-keys/derive/",
+        "https://api.futuur.com/v2.0/api-keys/derive/",
         json={
             "address": account.address,
             "timestamp": timestamp,
@@ -189,7 +189,7 @@ API builders use two different secrets. The HMAC pair authenticates every REST r
     import { privateKeyToAccount } from "viem/accounts";
 
     const OWNER_KEY = "0xYOUR_OWNER_PRIVATE_KEY";
-    const CHAIN_ID = 84532;
+    const CHAIN_ID = 0; // Replace with the active chain ID
 
     const account = privateKeyToAccount(OWNER_KEY);
     const timestamp = Math.floor(Date.now() / 1000);
@@ -219,7 +219,7 @@ API builders use two different secrets. The HMAC pair authenticates every REST r
       },
     });
 
-    const response = await fetch("https://web3-phase-01-preview.staging.cloud.futuur.com/v2.0/api-keys/derive/", {
+    const response = await fetch("https://api.futuur.com/v2.0/api-keys/derive/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -237,14 +237,14 @@ API builders use two different secrets. The HMAC pair authenticates every REST r
     ```bash curl
     # Sign DeriveApiKey with your owner key first, then:
 
-    curl -X POST "https://web3-phase-01-preview.staging.cloud.futuur.com/v2.0/api-keys/derive/" \
+    curl -X POST "https://api.futuur.com/v2.0/api-keys/derive/" \
       -H "Content-Type: application/json" \
       -d '{
         "address": "0xYourOwnerAddress",
         "timestamp": 1712500000,
         "nonce": 0,
         "signature": "0x...",
-        "chain_id": 84532
+        "chain_id": "<active chain ID>"
       }'
     ```
 
@@ -254,14 +254,14 @@ API builders use two different secrets. The HMAC pair authenticates every REST r
 
 ## Two-layer auth
 
-On-chain trading (phase-one preview host) uses the same shape as Polymarket CLOB bots, with Futuur-specific details:
+On-chain trading (coming soon) will use the same shape as Polymarket CLOB bots, with Futuur-specific details:
 
 | Layer | How it works | Purpose |
 |---|---|---|
 | L1 (wallet) | The owner EOA signs EIP-712 (`DeriveApiKey`, then `LimitOrderIntent`) | Prove wallet control and authorize each order |
 | L2 (HTTP) | Each request is signed with HMAC-SHA512 | Authenticate as a Futuur API user |
 
-HMAC **never** replaces the wallet signature. On the preview host, unsigned creates in `OOM` or `USDC` return `400` with `order_intent_signature is required for on-chain limit orders.`
+HMAC **never** replaces the wallet signature. Once on-chain trading is live, unsigned creates in `OOM` or `USDC` will return `400` with `order_intent_signature is required for on-chain limit orders.`
 
 If you already know Polymarket's CLOB client, do not copy their headers or hash:
 

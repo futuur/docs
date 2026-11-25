@@ -7,13 +7,13 @@ Every request to the Futuur API must be authenticated. Authentication uses HMAC-
 
 ## Get your API keys
 
-Get a public/private HMAC pair from **Settings** → **API keys**, or derive the same pair by signing with your wallet (phase-one preview host only). Full steps and the wallet-derive payload are in [Get your API keys](/guides/get-api-keys).
+Get a public/private HMAC pair from **Settings** → **API keys**, or, coming soon, derive the same pair by signing with your wallet. Full steps and the wallet-derive payload are in [Get your API keys](/guides/get-api-keys).
 
 - **Public key** — included in every request as the `Key` header. Safe to log.
 - **Private key** — used to sign requests. Never share or log this value.
 
 <Note>
-  On the phase-one preview host, HMAC authenticates the HTTP request and nothing else. Every order in `OOM` or `USDC` also needs an EIP-712 `LimitOrderIntent` signed by your Safe owner key. HMAC never replaces that wallet signature. See [Environment](/environment) and [On-chain trading](/concepts/on-chain-trading).
+  On `https://api.futuur.com` today, HMAC authenticates every authenticated request. Coming soon: with on-chain trading, every order in `OOM` or `USDC` will also need an EIP-712 `LimitOrderIntent` signed by your Safe owner key. HMAC will never replace that wallet signature. See [On-chain trading](/concepts/on-chain-trading).
 </Note>
 
 ## Required headers
@@ -69,7 +69,7 @@ The server signs what it **parsed**, not the bytes you sent. For a JSON body, ea
 Form-encoded bodies and query strings are always strings and are signed exactly as sent. If a name repeats, the last value is signed.
 
 <Tip>
-  Send a form-encoded body, or a JSON body whose values are all strings (`"price": "0.42"`, `"shares": "3"`, `"chain_id": "84532"`). Then the signed text is the text you sent, in any language. Numeric, decimal, and boolean fields accept strings. Sign nested objects or arrays only from Python, where `str()` gives the server's form. The endpoints with nested bodies are `POST /orders/batch/`, `POST /orders/batch-update/`, `POST /orders/batch-cancel/`, and the Safe relay endpoints.
+  Send a form-encoded body, or a JSON body whose values are all strings (`"price": "0.42"`, `"shares": "3"`, `"market": "3801"`). Then the signed text is the text you sent, in any language. Numeric, decimal, and boolean fields accept strings. Sign nested objects or arrays only from Python, where `str()` gives the server's form. The endpoints with nested bodies are `POST /orders/batch/`, `POST /orders/batch-update/`, `POST /orders/batch-cancel/`, and the Safe relay endpoints.
 </Tip>
 
 ### Timestamp window
@@ -178,8 +178,6 @@ curl "https://api.futuur.com/v2.0/events/?category=5" \
 ```
 
 </CodeGroup>
-
-On the phase-one preview host, replace the base URL with the one in [Environment](/environment).
 
 ## GET vs. POST requests
 

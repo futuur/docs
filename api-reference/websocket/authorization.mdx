@@ -248,8 +248,6 @@ Key={{your_public_key}}&Timestamp={{current_timestamp}}&channel_name={{channel_n
   Do not sort with `localeCompare`. It is case-insensitive and puts `channel_name` before `Key`, which gives a signature the server rejects with `401 authentication_failed`. Encode the values the way Python `urlencode` does. See [Authentication](/authentication#signing-process) for the exact rules.
 </Warning>
 
-On the phase-one preview host, use the base URL from [Environment](/environment).
-
 <CodeGroup>
 
 ```javascript Node.js

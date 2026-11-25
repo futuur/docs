@@ -8,7 +8,7 @@ An **order** is an instruction to buy or sell shares in a market outcome. When y
 Orders are created via [`POST /orders/`](/api-reference/orders/create), listed via [`GET /orders/`](/api-reference/orders/list), and canceled via [`PATCH /orders/{id}/cancel/`](/api-reference/orders/cancel). You can also [cancel several orders](/api-reference/orders/batch-cancel) or [cancel everything](/api-reference/orders/cancel-all) in a single call. There is no endpoint that returns a single order by ID, and no fills or trades endpoint: filter [`GET /orders/`](/api-reference/orders/list) and read the fill fields on the order.
 
 <Note>
-  On the phase-one preview host, orders in `OOM` and `USDC` settle on-chain. Each create must carry an EIP-712 `LimitOrderIntent` signed by your Safe owner key, in addition to HMAC. Matching stays off-chain. See [On-chain trading](/concepts/on-chain-trading) and [Environment](/environment).
+  Coming soon: orders in `OOM` and `USDC` will settle on-chain. Each create will carry an EIP-712 `LimitOrderIntent` signed by your Safe owner key, in addition to HMAC. Matching stays off-chain. This is not yet available on `https://api.futuur.com`. See [On-chain trading](/concepts/on-chain-trading).
 </Note>
 
 ## Order types
@@ -49,12 +49,12 @@ Orders are created via [`POST /orders/`](/api-reference/orders/create), listed v
     An order with `price: null` is a market order. It executes at the best available prices.
 
     <Warning>
-      Market orders cannot be used in `OOM` or `USDC` on the phase-one preview host. The signed intent contains a price, so a priceless order is rejected with `price_required`. Use an `ioc` order with a price instead.
+      Coming soon: market orders will not be available in `OOM` or `USDC` with on-chain trading. The signed intent contains a price, so a priceless order is rejected with `price_required`. Use an `ioc` order with a price instead.
     </Warning>
   </Tab>
 </Tabs>
 
-The examples show order fields only. On the preview host you add the signed-intent fields described in [Create order](/api-reference/orders/create).
+The examples show order fields only. When on-chain trading launches, you will add the signed-intent fields described in [Create order](/api-reference/orders/create).
 
 ## Side: bid vs ask
 
@@ -139,11 +139,11 @@ Canceling stops the unmatched remainder. A fill whose on-chain transfer has alre
 
 ### Expiration
 
-`expired_at` is the time after which the order no longer matches. On the preview host it is never later than the `expiry` you signed: the API lowers `expired_at` to the signed expiry. An expired order stops matching, but the API does not change its status at that moment, so cancel it if you need it to read `canceled`.
+`expired_at` is the time after which the order no longer matches. With on-chain trading (coming soon) it will never be later than the `expiry` you sign: the API lowers `expired_at` to the signed expiry then. An expired order stops matching, but the API does not change its status at that moment, so cancel it if you need it to read `canceled`.
 
 ### Settlement
 
-On the preview host, matching and settlement are separate steps. The engine matches off-chain, then moves collateral on-chain **asynchronously**. Shares are credited only after the collateral transfer succeeds; until then the order can show `processing`. If the transfer fails, the match fails and no shares change hands.
+Coming soon: with on-chain trading, matching and settlement are separate steps. The engine matches off-chain, then moves collateral on-chain **asynchronously**. Shares are credited only after the collateral transfer succeeds; until then the order can show `processing`. If the transfer fails, the match fails and no shares change hands.
 
 `settlement_mode` is `onchain` for these orders. `settlement_status` tracks the chain side:
 
@@ -193,7 +193,7 @@ There is no `amount` field on the order.
   <Accordion title="shares and amount">
     `shares` is the size of the order and is required. `amount` is an optional cross-check for the total; it does not size the order, and you can leave it out.
 
-    On an ask, `shares` can be the string `"max"` to sell everything you hold that is not reserved by your open asks, optionally capped with `max_shares`. `"max"` cannot be relied on for `OOM` or `USDC` on the preview host: the signed `sharesRaw` must equal the resolved quantity, so send an explicit share count.
+    On an ask, `shares` can be the string `"max"` to sell everything you hold that is not reserved by your open asks, optionally capped with `max_shares`. With on-chain trading (coming soon), `"max"` cannot be relied on for `OOM` or `USDC`: the signed `sharesRaw` must equal the resolved quantity, so send an explicit share count.
   </Accordion>
   <Accordion title="expired_at">
     Set `expired_at` to an ISO 8601 datetime to stop the order from matching after that time. See [Expiration](#expiration).
