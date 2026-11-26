@@ -37,7 +37,7 @@ Take a moment to understand the elements in the market interface:
 
 1. OUTCOMES: The possible outcomes for the event the market is trying to predict. You must pick one in order to place a bet.
 2. PRICE PER SHARE: The price that was paid to acquire 1 share of a given outcome in the most recent transaction on that market. At the moment the market is resolved, users who hold shares of the winning outcome will be rewarded with 1 Oom for each share they hold. Shares from the loosing outcome will be worth 0 at that moment, so users holding shares of the loosing outcomes will loose everything they spent buying these shares.<br />
-   Please pay close attention to these prices as they can fluctuate in real time depending on market activity. Prices can also progressively increase the more you buy shares. In the example above, the most recent price to buy 1 share of outcome “Yes” was 0.77 Oom. However, if you buy, for example, 100 shares in the market, it is possible that the price of the 100th share you buy is higher than the price for the 1st share. The magnitude of the price movements is determined by the market's [Order Book](/help/order-book) and Futuur’s [Automated Market Maker](/help/automated-market-maker) (AAM). As more bets occur and more people participate in the market, prices will become less volatile.<br />
+   Please pay close attention to these prices as they can fluctuate in real time depending on market activity. Prices can also progressively increase the more you buy shares. In the example above, the most recent price to buy 1 share of outcome “Yes” was 0.77 Oom. However, if you buy, for example, 100 shares in the market, it is possible that the price of the 100th share you buy is higher than the price for the 1st share. The magnitude of the price movements is determined by the market's [Order Book](/help/order-book) and Futuur’s [Automated Market Maker](/help/automated-market-maker) (AMM). As more bets occur and more people participate in the market, prices will become less volatile.<br />
    Futuur also charges a fee on top of the price per share on the moment of purchase (learn more [here](/help/betting-and-trading)).
 3. BET END DATE: The moment the market will close for new bets and sales.
 4. MARKET STATS: quick summary how many users have already bet on it, and the cumulative amount of resources they invested in it.
@@ -139,7 +139,7 @@ As more people bet on a certain outcome the price of that outcome tends to incre
 
 Alternatively, selling shares from an outcome tends to make its price drop, increasing the price of the other outcomes.
 
-The magnitude of the price movements is determined by a combination of the market's Order Book and Futuur’s [Automated Market Maker](/help/automated-market-maker) (AAM). As more bets occur and more people participate in the market, prices will become less volatile.
+The magnitude of the price movements is determined by a combination of the market's Order Book and Futuur’s [Automated Market Maker](/help/automated-market-maker) (AMM). As more bets occur and more people participate in the market, prices will become less volatile.
 
 ## Can I sell my position before the market closes?
 
@@ -173,9 +173,9 @@ The decision to leave a market before it closes may be justified for several rea
 
 Usually, yes, unless prices are at the extremes.
 
-Futuur uses an AMM (Automated Market Maker) that provides instant liquidity for all markets, allowing you to buy or sell a position at almost any time without having to wait for someone to accept your offer, as you would on a traditional exchange.
+Every trade on Futuur is matched in the market’s [Order Book](/help/order-book). Futuur’s [Automated Market Maker (AMM)](/help/automated-market-maker) normally keeps buy and sell orders in that book, so you can usually buy or sell a position right away without waiting for another user to accept your offer.
 
-In practice, the AMM can almost always provide enough liquidity for you to exit your position. The exception is at the extremes, where liquidity may be limited.
+This is not a guarantee. The AMM’s orders have a limited size, and liquidity may be limited when prices are at the extremes. If there is not enough in the book to fill your order, the part that cannot be matched is cancelled. You can always place a limit order at the price you want and wait for someone to take it.
 
 ## Can I bet on a sports market while the game is in progress?
 
@@ -195,7 +195,7 @@ The prices for which each amount of shares is sold is determined by the market's
 
 As more bets occur and more people place their Limit Orders, prices will become less volatile, allowing for bigger bets and bigger potential returns.
 
-If a market's [Order Book](/help/order-book) is empty at any given point, the price dynamic will be determined by Futuur's [Automated Market Maker (AMM)](/help/automated-market-maker), which charges a higher price the more you bet, to limit risk exposure.
+Futuur's [Automated Market Maker (AMM)](/help/automated-market-maker) also places orders in the [Order Book](/help/order-book). Its prices get worse the more you buy or sell, to limit its risk exposure. If the book is empty, a market order cannot be filled; you can place a limit order instead.
 
 ## Is there a minimum or maximum amount to bet?
 

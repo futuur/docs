@@ -1,9 +1,9 @@
 ---
 title: "Order Book"
-description: "How Futuur's order book works alongside the AMM: market orders, limit orders, spreads, and placing a bet through the order book."
+description: "How trading works on Futuur: the order book, market orders, limit orders, spreads, and what the automated market maker does."
 ---
 
-Read on to learn more about Futuur’s trading engine. Here we explain how the **Order Book + AMM hybrid approach** works, why it matters, and how you can use it.
+Read on to learn how trading works on Futuur. Every trade happens in a market’s **order book**. Futuur’s Automated Market Maker (AMM) takes part in that book like any other trader, by posting its own buy and sell orders.
 
 ## What is an Order Book?
 
@@ -45,48 +45,47 @@ Orders are ranked so the *best bid* (highest buy price) and *best ask* (lowest s
 > - Anyone placing a *market sell order* of up to 14.21 ø will get part of their order filled at 0.46ø/share (7.08ø in total), part filled at 0.44ø/share (8.75ø - 7.08ø = 1.67ø in total), and the rest filled at 0.43ø/share
 > - And so on until either the order is completely filled, or the order book runs out of Bids.
 
-## How does Futuur’s hybrid Order Book + AMM work?
+## How do the Order Book and the AMM work together?
 
-Futuur now combines the precision of a traditional order book with the always-on liquidity of an Automated Market Maker (AMM).
+There is one order book per market, and every trade is a match between two orders in it.
 
-1. **You submit a trade** (market order).
+Futuur’s [Automated Market Maker (AMM)](/help/automated-market-maker) is an account run by Futuur that places its own buy and sell orders in the book, at several prices. To you they look like any other order. Often they are what you trade against when no other user has an order at a better price.
 
-2. **Matching engine scans the order book**:
+When you send an order:
 
-   *If there are matching orders, they fill first—at exactly the posted prices.*
+1. **The matching engine looks at the orders on the other side of the book**, best price first.
+2. **At the same price, another user’s order is filled before the AMM’s.** Among users, the older order is filled first.
+3. **Your order is filled against those orders, at their posted prices,** until it is complete or there is nothing left that matches.
+4. **The order book and the market’s prices are updated.**
 
-3. **Fallback to AMM**: Any unfilled remainder goes to the AMM, which quotes a price from its curve and completes the trade instantly.
+**What this means for you**
 
-4. **Pool balances update** and the published order book refreshes.
-
-**Why it’s powerful**
-
-*✓ Zero‑slippage trades* when the book has depth.
-
-*✓ Guaranteed execution* when it doesn’t.
-
-*✓ Traders can choose the style (precision vs. speed) that fits each moment.*
+- You always trade at prices that are visible in the book. There is no separate, hidden price.
+- You can add your own orders to the book and wait for someone to take them (see Limit Orders below).
+- The AMM does not promise to fill any order of any size. It only fills what its own orders in the book cover.
 
 ## What is a Market Order?
 
-A **market order** says: *“Fill me* ***now*** *at the best price you can get.”*
+A **market order** says: *“Fill me* ***now*** *at the best prices available.”*
 
-- **Route:** Matches the current order book first.
-- **AMM safety‑net:** Any remainder is filled by the AMM.
-- **Use when:** Speed is more important than an exact price.
+- **How it fills:** it takes the best-priced orders in the book first, then the next best, and so on. The more you buy, the higher your average price can be.
+- **It never waits in the book.** Whatever cannot be matched right away is cancelled, and you keep the money or shares for that part.
+- **Use when:** speed is more important than an exact price.
 
 Example:
 
 ![Screenshot: What is a Market Order?](/images/help/order-book/01.png)
 
-You submit a market order of 100ø to buy shares of “Indiana Pacers”. The total amount for Asks in the book is 44.12ø. You take those 44.12ø. The AMM then fills the remaining 55.88ø at prices that start where the Order Book stopped (0.55ø/share) and get progressively higher, depending on pool depth.
+You submit a market order of 30ø to buy shares of “Indiana Pacers”. The best Ask is 0.49ø/share, with 5.58ø available at that price, so the first 5.58ø is filled there. The next 10.35ø is filled at 0.50ø/share, and the remaining 14.07ø at 0.53ø/share. Your average price is somewhere between 0.49ø and 0.53ø.
+
+If your order were bigger than everything on offer in the book, the part that could not be matched would be cancelled.
 
 ## What is a Limit Order?
 
 A **limit order** lets you dictate the *exact* price you want. You will *never* be filled at a worse price.
 
-- **Good‑til‑Expired (GTE):** By default, your limit order stays live until the market resolves or you cancel it.
-- **Custom expiry:** Use the dropdown to set a date/time after which the order cancels automatically.
+- **Stays in the book by default:** your limit order stays live until it is filled, you cancel it, or the market closes for betting. Orders still open when a market closes are cancelled.
+- **Custom expiry:** you can set a date and time after which the unfilled part of the order is cancelled automatically.
 - **Partial fills:** Your order can fill in chunks over time as matches appear.
 
 ## What is a Spread?
@@ -118,10 +117,11 @@ Example of a limit order:
 
 ## What happens if the Order Book is empty? Can I still trade?
 
-Absolutely. If the book shows no bids or asks that match your quantity/price, the AMM **steps in automatically**:
+It depends on the kind of order.
 
-- **Always quotes a price** based on current pool balances.
-- **Executes 100 % of your market order** immediately.
-- **Limit orders** remain in the book until a counterparty arrives *or* the expiry hits.
+- **Market orders** need orders on the other side of the book. If there are none, your market order is cancelled and nothing is charged. If there are some, but not enough, the part that matches is filled and the rest is cancelled.
+- **Limit orders** always work: your order goes into the book and waits until someone takes it, you cancel it, it expires, or the market closes.
 
-In practice, this means you will **never get stuck**—even in brand‑new or low‑traffic markets. The AMM keeps trading alive; the order book keeps trading efficient.
+The AMM normally keeps buy and sell orders in the book, so there is usually something to trade against. This is not guaranteed. The AMM’s orders have a limited size, and Futuur can reduce or remove them on any market.
+
+If a market order does not fill, or fills at a worse price than you expected, place a limit order at the price you want instead.

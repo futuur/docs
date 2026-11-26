@@ -7,9 +7,9 @@ Uma das características mais distintas da Futuur é o uso de um Formador de Mer
 
 ## O que é um Formador de Mercado Automatizado (AMM)?
 
-Um **Formador de Preços Automatizado** (Automated Market Maker, ou AMM) é um algoritmo que nos permite oferecer um preço de compra ou venda para qualquer resultado a qualquer momento, mesmo quando o [Livro de Ordens](/pt-br/help/order-book) de um mercado está vazio.
+Um **Formador de Mercado Automatizado** (Automated Market Maker, ou AMM) é um algoritmo que calcula preços de compra e de venda para cada resultado. Na Futuur, o AMM usa esses preços para colocar suas próprias ordens de compra e de venda no [Livro de Ordens](/pt-br/help/order-book) de cada mercado; assim, normalmente há contra o que negociar mesmo quando nenhum outro usuário tem uma ordem ali.
 
-Adotar uma abordagem híbrida **Livro de Ordens / AMM** traz a vantagem de liquidez instantânea e contínua para todos os nossos mercados, ao mesmo tempo que preserva os benefícios de uma precificação dinâmica típica de bolsas e corretoras. Isso garante que as negociações sejam sempre possíveis, mesmo nos mercados em que o livro de ordens, sozinho, não oferece liquidez suficiente.
+Você nunca negocia com o AMM por um caminho separado: as ordens dele ficam no mesmo livro que as de todos, e, no mesmo preço, a ordem de outro usuário é executada primeiro. As ordens do AMM têm tamanho limitado, portanto ele não garante que uma ordem de qualquer tamanho seja executada.
 
 ## Como funciona o AMM?
 

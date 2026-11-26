@@ -172,9 +172,9 @@ Sair de um mercado antes do fechamento pode fazer sentido por vários motivos �
 
 Geralmente sim, a menos que os preços estejam nos extremos.
 
-A Futuur usa um AMM (Automated Market Maker) que fornece liquidez instantânea para todos os mercados, permitindo comprar ou vender uma posição a praticamente qualquer momento, sem precisar esperar que alguém aceite sua oferta como em uma bolsa tradicional.
+Toda negociação na Futuur é casada no [Livro de Ordens](/pt-br/help/order-book) do mercado. O [Formador de Mercado Automatizado (AMM)](/pt-br/help/automated-market-maker) da Futuur normalmente mantém ordens de compra e de venda nesse livro; por isso, em geral você consegue comprar ou vender uma posição na hora, sem esperar que outro usuário aceite sua oferta.
 
-Na prática, o AMM quase sempre consegue garantir liquidez para você sair da sua posição, a exceção fica por conta dos extremos, onde a liquidez pode ser limitada.
+Isso não é uma garantia. As ordens do AMM têm tamanho limitado, e a liquidez pode ser limitada quando os preços estão nos extremos. Se não houver o suficiente no livro para executar sua ordem, a parte que não puder ser casada é cancelada. Você sempre pode colocar uma ordem limite no preço que quiser e esperar que alguém a aceite.
 
 ## Posso apostar em um mercado esportivo enquanto o jogo está em andamento?
 
@@ -194,7 +194,7 @@ Os preços a que cada quantidade de shares é negociada são definidos prioritar
 
 Conforme mais apostas são feitas e mais Ordens Limitadas são adicionadas, os preços tornam-se menos voláteis, permitindo apostas maiores e potenciais retornos mais altos.
 
-Se o [Livro de Ordens](/pt-br/help/order-book) de um mercado estiver vazio em determinado momento, a dinâmica de preços passa a ser determinada pelo [Formador de Preços Automático](/pt-br/help/automated-market-maker) da Futuur, que cobra um preço progressivamente maior quanto maior for o valor apostado, limitando a exposição ao risco.
+O [Formador de Mercado Automatizado (AMM)](/pt-br/help/automated-market-maker) da Futuur também coloca ordens no [Livro de Ordens](/pt-br/help/order-book). Os preços dele pioram quanto mais você compra ou vende, para limitar a exposição ao risco. Se o livro estiver vazio, uma ordem a mercado não pode ser executada; você pode colocar uma ordem limite.
 
 ## Existe um valor mínimo ou máximo para apostar?
 
