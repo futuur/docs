@@ -57,3 +57,37 @@ flowchart LR
 
 - ✅ **All markets** — political, sports, crypto, or any other category
 - ✅ **Everyone** — no volume thresholds, no application, no whitelisting
+- ✅ **Real money and play money** — same rules, different currency (USDC vs Ooms)
+
+> 🎯 **How to earn:** place a limit order that rests in the book and gets filled by a taker. That's it.
+
+## Fee Structure
+
+Taker fees are calculated with the same formula on every market:
+
+$$
+fees = 0.05 \times C \times P \times (1 - P)
+$$
+
+- **P** = price of a share (e.g. 50 cents = 0.5)
+- **C** = number of contracts
+
+Fees peak at **P = 0.50** and decrease symmetrically toward 0 and 1. **80% of the taker fee** goes to the maker as a rebate — as a purchase discount (buy side) or balance credit (sell side). Real money fees settle in **USDC**; play money fees settle in **Ooms**.
+
+### Example Fee Table (100 contracts)
+
+| Price (P) | Contracts (C) | Total Fee |   | Price (P) | Contracts (C) | Total Fee |
+| --- | --- | --- | --- | --- | --- | --- |
+| \$0.01 | 100 | \$0.0495 |   | \$0.55 | 100 | \$1.2375 |
+| \$0.05 | 100 | \$0.2375 |   | \$0.60 | 100 | \$1.2 |
+| \$0.10 | 100 | \$0.45 |   | \$0.65 | 100 | \$1.1375 |
+| \$0.15 | 100 | \$0.6375 |   | \$0.70 | 100 | \$1.05 |
+| \$0.20 | 100 | \$0.8 |   | \$0.75 | 100 | \$0.9375 |
+| \$0.25 | 100 | \$0.9375 |   | \$0.80 | 100 | \$0.8 |
+| \$0.30 | 100 | \$1.05 |   | \$0.85 | 100 | \$0.6375 |
+| \$0.35 | 100 | \$1.1375 |   | \$0.90 | 100 | \$0.45 |
+| \$0.40 | 100 | \$1.2 |   | \$0.95 | 100 | \$0.2375 |
+| \$0.45 | 100 | \$1.2375 |   | \$0.99 | 100 | \$0.0495 |
+| **\$0.50** | **100** | **\$1.25 ← max** |   |   |   |   |
+
+> 📌 **P = 0.50** is the maximum fee point. Values above are in USD for real money markets and apply identically in Ooms for play money.

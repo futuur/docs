@@ -9,7 +9,7 @@ This page is dedicated to the processes, fees, limits, and rules for depositing 
 
 Once you [create your account](/help/create-your-account) and [verify your email address](/help/create-your-account), you can make your first real-money deposit. To do so, select “Real Money” in the currency selector, and click to “Deposit”.
 
-![Screen recording: How do I make a deposit?](/images/help/deposits-and-withdrawals/01.gif)
+{/* TODO: new screen recording needed. The old one (01.gif, April 2024) shows the previous deposit screen. */}
 
 ### Update your personal information
 
@@ -19,23 +19,25 @@ If this is your first time making a deposit, you will be prompted to update your
 
 Fill up the form, making sure you are not using Futuur on a jurisdiction where real-money betting is prohibited (check the list of restricted countries [here](/help/license-and-jurisdiction)). Once you complete the form, click on “Submit”.
 
-### Choose your currency and follow the steps to deposit
+### Choose the network and send USDC
 
-Start by selecting which currency you wish to deposit. (If you do not own any cryptocurrencies yet, check [this section](/help/understanding-currencies) of our Help Center to learn where to get them)
+Deposits are made in **USDC**. (If you do not own any cryptocurrencies yet, check [this section](/help/understanding-currencies) of our Help Center to learn where to get them.)
 
-![Screen recording: Choose your currency and follow the steps to deposit](/images/help/deposits-and-withdrawals/03.gif)
+{/* TODO: new screen recording needed. The old one (03.gif, April 2024) shows a currency selector that no longer exists. */}
 
-You must also select the network you want to use for the transfer. It is **absolutely essencial** that the network you select for receiving your funds on Futuur is the same network you select at the moment of transferring the funds from your crypto wallet outside of Futuur.
+**1. Choose the network.** Futuur shows the networks you can use to send USDC. One is already selected for you, and the network with the lowest fee is marked “Cheapest”. Pick the network you will send from and click **Continue**.
+
+**2. Send USDC to your address.** The next screen shows your personal Futuur deposit address for that network, as a QR code and as text. Click **Copy Address** and paste it as the destination in your own wallet or exchange, or scan the QR code if your wallet supports it. If you picked the wrong network, click **Change network** to go back.
+
+It is **absolutely essential** that the network you select on Futuur is the same network you select when you send the funds from your wallet or exchange.
 
 <Warning>
-  If you select different networks at the two ends of the transaction, your funds may be lost forever in the blockchain. This is not a failure or a bug in Futuur’s architecture, but a feature of the blockchain networks used to transfer crypto assets.
+  Send only USDC, and only on the network shown on the deposit screen. If you send another token, or use a different network from the one you selected, your funds may be lost. This is how blockchain networks work, and Futuur cannot reverse a transfer.
 
-  Please make sure you double-check the networks on both ends before you send your funds to Futuur.
+  Please double-check the network on both ends before you send your funds to Futuur.
+
+  If you have already sent funds on the wrong network, write to [support@futuur.com](mailto:support@futuur.com) with the transaction ID, the network you used and the amount. We will look into it, but we cannot promise that the funds can be recovered.
 </Warning>
-
-After selecting your currency and network, you’ll see the address to which you should sent your funds. Please copy it and paste it as the destination address when setting the transfer up.
-
-If your wallet allows transfers using a QR code, you can scan the QR code on the left side when preparing your transfer.
 
 <Tip>
   Remember that different cryptocurrencies, networks and wallets charge different fees for transferring crypto. Please compare your options before setting up your transfer.
@@ -45,13 +47,13 @@ If your wallet allows transfers using a QR code, you can scan the QR code on the
 
 ## How long does it take for a deposit to be completed?
 
-Different currencies take different times to arrive in your wallet. You will always be notified by email once the funds arrive in your wallet, so please make sure to keep Futuur in your list of safe address, and check your spam folder if you don’t hear from us.
+Deposits are usually credited within minutes of being confirmed on the network. How long the confirmation takes depends on the network you chose, not on Futuur.
 
-Crypto deposits will typically take 10-30 minutes to arrive in your account, depending on the cryptocurrency used.
+We email you when the funds arrive, and you can safely close the deposit window while you wait. Please keep Futuur in your list of safe senders, and check your spam folder if you don’t hear from us.
 
 ## Is there a minimum amount for deposits?
 
-There is no deposit minimum. However, to avoid fraudulent and spam transactions, any transfer that is below the equivalent of 0.01 Euro will be rejected.
+There is no deposit minimum. However, to avoid fraudulent and spam transactions, any transfer below 0.01 USDC is treated as spam and is not credited to your account.
 
 ## Is there a maximum amount for deposits?
 
@@ -79,7 +81,7 @@ For security reasons, after clicking “Send”, you will receive an email askin
 
 You have 48 hours to confirm the withdrawal request. After that, it will be automatically canceled and you’ll have to initiate a new one.
 
-If you want to make changes to a request you have already initiated, please head back to your wallet, find the withdrawal request, and click to “Cancel this withdrawal”. After that, please wait 30 minutes before you initiate a new request.
+If you want to make changes to a request you have already initiated, please head back to your wallet, find the withdrawal request, and click to “Cancel this withdrawal”.
 
 ![Screenshot: Confirm the request (2)](/images/help/deposits-and-withdrawals/06.png)
 
@@ -93,14 +95,14 @@ Currently, we manually review all withdrawal requests, generally within 24 hours
 
 ## Is there a minimum amount for withdrawals?
 
-The minimum withdrawal amount varies according to the currency being withdrawn.
+The minimum withdrawal amount depends on the network you choose.
 
 ### Minimum withdrawals for cryptocurrencies
 
 | Currency | Network | Minimum Withdrawal Amount |
 | --- | --- | --- |
-| USDC | ERC20 | 10 USDC |
-| USDC | Binance Smart Chain (BEP20) | 0.00015 USDC |
+| USDC | Ethereum (ERC20) | 10 USDC |
+| USDC | BNB Smart Chain (BEP20) | 1 USDC |
 | USDC | Polygon | 1 USDC |
 | USDC | Solana | 1 USDC |
 
@@ -114,8 +116,8 @@ There is no maximum amount for withdrawals on Futuur. However, if your cumulativ
 
 | Currency | Network | Withdrawal Fee |
 | --- | --- | --- |
-| USDC | ERC20 | 5 USDC |
-| USDC | Binance Smart Chain (BEP20) | 0.000075 USDC |
+| USDC | Ethereum (ERC20) | 5 USDC |
+| USDC | BNB Smart Chain (BEP20) | No fee |
 | USDC | Polygon | No fee |
 | USDC | Solana | No fee |
 

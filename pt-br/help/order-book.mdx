@@ -1,9 +1,9 @@
 ---
 title: "Livro de Ordens (Order Book)"
-description: "Como o Livro de Ordens da Futuur funciona junto com o AMM: ordens a mercado, ordens limite, spread e como apostar pelo Livro de Ordens."
+description: "Como funciona a negociação na Futuur: o Livro de Ordens, ordens a mercado, ordens limite, spread e o papel do formador de mercado automatizado."
 ---
 
-Saiba tudo sobre o novo motor de negociação da Futuur. Aqui mostramos como funciona a abordagem híbrida **Livro de Ordens + [Formador de Preços Automatizado (Automated Market Maker, ou AMM)](/pt-br/help/automated-market-maker)**, por que ela é importante e como você pode aproveitá‑la.
+Saiba como funciona a negociação na Futuur. Toda operação acontece no **livro de ordens** do mercado. O [Formador de Mercado Automatizado (Automated Market Maker, ou AMM)](/pt-br/help/automated-market-maker) da Futuur participa desse livro como qualquer outro trader, colocando suas próprias ordens de compra e de venda.
 
 ## O que é um Livro de Ordens?
 
@@ -45,48 +45,47 @@ As ordens são ranqueadas para que o *melhor bid* (maior preço de compra) e o *
 > - Uma ordem de até 14,21 ø será executada em três níveis de preço: 0,46 ø/share (7,08 ø), 0,44 ø/share (1,67 ø) e 0,43 ø/share (restante).
 > - E assim por diante, até que a ordem seja totalmente executada ou não existam mais Bids.
 
-## Como funciona o modelo híbrido Livro de Ordens + AMM da Futuur?
+## Como o Livro de Ordens e o AMM funcionam juntos?
 
-A Futuur agora combina a precisão de um livro de ordens tradicional com a liquidez contínua de um **[Automated Market Maker (AMM)](/pt-br/help/automated-market-maker)**.
+Existe um livro de ordens por mercado, e toda operação é o casamento de duas ordens dentro dele.
 
-1. **Você envia uma ordem** (geralmente *a mercado*).
+O [Automated Market Maker (AMM)](/pt-br/help/automated-market-maker) da Futuur é uma conta operada pela Futuur que coloca suas próprias ordens de compra e de venda no livro, em vários preços. Para você, elas aparecem como qualquer outra ordem. Muitas vezes é contra elas que você negocia quando nenhum outro usuário tem uma ordem a um preço melhor.
 
-2. O **motor de casamentos verifica o livro de ordens**:
+Quando você envia uma ordem:
 
-   *Se houver ordens compatíveis, elas são executadas primeiro — exatamente nos preços listados.*
+1. **O motor de casamento olha as ordens do outro lado do livro**, começando pelo melhor preço.
+2. **No mesmo preço, a ordem de outro usuário é executada antes da ordem do AMM.** Entre usuários, a ordem mais antiga é executada primeiro.
+3. **Sua ordem é executada contra essas ordens, nos preços listados,** até ser concluída ou até não haver mais nada compatível.
+4. **O livro de ordens e os preços do mercado são atualizados.**
 
-3. **Fallback para o AMM:** qualquer quantidade restante é enviada ao AMM, que cota um preço de acordo com a curva e completa a transação instantaneamente.
+**O que isso significa para você**
 
-4. **Os saldos do pool são atualizados** e o livro de ordens é atualizado para o público.
-
-**Por que isso é poderoso?**
-
-*✓ Negociações sem slippage* quando o livro tem profundidade.
-
-*✓ Execução garantida* quando não há contraparte.
-
-✓ O trader escolhe entre precisão (ordem limitada) e velocidade (ordem a mercado) conforme a necessidade.
+- Você sempre negocia a preços visíveis no livro. Não existe um preço separado ou escondido.
+- Você pode colocar suas próprias ordens no livro e esperar que alguém as aceite (veja Ordem Limite abaixo).
+- O AMM não promete executar qualquer ordem de qualquer tamanho. Ele só executa o que as ordens dele no livro cobrem.
 
 ## O que é uma Ordem a Mercado?
 
-Uma **ordem a mercado** diz: *“Execute* ***agora*** *pelo melhor preço disponível.”*
+Uma **ordem a mercado** diz: *“Execute* ***agora*** *pelos melhores preços disponíveis.”*
 
-- **Roteiro:** consome primeiro o livro de ordens.
-- **Rede de segurança AMM:** qualquer saldo remanescente é executado pelo AMM.
+- **Como é executada:** consome primeiro as ordens de melhor preço no livro, depois as seguintes, e assim por diante. Quanto mais você compra, maior pode ser o seu preço médio.
+- **Nunca fica esperando no livro.** O que não puder ser casado na hora é cancelado, e você fica com o dinheiro ou as shares dessa parte.
 - **Use quando:** rapidez é mais importante que preço exato.
 
 **Exemplo:**
 
 ![Captura de tela: O que é uma Ordem a Mercado?](/images/help/order-book/01.png)
 
-Você envia uma ordem a mercado de 100 ø para comprar shares de “Indiana Pacers”. No Livro de Ordens há Asks somando 44,12 ø. Esses 44,12 ø são executados aos preços exibidos. O AMM então preenche os 55,88 ø restantes a partir de 0,55 ø/share, subindo progressivamente conforme a profundidade do pool.
+Você envia uma ordem a mercado de 30 ø para comprar shares de “Indiana Pacers”. O melhor Ask é 0,49 ø/share, com 5,58 ø disponíveis nesse preço; os primeiros 5,58 ø são executados ali. Os 10,35 ø seguintes são executados a 0,50 ø/share, e os 14,07 ø restantes a 0,53 ø/share. Seu preço médio fica entre 0,49 ø e 0,53 ø.
+
+Se a sua ordem fosse maior do que tudo o que está à venda no livro, a parte que não pudesse ser casada seria cancelada.
 
 ## O que é uma Ordem Limite?
 
 Uma **ordem limite** permite que você defina o preço *exato* que deseja. Ela *nunca* será executada a um preço pior.
 
-- **Good‑til‑Expired (GTE):** por padrão, sua ordem fica viva até o mercado se encerrar ou você cancelá‑la.
-- **Expiração personalizada:** defina data/hora para cancelar a ordem automaticamente se não for casada.
+- **Fica no livro por padrão:** sua ordem limite continua ativa até ser executada, você cancelá‑la ou o mercado fechar para apostas. Ordens ainda abertas quando o mercado fecha são canceladas.
+- **Expiração personalizada:** você pode definir data e hora a partir das quais a parte não executada da ordem é cancelada automaticamente.
 - **Execução parcial:** sua ordem pode ser preenchida em partes, conforme surgem contrapartes.
 
 ## O que é o Spread?
@@ -118,10 +117,11 @@ Exemplo de ordem limite:
 
 ## O que acontece se o Livro de Ordens estiver vazio? Ainda posso negociar?
 
-Sem dúvida. Se não houver bids ou asks que atendam à sua quantidade/preço, o **AMM entra em ação automaticamente**:
+Depende do tipo de ordem.
 
-- **Sempre cota um preço** com base no saldo atual do pool.
-- **Executa 100 % da sua ordem a mercado** instantaneamente.
-- **Ordens limite** permanecem no livro até aparecer uma contraparte *ou* expirarem.
+- **Ordens a mercado** precisam de ordens do outro lado do livro. Se não houver nenhuma, sua ordem a mercado é cancelada e nada é cobrado. Se houver algumas, mas não o suficiente, a parte compatível é executada e o restante é cancelado.
+- **Ordens limite** sempre funcionam: sua ordem entra no livro e espera até alguém aceitá-la, você cancelá-la, ela expirar ou o mercado fechar.
 
-Na prática, você **nunca fica travado** — mesmo em mercados novos ou de baixo volume. O AMM mantém a liquidez; o livro de ordens garante a eficiência.
+O AMM normalmente mantém ordens de compra e de venda no livro, então costuma haver contra o que negociar. Isso não é garantido. As ordens do AMM têm tamanho limitado, e a Futuur pode reduzi-las ou retirá-las em qualquer mercado.
+
+Se uma ordem a mercado não for executada, ou for executada a um preço pior do que você esperava, coloque uma ordem limite no preço que você quer.

@@ -44,3 +44,45 @@ Useful order options: `expired_at` auto-cancels the unfilled part of an order at
 The taker pays a fee; **80% of it goes back to the maker** whose resting order was filled, instantly and on every market. No application or volume threshold. There’s zero fees for makers.
 
 [Rebates](/help/rebates): how it works, with an example
+
+## 5. Deposits, withdrawals and settlement
+
+- **Assets:** USDC for real money. Ooms for play money (not withdrawable).
+- **Deposits:** on-chain transfer. Make sure the network you select on Futuur matches the network you send from. Typically 10–30 minutes. Futuur charges no deposit fee.
+- **Withdrawals:** Wallet → Withdraw. You confirm each request by email, then it is reviewed manually, generally within 24 hours. Funds usually arrive within 30 minutes of approval.
+
+| Asset and network | Withdrawal fee | Minimum |
+| --- | --- | --- |
+| USDC · Polygon | None | 1 USDC |
+| USDC · Solana | None | 1 USDC |
+| USDC · Ethereum (ERC-20) | 5 USDC | 10 USDC |
+
+- **KYC:** proof of identity and address may be required once cumulative deposits or withdrawals exceed the equivalent of \$2,000.
+- **Market settlement:** a market closes to new bets and sales at its Bet End Date, and pays out when it is resolved under its published rules. Sports markets are resolved automatically through a data provider, generally within 12 hours after the match. Other markets are resolved manually by our editorial team, and timing varies.
+
+More: [Deposits and Withdrawals](/help/deposits-and-withdrawals) · [Rules and resolutions](/help/rules-and-resolutions)
+
+## 6. Where you can trade real money
+
+Play money is available everywhere. Real-money trading is **not available** in certain jurisdictions, including the **United States, United Kingdom, Canada, France, Germany, Australia, Japan and Singapore**. See the full list and our licence details on [License and Jurisdiction](/help/license-and-jurisdiction).
+
+Trading as a firm? Write to [support@futuur.com](mailto:support@futuur.com) and we'll walk you through onboarding.
+
+## 7. Order book and AMM
+
+Futuur runs one order book per market. Futuur's automated market maker (AMM) is a participant in that book: it posts its own buy and sell orders there, like any other maker.
+
+- **Market orders** match the orders resting in the book, best price first. At the same price, another user's order fills before the AMM's. Whatever cannot be matched is cancelled: a market order never rests in the book.
+- **Limit orders** stay in the book until they are filled, you cancel them, or they expire.
+- **If the book is empty,** a market order has nothing to match and is cancelled. Use a limit order instead.
+
+More: [Order Book](/help/order-book) · [Automated Market Maker](/help/automated-market-maker)
+
+## 8. What's coming
+
+- **Liquidity rewards program.** Rewards for resting liquidity, in design. We're putting together a small first group of market makers to try the platform and help shape it. Interested? Write to [makers@futuur.com](mailto:makers@futuur.com).
+- **On-chain trading.** Matching stays off-chain and collateral moves on-chain, with each order also needing a wallet signature (EIP-712) alongside HMAC. Planned for the coming months, no date yet. Today's API uses HMAC-only auth and ledger settlement. [On-chain trading docs](/concepts/on-chain-trading)
+
+## Contact
+
+[makers@futuur.com](mailto:makers@futuur.com)

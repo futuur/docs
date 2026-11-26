@@ -178,13 +178,6 @@
                   "help/market-maker-guide",
                   "help/rebates"
                 ]
-              },
-              {
-                "group": "Legal",
-                "pages": [
-                  "legal/terms-of-service",
-                  "legal/privacy-policy"
-                ]
               }
             ]
           }
@@ -392,22 +385,6 @@
     {
       "source": "/Understanding-currencies-471bd65c55c0432a842f5fe6e9565d22",
       "destination": "/help/understanding-currencies"
-    },
-    {
-      "source": "/Privacy-Policy-fbd0af05edba4027b62780f8a21a8ae6",
-      "destination": "/legal/privacy-policy"
-    },
-    {
-      "source": "/fbd0af05edba4027b62780f8a21a8ae6",
-      "destination": "/legal/privacy-policy"
-    },
-    {
-      "source": "/Terms-of-Service-a2f757178971446cba1402b3cdc9a799",
-      "destination": "/legal/terms-of-service"
-    },
-    {
-      "source": "/a2f757178971446cba1402b3cdc9a799",
-      "destination": "/legal/terms-of-service"
     },
     {
       "source": "/1c9755229e6f466e839b6f932d328766",
